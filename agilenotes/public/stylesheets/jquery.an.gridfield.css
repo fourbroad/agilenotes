@@ -1,0 +1,34 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-gridfield {
+	position: relative;
+	border:1px solid #E8E8E8;
+}
+
+.an-gridfield .titlebar {
+	position: relative;
+	height: 32px;
+	border: medium none;
+}
+
+.an-gridfield .an-agilegrid {
+	border-top:1px solid darkgrey;
+}
+
+.an-gridfield .titlebar .title {
+	position: absolute;
+	left: 0;
+	padding: 8px 12px;
+}
+
+.an-gridfield .titlebar .toolbar {
+	position: absolute;
+	top:1px;
+	right: 0;
+	padding: 2px 2px;
+}
+
+.an-gridfield .titlebar .toolbar .ui-button-text-only .ui-button-text {
+	padding: 0.2em 0.6em;
+}

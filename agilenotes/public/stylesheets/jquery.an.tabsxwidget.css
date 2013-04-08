@@ -1,0 +1,11 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-tabsxwidget>.content.ui-tabs>.ui-tabs-nav {
+	min-height: 34px;
+}
+
+.an-tabsxwidget>.content.ui-tabs>.ui-tabs-panel {
+	padding: 0;
+	min-height: 20px;
+}

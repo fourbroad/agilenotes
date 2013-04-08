@@ -1,0 +1,154 @@
+
+.an-agilegrid {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right:0;
+	bottom:0;
+}
+
+.an-agilegrid .ui-widget-header{
+  border: none;
+}
+
+.an-agilegrid .top-left {
+	border-bottom: 1px solid darkgrey;
+	border-right: 1px solid darkgrey;
+	border-left:none;
+	border-top:none;
+	position: absolute;
+}
+
+.an-agilegrid .top-header,.an-agilegrid .left-header,.an-agilegrid .pager {
+	padding: 0;
+	overflow: hidden;
+	position: absolute;
+}
+
+.an-agilegrid .pager {
+	padding-left: 5px;
+}
+
+.an-agilegrid .top-header table,.an-agilegrid .left-header table {
+	position: absolute;
+	border: 0 solid #EEEEEE;
+}
+
+.an-agilegrid .top-header table th>div,.an-agilegrid .left-header table th>div {
+	border-right: 1px solid darkgrey;
+	border-bottom: 1px solid darkgrey;
+	overflow: hidden;
+	text-align: center;
+}
+
+.an-agilegrid .top-header table th>div:hover,.an-agilegrid .left-header table th>div:hover {
+	background-color: #EEEEEE;
+}
+
+.an-agilegrid .left-header table th {
+	display: block;
+}
+
+.an-agilegrid .content-area {
+	padding: 0;
+	overflow: auto;
+	position: absolute;
+}
+
+.an-agilegrid .content-area table {
+	overflow: hidden;
+	position: absolute;
+	border: 0 solid #EEEEEE;
+}
+
+.an-agilegrid .content-area table td>div {
+	overflow: hidden;
+	border-right: 1px solid #CCCCCC;
+	border-bottom: 1px solid #CCCCCC;
+}
+
+.an-agilegrid .content-area table td.selected {
+	background-color: #EEEEEE;
+}
+
+.an-agilegrid .content-area table tr.selected {
+	background-color: #EEEEEE;
+}
+
+.an-agilegrid .pager .ui-icon{
+    background-image:url("images/ui-icons_888888_256x240.png");
+}
+
+.an-agilegrid .pager button {
+}
+
+.an-agilegrid .pager .ui-button-icon-only,
+.an-agilegrid .pager .ui-button-text {
+    display: inline-block;
+	height: 25px;
+    width: 25px;
+    margin-top: 2px;
+}
+
+.an-agilegrid .pager .ui-button-text{
+	padding-top:0px;
+}
+
+.an-agilegrid .pager label.ui-button-icon-only,
+.an-agilegrid .pager label.ui-button-text {
+	display: inline-block;
+}
+
+.an-agilegrid .pager label.ui-button-icon-only>span.ui-button-text,
+.an-agilegrid .pager label.ui-button-text>span.ui-button-text {
+    height: 16px;
+    width: 16px;
+}
+
+.an-agilegrid .pager button.disabled {
+    opacity: 0.3;
+}
+
+.an-agilegrid .pager .goto-page {
+	display: inline-block;
+    margin-left: 5px;
+	margin-right: 5px;
+	font-weight: normal;
+}
+
+.an-agilegrid .pager input {
+	width: 30px;
+	text-align:center;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.an-agilegrid .pager .total-page {
+	display: inline-block;
+	text-align:center;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.an-agilegrid .pager .info {
+	display: inline-block;
+	font-weight: normal;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.an-agilegrid .pager .ui-icon-first-page {
+	background-position: -80px -160px;
+}
+
+.an-agilegrid .pager .ui-icon-prev-page {
+	background-position: -48px -160px;
+}
+
+.an-agilegrid .pager .ui-icon-next-page {
+	background-position: -32px -160px;
+}
+
+.an-agilegrid .pager .ui-icon-last-page {
+	background-position: -64px -160px;
+}

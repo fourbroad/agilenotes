@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Agilegrid</title>
+<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.24.custom.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.menu.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.agilegrid.css" type="text/css">
+                    
+<script src="javascripts/jquery-1.8.2.js"></script>
+<script src="javascripts/jquery.an.metadata.js"></script>
+<script src="javascripts/jquery.json-2.2.js"></script>
+<script src="javascripts/jquery-ui-1.8.24.custom.js"></script>
+<script src="javascripts/jquery.an.menu.js"></script>
+<script src="javascripts/jquery.an.agilegrid.js"></script>
+
+<style type="text/css">
+body{
+    min-height:100%;
+}
+#agilegrid {
+	width: 600px;
+	height: 400px;
+	border: 1px solid black; 
+}
+</style>
+
+<script type="text/javascript" charset="utf-8">
+	$(function() {
+		$("#agilegrid").agilegrid({isColumnResizable:true,rowCount:100,totalColCount:10,showPager:true});
+	});
+</script>
+</head>
+<body>
+	<div id="agilegrid">
+	</div>
+</body>
+</html>

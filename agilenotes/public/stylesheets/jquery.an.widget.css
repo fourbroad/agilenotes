@@ -1,0 +1,167 @@
+@charset "UTF-8";
+/* CSS Document */
+.widget{
+	position: relative;
+	display:inline-block;
+	*display:inline;
+	vertical-align: middle;
+}
+
+.widget.auto-width{
+	width:auto;
+}
+.widget.auto-height {
+	height:auto;
+}
+
+.widget.fill-width{
+    width:100%;
+}
+
+.widget.fill-height {
+	position: absolute;
+	top: 1px;
+	bottom: 1px;
+}
+
+.widget.an-state-hover,
+.widget>input.an-state-hover,
+.field[type=textarea]>.textarea-wrapper>textarea.an-state-hover {
+	 border: 2px dashed darkgray !important;
+}
+
+.field[type=textarea]>.textarea-wrapper{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.field[type=textarea]>.textarea-wrapper>textarea{
+	width:100%; 
+	height:100%; 
+	zoom:1; 
+	padding:0;
+	margin:0; 
+	outline:none;
+	resize: none;
+}
+
+.field[type=textarea].fill-width.fill-height>.textarea-wrapper>textarea{
+	border: none;
+}
+
+.widget[type=tabsx].design>div,
+.widget[type=tabsx].design>.an-tabsx>div,
+.widget[type=box].design>div,
+.widget[type=box].design>.title-bar>div,
+.widget[type=box].design>.content>div,
+.widget[type=box].design.link>.content div,
+.widget[type=box].design>.content>div.bottom>div,
+.widget.field.design, .widget.field.design div {
+	border-width:0;
+	background-image:none;
+	outline:none;
+}
+
+.widget[type=box].design,
+.widget[type=box].design.raw .widget,
+.widget[type=tabsx].design,
+.widget[type=grid].design>.content>.titlebar,
+.widget.field.design, .widget.field.design .widget.field.design{
+	border: 1px solid #AAAAAA;
+	border-width: 1px;
+}
+
+.widget[type=grid].design .title-bar,
+.widget[type=grid].design .an-agilegrid,
+.widget[type=grid].design .an-agilegrid>.top-left,
+.widget[type=grid].design th>div,
+.widget[type=grid].design td>div{
+	border-width: 1px;
+}
+
+
+.field[type=radio].design,
+.field[type=checkbox].design,
+.field[type=button].design{
+	border:none;
+}
+
+.field[type=text]>input,
+.field[type=password]>input,
+.field[type=datetime]>input {
+	width:100%;
+	height:100%;
+}
+
+.field[type=text].design,
+.field[type=password].design,
+.field[type=datetime].design {
+	padding: 3px 3px;
+	margin-left:0;
+}
+
+.field[type=checkbox].design,
+.widget[type=box].design.raw .field[type=checkbox].design {
+	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF;
+}
+
+.widget[type=box].design.raw .field[type=radio].design,
+.field[type=radio].design {
+	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF;
+}
+
+.widget[type=box].design.raw .field[type=textarea].design,
+.field[type=textarea].design {
+	background:url("/stylesheets/images/textarea.png") no-repeat scroll right bottom #FFFFFF;
+	padding-left:3px;
+	padding-right:3px;
+}
+
+.field[type=select]>select{
+	width:100%;
+	height:100%;
+}
+
+.widget[type=box].design.raw .field[type=select].design,
+.field[type=select].design {
+	background:url("/stylesheets/images/select.png") no-repeat scroll right center #FFFFFF;
+    padding: 3px;
+}
+
+.widget[type=box].design.raw .field[type=select][size].design,
+.field[type=select][size].design {
+	background:url("/stylesheets/images/select2.png") no-repeat scroll right center #FFFFFF;
+	background-size:contain;
+}
+
+.widget.design.selected {
+	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important; 
+	font-weight: normal; 
+	color: #555555;
+}
+
+.field[type=checkbox].design.selected{
+	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF !important;
+	border: 1px dashed darkgray !important;
+}
+
+.field[type=radio].design.selected {
+	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF !important;
+	border: 1px dashed darkgray !important;
+}
+
+/********************************
+.field *{
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+************************************/
+
+.an-field>.content>pre{
+	margin: 0;
+}

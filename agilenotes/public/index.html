@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Agile Notes</title>
+
+<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.24.custom.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.timepicker.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.menu.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.agilegrid.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.tree.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.workbench.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.border.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.tabsx.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.toolbar.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.page.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.form.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.taskbar.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.fileinput.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.filefield.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.gridfield.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.authorization.css" type="text/css">
+
+<!-- CSS for rte widgets -->
+<link rel="stylesheet" href="stylesheets/jquery.colorpicker.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.select.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/rte/paddinginput.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.an.rte.css" type="text/css">
+
+<link rel="stylesheet" href="stylesheets/base.css" type="text/css">
+
+<link rel="stylesheet" href="stylesheets/jquery.an.webspace.css" type="text/css">
+
+<script src="javascripts/lib/model.js"></script>
+<script src="javascripts/lib/utils.js"></script>
+<script src="javascripts/jquery-1.8.2.js"></script>
+<script src="javascripts/jquery.ans.js"></script>
+<script src="javascripts/jquery.an.metadata.js"></script>
+<script src="javascripts/jquery.tmpl.js"></script>
+<script src="javascripts/jquery.tmplPlus.js"></script>
+<script src="javascripts/jquery.datalink.js"></script>
+<script src="javascripts/jquery.validate.js"></script>
+<script src="javascripts/i18n/en.js"></script>
+<script src="javascripts/jquery.json-2.2.js"></script>
+<script src="javascripts/jquery.mousewheel.js"></script>
+<script src="javascripts/jquery-ui-1.8.24.custom.js"></script>
+<script src="javascripts/jquery.ui.timepicker.js"></script>
+<script src="javascripts/jquery.form.js"></script>
+<script src="javascripts/jquery.an.widget.js"></script>
+<script src="javascripts/jquery.an.field.js"></script>
+<script src="javascripts/jquery.an.inputfield.js"></script>
+<script src="javascripts/jquery.an.fileinput.js"></script>
+<script src="javascripts/jquery.an.textfield.js"></script>
+<script src="javascripts/jquery.an.radiofield.js"></script>
+<script src="javascripts/jquery.an.checkboxfield.js"></script>
+<script src="javascripts/jquery.an.passwordfield.js"></script>
+<script src="javascripts/jquery.an.datetimefield.js"></script>
+<script src="javascripts/jquery.an.textareafield.js"></script>
+<script src="javascripts/jquery.an.rtefield.js"></script>
+<script src="javascripts/jquery.an.editorfield.js"></script>
+<script src="javascripts/jquery.an.viewfield.js"></script>
+<script src="javascripts/jquery.an.pagefield.js"></script>
+<script src="javascripts/jquery.an.selectfield.js"></script>
+<script src="javascripts/jquery.an.filefield.js"></script>
+<script src="javascripts/jquery.an.gridfield.js"></script>
+<script src="javascripts/jquery.an.buttonfield.js"></script>
+<script src="javascripts/jquery.an.tabsxwidget.js"></script>
+<script src="javascripts/jquery.an.login.js"></script>
+<script src="javascripts/jquery.an.tree.js"></script>
+<script src="javascripts/jquery.cookie.js"></script>
+<script src="javascripts/jquery.hotkeys.js"></script>
+<script src="javascripts/jquery.an.menu.js"></script>
+<script src="javascripts/jquery.an.border.js"></script>
+<script src="javascripts/jquery.an.rte.js"></script>
+<script src="javascripts/jquery.an.tabsx.js"></script>
+<script src="javascripts/jquery.an.form.js"></script>
+<script src="javascripts/jquery.an.outline.js"></script>
+<script src="javascripts/jquery.an.agilegrid.js"></script>
+<script src="javascripts/jquery.an.toolbar.js"></script>
+<script src="javascripts/jquery.an.view.js"></script>
+<script src="javascripts/jquery.an.gridview.js"></script>
+<script src="javascripts/jquery.an.page.js"></script>
+<script src="javascripts/jquery.an.editor.js"></script>
+<script src="javascripts/jquery.an.explorer.js"></script>
+<script src="javascripts/jquery.an.organization.js"></script>
+<script src="javascripts/jquery.an.groups.js"></script>
+<script src="javascripts/jquery.an.roles.js"></script>
+<script src="javascripts/jquery.an.workbench.js"></script>
+<script src="javascripts/jquery.an.authorization.js"></script>
+
+
+<script src="javascripts/jquery-css-transform.js"></script>
+<script src="javascripts/jquery.easing.1.3.js"></script>
+<script src="javascripts/jquery-animate-css-rotate-scale.js"></script>
+<script src="javascripts/jquery.quicksand.js"></script>
+
+<!-- Common rte JS and widgets -->
+<script src="javascripts/lib/rte/i18n.js"></script>
+<script src="javascripts/jquery.ui.colorpicker.js"></script>
+<script src="javascripts/lib/rte/jquery.borderselect.js"></script>
+<script src="javascripts/lib/rte/jquery.paddinginput.js"></script>
+<script src="javascripts/jquery.ui.select.js"></script>
+
+<!-- RTE core -->
+<script src="javascripts/lib/rte/rte.dom.js"></script>
+<script src="javascripts/lib/rte/rte.selection.js"></script>
+<script src="javascripts/lib/rte/rte.w3cRange.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+$(function(){
+	$("body").webspace();
+});
+</script>
+</head>
+<body>
+    <div id="wrapper">
+      <div id="site">
+        <div id="title">
+          <h1>Agile Notes<span></span></h1>
+        </div>
+
+        <div id="login" title="Login" style="display:none;">
+			<form >
+				<p class="validateTips">Login to Agile Notes with your name and password.</p>
+				<label for="username">Name</label>
+				<input type="text" name="username" id="username" class="text ui-widget-content ui-corner-all" />
+				<label for="password">Password</label> 
+				<input type="password" name="password" id="password" class="text ui-widget-content ui-corner-all" />
+			</form>
+		</div>
+
+        <ul class="splitter">
+            <div class='system-menu'/>
+        </ul>
+        
+        <div id="appWizard" class="wizard" title="Create New Application" style="display:none;">
+			<div >
+				<p class="validateTips">All form fields are required.</p>
+				<label for="name">Name</label> 
+				<input type="text" name="name" id="name" class="text ui-widget-content ui-corner-all" />
+				<label for="title">Title</label>
+				<input type="text" name="title" id="title" class="text ui-widget-content ui-corner-all" />
+				<label for="icon">Icon</label> 
+				<input type="file" name="icon" id="icon" class="text ui-widget-content ui-corner-all" />
+				<label for="description">Description</label> 
+				<textarea name="description" id="description" class="text ui-widget-content ui-corner-all"></textarea>
+			</div>
+		</div>
+        <div class="apps"></div>
+      </div>
+    </div>
+
+	<div class="taskbar" style="display:none;">
+		<ul></ul>
+	</div>
+	   
+	<script type="text/javascript">
+//	  var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+//	  document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+//	  try {
+//	    var pageTracker = _gat._getTracker("UA-1121012-6");
+//	    pageTracker._trackPageview();
+//	    } catch(err) {}
+	</script>
+</body>
+</html>

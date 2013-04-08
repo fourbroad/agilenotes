@@ -1,0 +1,69 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-tree, .an-tree ul { 
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+li.ui-draggable{
+	list-style:none;
+}
+
+.an-tree .hitarea {
+	background: url(images/treeview-default.gif) -64px -25px no-repeat;
+	height: 16px;
+	width: 16px;
+	margin-left: -16px;
+	float: left;
+	cursor: pointer;
+}
+/* fix for IE6 */
+* html .hitarea {
+	display: inline;
+	float:none;
+}
+
+.an-tree li { 
+	margin: 0;
+	padding: 3px 0pt 3px 16px;
+}
+
+.an-tree li > span.selected {
+	background-color: #eeeeee !important;
+}
+
+.an-tree li > span.ui-state-hover {
+	background-color: #efefef !important;
+	border-width: 0;
+}
+
+.an-tree li { background: url(images/treeview-default-line.gif) 0 0 no-repeat; }
+.an-tree li.collapsable, .an-tree li.expandable { background-position: 0 -176px; }
+
+.an-tree li.expandable > .hitarea { background-position: -80px -3px; }
+
+.an-tree li.last { background-position: 0 -1766px }
+.an-tree li.last.collapsable, .an-tree li.last.expandable { background-image: url(images/treeview-default.gif); }  
+.an-tree li.last.collapsable { background-position: 0 -111px }
+.an-tree li.last.expandable { background-position: -32px -67px }
+
+.an-tree li.last.collapsable>.hitarea, .an-tree li.last.expandable>.hitarea { background-position: 0; }
+
+.an-tree-famfamfam li { background-image: url(images/treeview-famfamfam-line.gif); }
+.an-tree-famfamfam .hitarea, .an-tree-famfamfam li.last.collapsable, .an-tree-famfamfam li.last.expandable { background-image: url(images/treeview-famfamfam.gif); } 
+
+.an-tree .hitarea.loading {
+	background: url(images/load.gif) 0 0 no-repeat;
+	height: 16px;
+	width: 16px;
+	display: block;
+}
+
+.an-tree li { padding: 3px 0 2px 16px; }
+.an-tree span {white-space: nowrap;}
+.an-tree span.folder, .an-tree span.file { padding: 1px 5px 1px 16px; }
+.an-tree span.folder { background: url(images/folder.png) 0 center no-repeat; }
+.an-tree li.expandable span.folder { background: url(images/folder-closed.png) 0 center no-repeat; }
+.an-tree span.file { background: url(images/document.png) 0 center no-repeat; }

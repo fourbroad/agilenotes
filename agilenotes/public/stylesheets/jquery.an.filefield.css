@@ -1,0 +1,62 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.field.file ul.grid {
+	margin: 0;
+}
+
+.field.file .grid li,
+.field.file .grid li img {
+    margin: 0;
+}
+
+.field.file .grid li strong {
+	color: #686F74;
+}
+
+.grid {
+  padding: 0;
+  margin: 0;
+}
+
+.grid:after {
+  content: "";
+  display: block;
+  height: 0;
+  overflow: hidden;
+  clear: both;
+}
+
+.grid ul, .grid li{
+    background: none repeat scroll 0 0 transparent;
+    border: 0 none;
+    font-size: 100%;
+    margin: 0;
+    padding: 0;
+    vertical-align: baseline;
+}
+
+.grid li {
+  list-style: none;
+  margin: 10px;
+  float: left;
+  text-align: center;
+  font-family: "Helvetica Neue", sans-serif;
+  line-height: 17px;
+  color: #686f74;
+  overflow: hidden;
+}
+
+.grid li img{
+  display: inline-block;
+}
+
+.grid li strong,
+.grid li span {
+  font: normal 13px/1.5 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Verdana, sans-serif;
+  display: block;
+}
+
+.grid li strong {
+  color: #fff;
+}

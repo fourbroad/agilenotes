@@ -1,0 +1,43 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-border>.west>.ui-tabs,
+.an-border>.center>.ui-tabs,
+.an-border>.east>.ui-tabs{
+    position: absolute;
+	bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+	margin-top:1px;
+    padding:0px;
+}
+
+.an-border>.west>.ui-tabs{
+	margin-left:1px;
+	margin-right:2px;
+}
+
+.an-border>.east>.ui-tabs{
+	margin-left:4px;
+	margin-right:1px;
+}
+
+.an-border>.center>.ui-tabs{
+	margin-left:2px;
+	margin-right:0;
+}
+
+.an-border>.west>.ui-tabs>.ui-tabs-panel,
+.an-border>.center>.ui-tabs>.ui-tabs-panel,
+.an-border>.east>.ui-tabs>.ui-tabs-panel {
+    position: absolute;
+	bottom: 0;
+    left: 0;
+    margin: 0;
+    overflow: auto;
+    padding: 5px;
+    right: 0;
+    top: 27px;
+    background-color: white;
+}

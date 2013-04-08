@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>jQuery UI Button - Toolbar</title>
+<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.14.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.menu.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.agilegrid.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.tree.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.window.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.toolbar.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.page.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.wizard.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.taskbar.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.fileinput.css" type="text/css">
+
+<!-- CSS for rte widgets -->
+<link rel="stylesheet" href="stylesheets/rte/common.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/rte/colorpicker.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/rte/dialogform.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/rte/paddinginput.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/rte/select.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.rte.css" type="text/css">
+
+<link rel="stylesheet" href="stylesheets/main.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/webspace/css/webspace.css" type="text/css">
+
+<script src="js/jquery/jquery-1.6.2.js"></script>
+<script src="js/jquery/jquery.an.metadata.js"></script>
+<script src="js/jquery/jquery.tmpl.js"></script>
+<script src="js/jquery/jquery.tmplPlus.js"></script>
+<script src="js/jquery/jquery.datalink.js"></script>
+<script src="js/jquery/jquery.validate.js"></script>
+<script src="js/i18n/en.js"></script>
+<script src="js/jquery/jquery.json-2.2.js"></script>
+<script src="js/jquery/jquery.mousewheel.js"></script>
+<script src="js/jquery/jquery.couch.js"></script>
+<script src="js/jquery/jquery-ui-1.8.13.custom.js"></script>
+<script src="js/jquery/jquery.form.js"></script>
+<script src="js/jquery/jquery.ui.fileinput.js"></script>
+<script src="js/jquery/jquery.ui.window.js"></script>
+<script src="js/jquery/jquery.ui.wizard.js"></script>
+<script src="js/jquery/jquery.ui.login.js"></script>
+<script src="js/jquery/jquery.ui.taskbar.js"></script>
+<script src="js/jquery/jquery.ui.tree.js"></script>
+<script src="js/jquery/jquery.cookie.js"></script>
+<script src="js/jquery/jquery.hotkeys.js"></script>
+<script src="js/jquery/jquery.ui.menu.js"></script>
+<script src="js/jquery/jquery.ui.border.js"></script>
+<script src="js/jquery/jquery.ui.rte.js"></script>
+<script src="js/jquery/jquery.ui.tabsx.js"></script>
+<script src="js/jquery/jquery.ui.outline.js"></script>
+<script src="js/jquery/jquery.ui.agilegrid.js"></script>
+<script src="js/jquery/jquery.ui.toolbar.js"></script>
+<script src="js/jquery/jquery.ui.view.js"></script>
+<script src="js/jquery/jquery.ui.page.js"></script>
+<script src="js/jquery/jquery.ui.explorer.js"></script>
+<script src="js/jquery/jquery.ui.workbench.js"></script>
+
+<script src="js/jquery/jquery-css-transform.js"></script>
+<script src="js/jquery/jquery.easing.1.3.js"></script>
+<script src="js/jquery/jquery-animate-css-rotate-scale.js"></script>
+<script src="js/jquery/jquery.quicksand.js"></script>
+
+<!-- Common rte JS and widgets -->
+<script src="js/lib/rte/i18n.js"></script>
+<script src="js/jquery/jquery.ui.colorpicker.js"></script>
+<script src="js/lib/rte/jquery.borderselect.js"></script>
+<script src="js/lib/rte/jquery.paddinginput.js"></script>
+<script src="js/jquery/jquery.ui.select.js"></script>
+
+<!-- RTE core -->
+<script src="js/lib/rte/rte.dom.js"></script>
+<script src="js/lib/rte/rte.selection.js"></script>
+<script src="js/lib/rte/rte.w3cRange.js"></script>
+	<style>
+	</style>
+	<script>
+	$(function() {
+		$( "#beginning" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-seek-start"
+			}
+		});
+		$( "#rewind" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-seek-prev"
+			}
+		});
+		$( "#play" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-play"
+			}
+		})
+		.click(function() {
+			var options;
+			if ( $( this ).text() === "play" ) {
+				options = {
+					label: "pause",
+					icons: {
+						primary: "ui-icon-pause"
+					}
+				};
+			} else {
+				options = {
+					label: "play",
+					icons: {
+						primary: "ui-icon-play"
+					}
+				};
+			}
+			$( this ).button( "option", options );
+		});
+		$( "#stop" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-stop"
+			}
+		})
+		.click(function() {
+			$( "#play" ).button( "option", {
+				label: "play",
+				icons: {
+					primary: "ui-icon-play"
+				}
+			});
+		});
+		$( "#forward" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-seek-next"
+			}
+		});
+		$( "#end" ).button({
+			text: false,
+			icons: {
+				primary: "ui-icon-seek-end"
+			}
+		});
+		$( "#shuffle" ).button();
+		$( "#repeat" ).buttonset();
+	});
+	</script>
+</head>
+<body>
+
+<div class="demo">
+
+<div id="main-toolbar" class="ui-widget-header ui-corner-all">
+	<button id="beginning">go to beginning</button>
+	<button id="rewind">rewind</button>
+	<button id="play">play</button>
+	<button id="stop">stop</button>
+	<button id="forward">fast forward</button>
+	<button id="end">go to end</button>
+	
+	<input type="checkbox" id="shuffle" /><label for="shuffle">Shuffle</label>
+	
+	<span id="repeat">
+		<input type="radio" id="repeat0" name="repeat" checked="checked" /><label for="repeat0">No Repeat</label>
+		<input type="radio" id="repeat1" name="repeat" /><label for="repeat1">Once</label>
+		<input type="radio" id="repeatall" name="repeat" /><label for="repeatall">All</label>
+	</span>
+</div>
+
+</div><!-- End demo -->
+
+
+
+<div class="demo-description">
+<p>
+	A mediaplayer toolbar. Take a look at the underlying markup: A few button elements,
+	an input of type checkbox for the Shuffle button, and three inputs of type radio for the Repeat options. 
+</p>
+</div><!-- End demo-description -->
+
+</body>
+</html>

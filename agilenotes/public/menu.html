@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Menu</title>
+<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.14.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.ui.menu.css" type="text/css">
+
+
+<script type="text/javascript" src="js/jquery/jquery-1.6.2.js"></script>
+<script type="text/javascript"
+	src="js/jquery/jquery-ui-1.8.13.custom.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.ui.menu.js"></script>
+
+<script type="text/javascript">
+	$(function() {
+		$(".demo button").button({
+			icons: {
+				primary: "ui-icon-home",
+				secondary: "ui-icon-triangle-1-s"
+			}
+		});
+		
+		$("#navMenu").menu({
+			context:".demo button",
+			triggerEvent:"click",
+			menuPosition:{
+				of: ".demo button",
+				my: "left top",
+				at: "left bottom"
+			},
+			select: function(event, ui) {
+				alert(ui);
+				$("#log").append("<div>Selected " + ui.item.text() + "</div>");
+			}
+		});
+	});
+</script>
+</head>
+<body>
+<div class="demo">
+
+	<button>Select a city</button>
+	<ul id="navMenu" style="display:none;">
+		<li><a href="?Aberdeen">Aberdeen</a></li>
+		<li><a href="?Ada">Ada</a></li>
+		<li><a href="?Adamsville">Adamsville</a></li>
+		<li><a href="?Addyston">Addyston</a></li>
+		<li>
+			<a href="?Delphi">Delphi</a>
+			<ul>
+				<li><a href="?Ada">Ada</a></li>
+				<li><a href="?Saarland">Saarland</a></li>
+				<li><a href="?Salzburg">Salzburg</a></li>
+			</ul>
+		</li>
+
+		<li><a href="?Saarland">Saarland</a></li>
+		<li>
+			<a href="?Salzburg">Salzburg</a>
+			<ul>
+				<li>
+					<a href="?Delphi">Delphi</a>
+					<ul>
+
+						<li><a href="?Ada">Ada</a></li>
+						<li><a href="?Saarland">Saarland</a></li>
+						<li><a href="?Salzburg">Salzburg</a></li>
+					</ul>
+				</li>
+				<li>
+					<a href="?Delphi">Delphi</a>
+
+					<ul>
+						<li><a href="?Ada">Ada</a></li>
+						<li><a href="?Saarland">Saarland</a></li>
+						<li><a href="?Salzburg">Salzburg</a></li>
+					</ul>
+				</li>
+				<li><a href="?Perch">Perch</a></li>
+
+			</ul>
+		</li>
+	</ul>
+
+	<div id="log"></div>
+
+</div>
+</body>
+</html>

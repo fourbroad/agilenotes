@@ -1,0 +1,283 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-toolbar {
+	display: block;
+	background-color: #EEEEEE;
+	padding-top:2px;
+}
+
+.an-toolbar .start-menu {
+	height:24px;
+}
+
+.an-toolbar button,
+.an-toolbar label {
+	margin-bottom: 2px;
+}
+
+.an-toolbar .ui-button-icon-only,
+.an-toolbar .ui-button-text {
+    height: 22px;
+    width: 22px;
+}
+
+.an-toolbar .ui-button-text{
+	padding-top:0px;
+}
+
+.an-toolbar .start-menu .ui-button-text{
+	width: 90px;
+}
+
+.an-toolbar label.ui-button-icon-only,
+.an-toolbar label.ui-button-text {
+	display: inline-block;
+}
+
+.an-toolbar button.ui-button-icon-only,
+.an-toolbar button.ui-button-text {
+    display: inline-block;
+    height: 24px;
+    width: 24px;}
+
+.an-toolbar label.ui-button-icon-only>span.ui-button-text,
+.an-toolbar label.ui-button-text>span.ui-button-text {
+    height: 16px;
+    width: 16px;
+}
+
+.an-toolbar .start-menu .ui-icon{
+    background-image:url("images/ui-icons_888888_256x240.png");
+}
+
+.an-toolbar .start-menu .ui-icon-home {
+	background-position: 0 -112px;
+}
+
+.an-toolbar .start-menu .ui-icon-triangle-1-s {
+	background-position: -64px -16px;
+}
+
+.an-toolbar button div.color-indicator {
+	position:absolute;
+	top:0px;
+	width:18px;
+	height:4px;
+	margin:16px 0 2px 2px;
+	background-color: #000;
+}
+
+.an-toolbar acronym.rte-select {
+	display: inline-block;
+    height: 22px;
+    width: 120px;
+    margin-top: -6px;
+    top: 7px;
+    margin-right:1px;
+    margin-left:1px;
+    background:url("images/editor-toolbar.png") no-repeat scroll 0 0 transparent;
+    background-position: -475px -30px;
+}
+
+.an-toolbar acronym.rte-select label{
+    height: 22px;
+    width: 96px;
+    float: none;
+    margin-left: 0;
+}
+
+.an-toolbar acronym.rte-select label span{
+    height: 22px;
+    float: none;
+    top: 2px;
+    position: absolute;
+}
+
+.an-toolbar button.disabled {
+    opacity: 0.3;
+}
+
+.an-toolbar .ui-icon {
+    background:url("images/editor-toolbar.png") no-repeat scroll 0 0 transparent;
+}
+
+.an-toolbar .ui-icon-clean-format {
+	background-position: -184px -5px;
+}
+
+.an-toolbar .ui-icon-doc-struct {
+	background-position: -716px -7px;
+}
+
+.an-toolbar .ui-icon-bold {
+	background-position: -256px -5px;
+}
+
+.an-toolbar .ui-icon-italic {
+	background-position: -274px -5px;
+}
+
+.an-toolbar .ui-icon-underline {
+	background-position: -294px -5px;
+}
+
+.an-toolbar .ui-icon-strikethrough {
+	background-position: -153px -32px;
+}
+
+.an-toolbar .ui-icon-subscript {
+	background-position: -58px -32px;
+}
+
+.an-toolbar .ui-icon-superscript {
+	background-position: -80px -32px;
+}
+
+.an-toolbar .ui-icon-align-left {
+	background-position: -315px -5px;
+}
+
+.an-toolbar .ui-icon-align-center {
+	background-position: -339px -5px;
+}
+
+.an-toolbar .ui-icon-align-right {
+	background-position: -364px -5px;
+}
+
+.an-toolbar .ui-icon-align-full {
+	background-position: -178px -32px;
+}
+
+.an-toolbar .ui-icon-left-to-right {
+	background-position: -859px -30px;
+}
+
+.an-toolbar .ui-icon-right-to-left {
+	background-position: -859px -6px;
+}
+
+.an-toolbar .ui-icon-font-color {
+	background-position: -376px -33px;
+}
+
+.an-toolbar .ui-icon-background-color {
+	background-position: -399px -33px;
+}
+
+.an-toolbar .ui-icon-font {
+	background-position: -237px -7px;
+}
+
+.an-toolbar .ui-icon-font-size {
+	background-position: -237px -7px;
+}
+
+.an-toolbar .ui-icon-format {
+	background-position: -237px -7px;
+}
+
+.an-toolbar .ui-icon-outdent {
+	background-position: -10px -32px;
+}
+
+.an-toolbar .ui-icon-indent {
+	background-position: -36px -32px;
+}
+
+.an-toolbar .ui-icon-ordered-list {
+	background-position: -128px -32px;
+}
+
+.an-toolbar .ui-icon-unordered-list {
+	background-position: -104px -32px;
+}
+
+.an-toolbar .ui-icon-link {
+	background-position: -248px -32px;
+}
+
+.an-toolbar .ui-icon-del-link {
+	background-position: -274px -32px;
+}
+
+.an-toolbar .ui-icon-horizontal-rule {
+	background-position: -203px -32px
+}
+
+.an-toolbar .ui-icon-block-quote {
+	background-position: -224px -33px;
+}
+
+.an-toolbar .ui-icon-block-element {
+	background-position: -659px -32px;
+}
+
+.an-toolbar .ui-icon-stop-float {
+	background-position: -775px -8px;
+}
+
+.an-toolbar .ui-icon-css {
+	background-position: -805px -8px;
+}
+
+.an-toolbar .ui-icon-page-break {
+	background-position: -715px -31px;
+}
+
+.an-toolbar .ui-icon-image {
+	background-position: -389px -5px;
+}
+
+.an-toolbar .ui-icon-flash {
+	background-position: -414px -5px;
+}
+
+.an-toolbar .ui-icon-table {
+	background-position: -425px -33px;
+}
+
+.an-toolbar .ui-icon-table-props {
+	background-position: -606px -32px;
+}
+
+.an-toolbar .ui-icon-del-table {
+	background-position: -465px -5px;
+}
+
+.an-toolbar .ui-icon-row-before {
+	background-position: -687px -7px;
+}
+
+.an-toolbar .ui-icon-row-after {
+	background-position: -659px -7px;
+}
+
+.an-toolbar .ui-icon-del-row {
+	background-position: -504px -33px;
+}
+
+.an-toolbar .ui-icon-col-before {
+	background-position: -745px -30px;
+}
+
+.an-toolbar .ui-icon-col-after {
+	background-position: -776px -30px;
+}
+
+.an-toolbar .ui-icon-del-column {
+	background-position: -530px -33px;
+}
+
+.an-toolbar .ui-icon-cell-props {
+	background-position: -809px -30px;
+}
+
+.an-toolbar .ui-icon-merge-cells {
+	background-position: -556px -33px;
+}
+
+.an-toolbar .ui-icon-split-cells {
+	background-position: -632px -32px;
+}

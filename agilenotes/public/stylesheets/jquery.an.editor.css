@@ -1,0 +1,22 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-editor {
+	border-width: 0;
+}
+
+.an-editor.tabs-nav-hide>.ui-tabs-nav {
+	display:none;
+}
+
+.an-editor.tabs-bottom > .ui-tabs-nav {
+    height: 24px;
+}
+
+.an-editor.tabs-bottom.ui-tabs > .ui-tabs-panel {
+    bottom: 27px;
+}
+
+.an-editor.tabs-bottom > .ui-tabs-nav > li > a {
+    padding: 0.2em 0.6em;
+}

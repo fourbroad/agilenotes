@@ -1,0 +1,57 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* tabs in bottom */
+.tabs-bottom { 
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 26px;	
+} 
+	
+.tabs-bottom.ui-tabs>.ui-tabs-panel {
+    position: absolute;
+    top: 0px;
+    bottom: 37px;
+    left: 0;
+    margin: 0;
+    overflow: auto;
+    padding: 0;
+    right: 0;
+    background-color: white;
+} 
+
+.tabs-bottom>.ui-tabs-nav {
+	position: absolute !important;
+	left: 0; 
+	bottom: 0; 
+	right:0; 
+	padding: 0 0.2em 0.2em 0;
+} 
+
+.tabs-bottom>.ui-tabs-nav>li {
+	margin-bottom: 1px !important;
+	border-top: none;
+	border-bottom-width: 1px;
+	border-radius: 0 0 4px 4px;
+}
+
+.tabs-bottom>ul>.ui-tabs-selected {
+	margin-top: -1px !important;
+}
+.ui-tabs-slideshow-nav{
+	position: absolute;
+	right: 0;
+	bottom: 2px;
+}
+.ui-tabs .ui-tabs-nav.ui-tabs-slideshow-nav li{
+	border-bottom: 1px solid #D3D3D3 !important;
+	border-radius: 2px;
+}
+.ui-tabs .ui-tabs-nav.ui-tabs-slideshow-nav li.ui-state-active{
+	border-bottom:1px solid #aaaaaa !important;
+}
+.ui-tabs .ui-tabs-nav.ui-tabs-slideshow-nav li.ui-state-hover{
+	border-bottom:1px solid #999999 !important;
+}

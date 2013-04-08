@@ -1,0 +1,12 @@
+@charset "UTF-8";
+/* CSS Document */
+.page iframe {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 0 solid;
+    display: block;
+    height: 100%;
+    margin: 0;
+    outline: medium none;
+    padding: 0;
+    width: 100%;
+}

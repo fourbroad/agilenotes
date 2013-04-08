@@ -1,0 +1,64 @@
+
+.an-authorization .an-tabsx>.ui-tabs-nav>li>a {
+	 padding: 0.2em 0.6em;
+}
+
+.an-authorization .an-tabsx>.ui-tabs-panel {
+    padding: 1em 1em;
+}
+
+.an-authorization .an-tabsx>.ui-tabs-nav {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-left: 0 none;
+    border-right: 0 none;
+    border-top: 0 none;
+    padding: 0;
+}
+
+.an-authorization.ui-dialog-content {
+    padding: 2px;
+    margin-top: 6px;
+}
+
+.an-authorization .west .organization,
+.an-authorization .center .operation {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	overflow: auto;
+	border: 1px solid #AAAAAA;
+}
+
+.an-authorization .west .organization{
+	padding: 5px;
+	margin-right: 2px;
+}
+
+.an-authorization .center .operation {
+    margin-left: 2px;
+	padding-left: 15px;
+    padding-right: 15px;
+}
+
+.operation>.content {
+    bottom: 15px;
+    left: 15px;
+    overflow: auto;
+    padding: 0;
+    position: absolute;
+    right: 15px;
+    top: 60px;
+}
+
+.operation>.title {
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #AAAAAA;
+}
+
+.operation .content .an-form{
+	border: none;
+}

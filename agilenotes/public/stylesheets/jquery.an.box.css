@@ -1,0 +1,90 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.an-box {
+	position: relative;
+	border:1px solid #E8E8E8;
+}
+
+.an-box>.title-bar {
+	position: relative;
+	height: 32px;
+	border: medium none;
+}
+
+.an-box>.title-bar>.title {
+	position: absolute;
+	left: 0;
+	padding: 8px 12px;
+}
+
+.an-box>.title-bar>.toolbar {
+	position: absolute;
+	top:1px;
+	right: 0;
+	padding: 1px 2px;
+}
+
+.an-box>.title-bar>.toolbar .ui-button .ui-button-text {
+	padding: 0.2em 0.6em;
+}
+
+.an-box>.title-bar>.toolbar .ui-button.box-menu {
+	width:40px;
+}
+
+.an-box>.title-bar>.toolbar .ui-button.box-menu .box-menu-icon {
+	background: url("images/toolbox.png") no-repeat scroll 0 0 transparent;
+    margin-left: -14px;
+    width: 26px;
+}
+
+.an-box>.title-bar>.toolbar .ui-button.box-menu:hover .box-menu-icon {
+	background-position:  0px -18px;
+}
+
+.an-box>.content {
+	position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.an-box.auto-width>.content{
+	position: relative;
+	width:auto;
+}
+.an-box.auto-height>.content {
+	position: relative;
+	top: 0px;
+	height:auto;
+}
+
+.an-box.title-bar>.content{
+	top: 32px;
+}
+
+.an-box.title-bar.auto-height>.content{
+	top: 0px;
+}
+
+.an-box>.content.link>div {
+	border-width: 0;
+}
+
+.an-box>.content>pre{
+	margin: 0;
+}
+
+.an-box.foot-area>.content{
+    bottom: 50px;	
+}
+
+.an-box>.foot-area {
+	padding-right: 40px; 
+}
+.an-box>.foot-area>.ui-button {
+	float: right;
+    margin: 5px 8px 30px;
+}

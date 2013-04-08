@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Agile Notes</title>
+
+<script type="text/javascript" charset="utf-8" src="javascripts/index.js"></script>
+<style type="text/css">
+html,body {
+	top:0;
+	left:0;
+	right:0;
+	bottom:0;
+	margin: 0;
+	padding:0;
+	overflow: hidden;
+	position: absolute;
+	background-color: #EEEEEE;
+}
+html, body, td, th, li, label, p, span, a {
+    font-family: Verdana,Arial,sans-serif;
+    font-size: 14px;
+}
+</style>
+<script type="text/javascript" charset="utf-8">
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
+	return r != null? unescape(r[2]):null;
+} 
+
+$(function(){
+	var dbId = getUrlParam("dbid");
+	$.ans.getDB(dbId,null,function(error,db){
+		window.dataBase=db||{};
+		window.database=db||{};
+		if(database.local=="zn"){
+			$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
+		}else{
+			$.ajax({url: "javascripts/i18n/en.js",async:false});
+		}
+		if(db){
+			$("#workbench").workbench($.extend(true,{dbId:db._id},db,$.evalJSON($.cookie(dbId))));
+		}else{
+			showDialog("Error", "Can not find db : "+ dbId);
+		}
+	});
+});
+
+setInterval(function(){
+	$.ajax({
+		method : 'GET',
+		url : "/login",
+		success : function(obj) {
+			if(!obj.success){
+				alert("会话超时,请重新登录！");
+				window.location = "../";
+			}
+		}
+	});
+},300000);
+</script>
+</head>
+<body>
+<div id="workbench">
+    <div class='center'><div id='center-tabs'><ul/></div></div>
+	<div class='north'></div>
+	<div class='south'></div>
+	<div class='west'><div id='west-tabs'><ul/></div></div>
+	<div class='east'><div id='east-tabs'><ul/></div></div>
+</div>
+</body>
+</html>

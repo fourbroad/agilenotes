@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Tree</title>
+<link rel="stylesheet" href="stylesheets/jquery.ui.tree.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.14.css" type="text/css">
+
+<script type="text/javascript" src="js/jquery/jquery-1.6.2.js"></script>
+<script type="text/javascript"
+	src="js/jquery/jquery-ui-1.8.13.custom.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.ui.tree.js"></script>
+<script type="text/javascript">
+	// first example
+	$(function() {
+		$(".tree").tree({});
+		$("#add").click(function() {
+			var branches = $("<li><span class='folder'>New Sublist</span><ul>" + 
+				"<li><span class='file'>Item1</span></li>" + 
+				"<li><span class='file'>Item2</span></li></ul></li>").appendTo("#browser");
+			$(".tree").treeview({
+				add: branches
+			});
+			branches = $("<li class='closed'><span class='folder'>New Sublist</span><ul><li><span class='file'>Item1</span></li><li><span class='file'>Item2</span></li></ul></li>").prependTo("#folder21");
+			$(".tree").treeview({
+				add: branches
+			});
+		});
+		$(".tree").bind("contextmenu", function(event) {
+			if ($(event.target).is("li") || $(event.target).parents("li").length) {
+				$(".tree").treeview({
+					remove: $(event.target).parents("li").filter(":first")
+				});
+				return false;
+			}
+		});
+	});
+</script>
+</head>
+<body>
+	<button id="add">Add!</button>
+	<div class="tree filetree">
+		<ul>
+			<li><span class="folder">Folder 1</span>
+				<ul>
+					<li><span class="file">Item 1.1</span>
+					</li>
+				</ul></li>
+			<li><span class="folder">Folder 2</span>
+				<ul>
+					<li><span class="folder">Subfolder 2.1</span>
+						<ul id="folder21">
+							<li><span class="file">File 2.1.1</span>
+							</li>
+							<li><span class="file">File 2.1.2</span>
+							</li>
+						</ul></li>
+					<li><span class="file">File 2.2</span>
+					</li>
+				</ul></li>
+			<li class="closed"><span class="folder">Folder 3 (closed
+					at start)</span>
+				<ul>
+					<li><span class="file">File 3.1</span>
+					</li>
+				</ul></li>
+		</ul>
+	</div>
+</body>
+</html>

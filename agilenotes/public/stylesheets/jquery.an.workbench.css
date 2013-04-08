@@ -1,0 +1,81 @@
+
+.an-workbench {
+	top: 0;
+	left: 3px;
+	right: 3px;
+	bottom: 0;
+	position: absolute;
+}
+
+.an-workbench>.center>.ui-tabs>.an-editor.tabs-nav-hide>.ui-tabs-panel {
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	position: absolute;
+	padding: 0;
+	margin: 0;
+	overflow: auto;
+}
+
+.workbench.an-tabsx>.ui-tabs-nav>li>a,
+.an-workbench>div>.an-tabsx>.ui-tabs-nav>li>a {
+	 padding: 0.2em 0.6em;
+}
+
+.workbench.an-tabsx>.ui-tabs-panel,
+.an-workbench>div>.an-tabsx>.ui-tabs-panel {
+    padding: 1em 1em;
+}
+
+.workbench.an-tabsx>.ui-tabs-nav,
+.an-workbench>div>.an-tabsx>.ui-tabs-nav {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-left: 0 none;
+    border-right: 0 none;
+    border-top: 0 none;
+    padding: 0;
+}
+
+.an-workbench .south{
+	padding:5px;
+    text-align: right;
+}
+
+.ui-dialog .ui-dialog-titlebar {
+	text-align:center;
+	height: 19px;
+}
+
+.ui-dialog .ui-dialog-title {
+	float:none !important;
+}
+
+.ui-dialog .ui-dialog-content {
+	padding: 2px;
+}
+
+.ui-dialog .an-editor .an-form{
+    position: absolute;
+	bottom: 0;
+    left: 2px;
+    right: 2px;
+    top: 29px;
+}
+
+.an-workbench>.center>.ui-tabs>.an-editor>.an-form>form {
+	top:0;
+	left: 0;
+    right: 0;
+    bottom: 0;
+    outline: 0 none;
+    overflow: auto;
+    position: absolute;
+}
+
+
+.ui-dialog .an-editor.tabs-nav-hide .an-form{
+	top: 5px;
+	border: none;
+}

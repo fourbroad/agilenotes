@@ -1,0 +1,12 @@
+{
+  "name": "Agilenotes",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node agilenotes"
+  },
+  "dependencies": {
+    "express": "3.0.0beta7",
+    "jade": "*"
+  }
+}
