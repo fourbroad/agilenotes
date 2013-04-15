@@ -602,7 +602,6 @@ $.widget( "an.workbench", {
 		tabs.tabsx("add","#"+id, title);
 		var sv = $("#"+id, tabs).sideview($.extend({
 			dbId:dbId,
-			showUser:true,
 			drop:function(e,data){
 				var $this = $(this), s = data.source.data, t = data.target.data;
 				if(s._path == (t._path + s._id+",")) return;

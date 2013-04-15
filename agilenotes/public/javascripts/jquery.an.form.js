@@ -42,7 +42,7 @@ $.widget( "an.form", {
 		o.document = $.type(o.document) == "function" ? o.document(): o.document;
 		$(o.document).bind("docchanged.form",function(e,doc, oldDoc){
 			self.refresh();
-            el.trigger("documentchanged",e,[doc,oldDoc]);
+            el.trigger("documentchanged",e,[doc,oldDoc])
 		}).bind("propchanged.form",function(e,id,value,oldValue,trans){
 			self.field(id, value);
 		});
@@ -546,6 +546,7 @@ $.widget( "an.form", {
 		return this;
 	},
 
+	// TODO bug fix: 打印错误!
 	print: function(){
 		var o = this.options, docId = o.document.prop("_id"), loc = window.location, 
 		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&docid="+docId+"&formid="+o.form._id;
@@ -570,7 +571,7 @@ $.widget( "an.form", {
 	},
 
 	destroy: function() {
-		$(this.options.document).unbind(".form");
+		$(this.options.document).unbind(".form")
 		this.element.unbind(".form").removeClass("an-form").children("style").remove();
 		return $.Widget.prototype.destroy.apply( this, arguments );
 	}

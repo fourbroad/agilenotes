@@ -80,7 +80,7 @@
   	$.ajax($.extend(true,{
 		type: "GET", 
 		url: url,
-		cache:!($.browser.msie&&$.browser.version=="9.0"),
+		cache:!($.browser.msie),
 		dataType: "json",
 		complete: function(req) {
 			var resp = httpData(req, "json"), err, result;
@@ -263,7 +263,8 @@
    },
    
    postTemp: function(input, options){
-	   var form = $('<form action="" method="POST"></form>').append(input.clone().attr("name","file")),	
+	   
+	   var form = $('<form action="" method="POST"></form>').append(input.attr("name","file")),	
 	       o = {url: "/tmp"};
 	   $.extend(o, options);
 	   form.ajaxSubmit(o);
