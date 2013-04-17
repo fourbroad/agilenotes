@@ -67,6 +67,11 @@ function equals(a1,a2){
 
 }
 
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
+	return r != null? unescape(r[2]):null;
+} 
+
 function attributes(node){
 	var attrs = {}, as = node.attributes;
 	for(var i=0; i < as.length; i++) {
