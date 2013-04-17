@@ -71,7 +71,7 @@ agilenotes.configure(function() {
 	
 	agilenotes.set('passport', passport);
 	
-	// Authorization mode: include inherit current.
+	// Authorization mode: include,inherit,current.
 	agilenotes.set('ou_authz', "include"); 
 	agilenotes.set('group_authz', "inherit");
 	agilenotes.set('role_authz', "inherit");
