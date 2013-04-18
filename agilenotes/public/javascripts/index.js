@@ -58,9 +58,6 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.jsrenderfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.buttonfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.tabsxwidget.js"><\/script>\
-<script src="javascripts/knockout-2.2.1.js"><\/script>\
-<script src="javascripts/knockout.mapping.js"><\/script>\
-<script src="javascripts/knockout.reactor.js"><\/script>\
 <script src="javascripts/jquery.tmpl.js"><\/script>\
 <script src="javascripts/jquery.an.tree.js"><\/script>\
 <script src="javascripts/jquery.cookie.js"><\/script>\
