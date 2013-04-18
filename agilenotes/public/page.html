@@ -12,8 +12,6 @@
 }
 </style>
 
-<style id="global" type="text/css"></style>
-
 <script type="text/javascript" charset="utf-8">
 // load validate methods. 
 function loadValidateMethods(dbId, callback){
@@ -28,7 +26,7 @@ function loadValidateMethods(dbId, callback){
 var dbId = getUrlParam("dbid");
 $.ans.getDB(dbId,null,function(error,db){
 	window.database=db||{};
-	
+	document.title=db.title;
 	if(database.local=="zn"){
 		$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
 	}else{
