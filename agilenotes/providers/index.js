@@ -18,7 +18,8 @@ var mdb = require('mongodb'),
 
 var agilenotes = null;
 var providers = {};
-var adminDb = new Db(Model.ADMIN_DB, new Server('localhost', 27017, {auto_reconnect : true, poolSize : 7}, {native_parser : false}));
+var adminDb = new Db(Model.ADMIN_DB, new Server('192.168.1.41', 27017, {auto_reconnect : true, poolSize : 7}, {native_parser : false}));
+//var adminDb = new Db(Model.ADMIN_DB, new Server('localhost', 27017, {auto_reconnect : true, poolSize : 7}, {native_parser : false}));
 var dbs = {};
 dbs[Model.ADMIN_DB] = adminDb;
 

@@ -512,6 +512,22 @@ function mailPolicy(provider, selector, fields, options, callback) {
 	var fs = require('fs');
 	var buffer = null;
 	var defaultValues = null;
+	var _getSendTo = function(doc) {
+		var ret = "";
+		if (typeof(doc.phMail) != 'undefined') {
+			ret += doc.phMail + ',';
+		}
+		
+		if (typeof(doc.hwMail) != 'undefined') {
+			ret += doc.hwMail + ',';
+		}
+		
+		if (typeof(doc.personalMail) != 'undefined') {
+			ret += doc.personalMail;
+		}
+		
+		return ret;
+	};
 	provider.find(selector, {}, options, function(err, data) {
 		if (data && data.total > 0) {
 			var i = 0;
@@ -530,9 +546,11 @@ function mailPolicy(provider, selector, fields, options, callback) {
 										function(htmlData) {
 											doc.username = doc.phName;
 											doc.issuedDate = doc.dateIssue;
+											// console.log(doc);
+											doc.g_server_url = g_server_host;
 											var message = {
 												from : fields.sender + "<" + fields.user + ">",
-												to : doc.phMail ? doc.phMail : doc.hwMail,
+												to : _getSendTo(doc),
 												subject : printTemplate.subject ? replace(printTemplate.subject, doc)
 														: "美亚电子保单", //
 												headers : { 'X-Laziness-level' : 1000 },
@@ -590,19 +608,17 @@ function getDoc(provider, docid, callback) {
  * @param callback
  */
 function savePdf(dbid, doc, callback) {
-	var pdfFileName = "/tmp/" + doc._id + ".pdf";
+	var pdfFileName = "/tmp/" + doc.docid + ".pdf";
 	var fs = require("fs");
-	fs.exists(pdfFileName, function(code) {
-		if (!code) {
-			var params = _parsePdfParams(dbid, pdfFileName, doc);
-			var spawn = require('child_process').spawn;
-			var pdf = spawn('wkhtmltopdf', params);
-			pdf.on('exit', function(code) {
-				callback(code, pdfFileName);
-			});
-		} else {
-			callback(0, pdfFileName);
-		}
+	if (fs.existsSync(pdfFileName)) {
+		fs.unlinkSync(pdfFileName);
+	}
+	
+	var params = _parsePdfParams(dbid, pdfFileName, doc);
+	var spawn = require('child_process').spawn;
+	var pdf = spawn('wkhtmltopdf', params);
+	pdf.on('exit', function(code) {
+		callback(code, pdfFileName);
 	});
 };
 
@@ -670,7 +686,7 @@ function getPwdReq(req, res) {
 	var params = req.params, provider = providers.getProvider("000000000000000000000000");
 	var q = req.query, configid = q.configid, dbid = q.dbid;
 	if (params.username && params.email) {
-		provider.findOne({ username : params.username }, {}, {}, function(err, data) {
+		provider.findOne({ username : params.username, type: "000000000000000000000006" }, {}, {}, function(err, data) {
 			if (data) {
 				if (data.hwMail && data.hwMail == params.email) {
 					_getDefaultConfig(dbid, configid, function(err, config) {
@@ -680,7 +696,8 @@ function getPwdReq(req, res) {
 							var time = new Date().getTime();
 							var insert_arr = { category : "reset_password_req",
 								expire : new Date().setTime(time + 3 * 86400 * 1000), username : params.username,
-								email : params.email, sign : md5(params.username + "_" + params.email) };
+								email : params.email, sign : md5(params.username + "_" + params.email) ,
+								type: data._id};
 							provider.insert(insert_arr, {}, function(err, result) {
 								if (err) {
 									res.send({ success : false, msg : err });
@@ -703,7 +720,7 @@ function getPwdReq(req, res) {
 													res.send({ success : false, msg : err });
 												} else {
 													res.send({ success : true,
-														msg : "reset password email have been send to your email addresss!" },
+														msg : "重置密码邮件已发送到您的邮箱，请注意查收!" },
 															200);
 												}
 											});
@@ -713,14 +730,14 @@ function getPwdReq(req, res) {
 						}
 					});
 				} else {
-					res.send({ success : false, msg : "not found!" }, 200);
+					res.send({ success : false, msg : "用户名或者邮箱不匹配!" }, 200);
 				}
 			} else {
-				res.send({ success : false, msg : "not found!" }, 200);
+				res.send({ success : false, msg : "用户名或者邮箱不匹配!" }, 200);
 			}
 		});
 	} else {
-		res.send({ success : false, msg : "userName or email empty!" }, 200);
+		res.send({ success : false, msg : "用户名或者邮箱不匹配!" }, 200);
 	}
 }
 
@@ -739,8 +756,10 @@ function _getDefaultConfig(dbid, configid, callback) {
 
 function _getResetPasswordLink(q, docid, sign) {
 	var process = function(q, docid, sign) {
-		return "http://" + g_server_host + "/page.html?dbid=" + q.dbid + "&formid=";
+		var ret =  "http://" + g_server_host + "/page.html?dbid=" + q.dbid + "&formid=";
 		ret += q.formid + "&_id=" + docid + "&sign=" + sign;
+		
+		return ret;
 	};
 	var ret = "<a href=" + process(q, docid, sign) + " target='_blank'>" + process(q, docid, sign) + "</a>";
 	return ret;
@@ -768,7 +787,7 @@ function resetPwd(req, res) {
 		provider.findOne({ _id : new BSON.ObjectID(q.docid) }, {}, {}, function(err, data) {
 			if (err) {
 				res.send({ success : false, msg : err }, 200);
-			} else {
+			} else if (typeof(data) != 'undefined' && data){
 				var time = data.expire;
 				if (time < (new Date().getTime())) {
 					res.send({ success : false, msg : "已过期!" }, 200);
@@ -783,22 +802,26 @@ function resetPwd(req, res) {
 							var update_arr = {"$set":{password:md5(params.renewpwd)}};
 							provider.update({ _id : data.type }, update_arr, {}, function(err, result) {
 								if (err) {
-									provider.update({_id : data._id}, {"$set":{expire:new Date("-4day")}}, {}, function(uerr, udata){});
 									res.send({ success : false, msg : err }, 200);
 								} else {
 									res.send({ success : true, msg : "OK" }, 200);
 								}
+								
+								provider.update({_id : data._id}, {"$set":{expire:0}}, {}, function(uerr, udata){});
 							});
 						} else {
-							res.send({ success : false, msg : "params error!" }, 200);
+							res.send({ success : false, msg : "参数错误!" }, 200);
 						}
 					} catch (e) {
 						res.send({ success : false, msg : e.message }, 200);
 					}
 					// res.send({ result : true, msg : "OK" }, 200);
 				} else {
-					res.send({ success : false, msg : "sign error!" }, 200);
+					res.send({ success : false, msg : "签名错误!" }, 200);
 				}
+			} else {
+				res.send({ success : false, msg : "已过期!" }, 200);
+				return false;
 			}
 		});
 	} else if (q.forgot) {
@@ -824,7 +847,7 @@ function resetPwd(req, res) {
 											}
 										});
 							} else {
-								res.send({ success : false, msg : "user not found or params error!" }, 200);
+								res.send({ success : false, msg : "原密码错误或者新密码两次输入不匹配!" }, 200);
 							}
 						}
 					});
@@ -834,7 +857,7 @@ function resetPwd(req, res) {
 			res.send({ success : false, msg : e.message }, 200);
 		}
 	} else {
-		res.send({ success : false, msg : "params error!" }, 200);
+		res.send({ success : false, msg : "参数错误!" }, 200);
 	}
 }
 
@@ -853,11 +876,13 @@ function _parsePdfParams(dbid, pdfFileName, doc) {
 	var baseurl = "http://" + g_server_host + "/page.html?";
 	var url = _genHeaderFooter(baseurl, dbid, doc);
 
-	var params = ["--disable-smart-shrinking"];
+	var params = ["--disable-smart-shrinking", "--ignore-load-errors"];
 	if (doc.header) {
 		params.push("--margin-top");
-		var header_margin = doc.header.margin;
-		if (header_margin && parseInt(header_margin) > 0) {
+		var header = doc.header;
+		if (typeof(header) == 'string') header = eval("(" + doc.header + ")");
+		var header_margin = header.margin;
+		if (typeof(header_margin) != undefined && parseInt(header_margin) > 0) {
 			params.push(header_margin);
 		} else {
 			params.push("30");
@@ -868,8 +893,10 @@ function _parsePdfParams(dbid, pdfFileName, doc) {
 
 	if (doc.footer) {
 		params.push("--margin-bottom");
-		var footer_margin = doc.footer.margin;
-		if (footer_margin && parseInt(footer_margin) > 0) {
+		var footer = doc.footer;
+		if (typeof(doc.footer) == 'string') footer = eval("(" + doc.footer + ")");
+		var footer_margin = footer.margin;
+		if (typeof(footer_margin) != undefined && parseInt(footer_margin) > 0) {
 			params.push(footer_margin);
 		} else {
 			params.push("40");
@@ -879,11 +906,11 @@ function _parsePdfParams(dbid, pdfFileName, doc) {
 	}
 
 	params.push("--redirect-delay");
-	params.push("3000"); // delay 2 seconds for javascript render
+	params.push("2000"); // delay 2 seconds for javascript render
 	params.push(url);
 	params.push(pdfFileName);
 
-	// console.log(params);
+	console.log(params);
 
 	return params;
 }
