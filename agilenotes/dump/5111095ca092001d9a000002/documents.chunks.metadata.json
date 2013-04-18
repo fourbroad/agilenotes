@@ -1,1 +1,1 @@
-{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "ns" : "5111095ca092001d9a000002.documents.chunks", "name" : "_id_" } ] }
+{indexes:[{ "v" : 1, "key" : { "_id" : 1 }, "ns" : "5111095ca092001d9a000002.documents.chunks", "name" : "_id_" }]}

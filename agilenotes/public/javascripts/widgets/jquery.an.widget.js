@@ -45,7 +45,7 @@ $.widget( "an.widget", {
 			}
 		});
 	},
-	
+
 	_init: function(){
 		this.refresh();
 	},

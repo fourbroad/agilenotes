@@ -38,7 +38,7 @@ $.widget( "an.inputfield", $.an.field, {
 	
 	_browser:function(){
 		this.input.hide();
-		this.content.html(this.options.value+"").show();
+		this.content.html(this.options.value+"").css("display","inline-block");
 	},
 	
 	_edit:function(){
