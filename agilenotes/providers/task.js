@@ -83,6 +83,7 @@ Task.prototype.exec = function(user, task, options, callback) {
 	
 	if(task.taskType == "interval" && !user){
 		providers.getProvider(Model.ADMIN_DB).findOne({_id:task.userId}, null, null, function(error, user){
+			// FIXME incorrect assigned code.
 			providersWrapper = createWrapper(user, ACL, providers);
 		});
 	}else{

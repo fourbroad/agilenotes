@@ -23,11 +23,6 @@ html, body, td, th, li, label, p, span, a {
 }
 </style>
 <script type="text/javascript" charset="utf-8">
-function getUrlParam(name) {
-	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
-	return r != null? unescape(r[2]):null;
-} 
-
 $(function(){
 	var dbId = getUrlParam("dbid");
 	$.ans.getDB(dbId,null,function(error,db){

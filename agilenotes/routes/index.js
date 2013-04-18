@@ -664,8 +664,10 @@ module.exports = function(agilenotes){
 			});
 
 			var passport = agilenotes.get("passport");
+
 			agilenotes.get('/', function(req, res){res.redirect('/page.html?dbid='+Model.ADMIN_DB);});
 			agilenotes.get('/admin',function(req,res){res.redirect('/workbench.html?dbid='+Model.ADMIN_DB);});
+
 			agilenotes.post('/login', function(req, res, next) { passport.authenticate('local',function (err, user, message){
 						if (message){
 							res.send( MSG.auth.c1503, 200);

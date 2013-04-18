@@ -13,11 +13,6 @@
 </style>
 
 <script type="text/javascript" charset="utf-8">
-function getUrlParam(name) {
-	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
-	return r != null? unescape(r[2]):null;
-} 
-
 // load validate methods. 
 function loadValidateMethods(dbId, callback){
 	$.ans.getDoc(dbId, null, {selector:{type:"50ae3f8e6cec663c0a000002"}},function(err,data){
