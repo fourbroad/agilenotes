@@ -40,7 +40,7 @@ $.widget( "an.gridview", $.an.view, {
 			prevpage:function(e, data){ o.skip = o.skip - o.limit; self._loadDocs(); },
 			gotopage:function(e,data){ o.skip = (data.page-1)*o.limit; self._loadDocs(); },
 			nextpage:function(e,data){ o.skip = o.skip + o.limit; self._loadDocs(); },
-			lastpage:function(e,data){ o.skip = Math.floor(o.total/o.limit)*o.limit; self._loadDocs(); },
+			lastpage:function(e,data){ o.skip = (Math.floor(o.total/o.limit)-1)*o.limit; self._loadDocs(); },
 			celldblclick:function(e,data){ self._trigger("docdblclick", e, self.docs[data.row-o.skip]); },
 			cellclick:function(e,data){ self._trigger("docclick", e, self.docs[data.row-o.skip]); },
 			contentActions:function(row,col){ return o.contentActions(self.docs[row-o.skip]);},
