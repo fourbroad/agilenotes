@@ -16,7 +16,8 @@ Task = function(db, agilenotes) {
 Utils.extend(Task, Document);
 
 Task.prototype.exec = function(user, task, options, callback) {
-	if(this.intervalIds[task._id]){ // FIXME: Non-reentrant?
+	// TODO: Non-reentrant?
+	if(this.intervalIds[task._id]){
 		clearInterval(this.intervalIds[task._id]);
 		delete this.intervalIds[task._id];
 	}
@@ -120,7 +121,7 @@ Task.prototype.exec = function(user, task, options, callback) {
 	if(task.taskType == "interval" && !user){
 		providers.getProvider(Model.ADMIN_DB).findOne({_id:task.userId}, null, null, function(error, user){
 			providersWrapper = createWrapper(user, ACL, providers);
-			exec(this.db, task, providersWrapper,options);
+			exec(self.db, task, providersWrapper,options);
 		});
 	}else{
 		providersWrapper = createWrapper(user, ACL, providers);
