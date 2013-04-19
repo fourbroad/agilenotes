@@ -453,8 +453,7 @@ function pay(req, res){
                 if (err){
                         console.log(err);
                  }else if (doc.policyState == "pending" ){
-                        var plan = doc.planName == "undefined" ? "" : doc.planName;
-			var subject = doc.productName + plan + " (" + doc.insureds[0].name + " 等 " + doc.insureds.length + "人)";
+			var subject = doc.productName + " (" + doc.insureds[0].name + " 等 " + doc.insureds.length + "人)";
 			var body = "";
 			var totalPremium  = doc.totalPremium;
 			var defaultbank = req.body.defaultbank != "undefined" ?  req.body.defaultbank : '' ;
@@ -676,6 +675,12 @@ module.exports = function(agilenotes){
 							 req.logIn(user, function(err) {
 							      if (err) {  res.send({success : false ,code : 500, msg: err});}
 								res.setHeader("Set-Cookie", ["userID="+ user._id, "userName=" + user.username ]);
+								if (user.isFirstLogin == 1) {
+									MSG.auth.c1501.isFirstLogin = 1;
+									provider.update({_id:user._id},{"$set": {"isFirstLogin" : 0}}, {}, function(error, ret){});
+								} else {
+									MSG.auth.c1501.isFirstLogin = 0;
+								}
 								res.send(MSG.auth.c1501, 200);
 	
 							});

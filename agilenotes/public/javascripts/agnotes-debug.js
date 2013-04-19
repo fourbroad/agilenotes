@@ -833,7 +833,7 @@ ObjectId.prototype.toString = function () {
   	$.ajax($.extend(true,{
 		type: "GET", 
 		url: url,
-		cache:!($.browser.msie&&$.browser.version=="9.0"),
+		cache:!($.browser.msie),
 		dataType: "json",
 		complete: function(req) {
 			var resp = httpData(req, "json"), err, result;
@@ -14003,7 +14003,10 @@ $.widget( "an.sideview", {
 					var d = parentNode.data, sel = {_path:{$regex:'^'+d._path+'[^,]+,$'}}; 
 					if(o.showUser&&(d.type == Model.GROUP)){
 						sel = {$or:[sel,{type:Model.USER, _groupPaths:d._path}]};
+					}else if(!o.showUser){
+						sel = {$and:[sel,{type:{$ne:Model.USER}}]};
 					}
+
 					$.ans.getDoc(o.dbId,null,{selector:sel},function(err,data){
 						var nodes = [];
 						$.each(data.docs, function(k, doc){
@@ -14681,7 +14684,6 @@ $.widget( "an.workbench", {
 		tabs.tabsx("add","#"+id, title);
 		var sv = $("#"+id, tabs).sideview($.extend({
 			dbId:dbId,
-			showUser:true,
 			drop:function(e,data){
 				var $this = $(this), s = data.source.data, t = data.target.data;
 				if(s._path == (t._path + s._id+",")) return;
