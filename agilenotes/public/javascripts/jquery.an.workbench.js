@@ -137,6 +137,7 @@ $.widget( "an.workbench", {
 			self._initMainToolbar();
 			// load opened documents.
 			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
+			
 			// load side views.
 			$.each(o.sideViews, function(){ self.showSideView(this.id, this.anchor, this.options); });
 		});
@@ -764,8 +765,15 @@ $.widget( "an.workbench", {
 			    tabshow:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 			    tabcreated:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 				saved:function(err,doc,bl){
-					var type={"000000000000000000000001":"openDocument","000000000000000000000002":"openForm","000000000000000000000003":"openView","000000000000000000000004":"openPage"};
-					var data={method:type[doc.type], id:doc._id};
+					var m = "openDocument";
+					if(doc.type == Model.FORM){
+						m = "openForm";
+					}else if(doc.type == Model.VIEW){
+						m = "openView";
+					}else if(doc.type == Model.PAGE){
+						m = "openPage";
+					}
+					var data={method:m, id:doc._id};
 					if(bl){
 						self.options.openedDocuments.push(data);
 						self._saveOptions();
