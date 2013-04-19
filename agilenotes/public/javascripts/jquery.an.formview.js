@@ -126,7 +126,7 @@ $.widget( "an.formview", $.an.view, {
 	
 	lastpage:function(){
 		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		o.skip = (Math.floor(o.total/o.limit)-1)*o.limit; 
 		this._loadDocs();
 	},
 	
