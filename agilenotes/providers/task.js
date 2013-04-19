@@ -16,6 +16,7 @@ Task = function(db, agilenotes) {
 Utils.extend(Task, Document);
 
 Task.prototype.exec = function(user, task, options, callback) {
+	// TODO: Non-reentrant?
 	if(this.intervalIds[task._id]){
 		clearInterval(this.intervalIds[task._id]);
 		delete this.intervalIds[task._id];
@@ -81,47 +82,52 @@ Task.prototype.exec = function(user, task, options, callback) {
 		};
 	}
 	
+	var self = this;
+	function exec(db, task, provider, options){
+		try{
+			var handler = eval("("+task.handler+")");
+			if(typeof(handler)=="function"){
+				if(task.taskType == "instant"){
+					handler(db, provider, options, function(error, result){
+						callback(error, result);
+					});
+				}else if(task.taskType == "interval"){
+					self.intervalIds[task._id] = setInterval(function(){
+						handler(db, provider, options, function(error,result){
+							error&&console.log(error);
+							result && console.log(result);
+						});
+					},parseInt(task.delay));
+					callback(null, "OK");
+				}else if(task.taskType == "timeout"){
+					self.timeoutIds[task._id] = setTimeout(function(){
+						handler(db, provider, options, function(error,result){
+							error&&console.log(error);
+							result && console.log(result);
+						});
+					}, parseInt(task.delay));
+					callback(null, "OK");
+				}
+			}else{
+				callback&&callback("Invalid handler.");
+				console.log("Invalid handler.");
+			}
+		}catch(e){
+			callback&&callback(e.toString());
+			console.log(e.toString());
+		}
+	}
+	
 	if(task.taskType == "interval" && !user){
 		providers.getProvider(Model.ADMIN_DB).findOne({_id:task.userId}, null, null, function(error, user){
-			// FIXME incorrect assigned code.
 			providersWrapper = createWrapper(user, ACL, providers);
+			exec(self.db, task, providersWrapper,options);
 		});
 	}else{
 		providersWrapper = createWrapper(user, ACL, providers);
+		exec(this.db, task, providersWrapper,options);
 	}
 	
-	try{
-		var self = this, handler = eval("("+task.handler+")");
-		if(typeof(handler)=="function"){
-			if(task.taskType == "instant"){
-				handler(this.db, providersWrapper, options, function(error, result){
-					callback(error, result);
-				});
-			}else if(task.taskType == "interval"){
-				this.intervalIds[task._id] = setInterval(function(){
-					handler(self.db, providersWrapper, options, function(error,result){
-						error&&console.log(error);
-						result && console.log(result);
-					});
-				},parseInt(task.delay));
-				callback(null, "OK");
-			}else if(task.taskType == "timeout"){
-				this.timeoutIds[task._id] = setTimeout(function(){
-					handler(self.db, providersWrapper, options, function(error,result){
-						error&&console.log(error);
-						result && console.log(result);
-					});
-				}, parseInt(task.delay));
-				callback(null, "OK");
-			}
-		}else{
-			callback&&callback("Invalid handler.");
-			console.log("Invalid handler.");
-		}
-	}catch(e){
-		callback&&callback(e.toString());
-		console.log(e.toString());
-	}
 };
 
 Task.prototype.clearTask = function(task, options, callback) {
