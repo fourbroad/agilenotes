@@ -8,6 +8,7 @@ var mongo = require("mongodb"),
     MailLib = require("../lib/mail"), // mail module
     MSG = require("../config/global_message").GLOBAL_MSG, // global messages
     Functions = require("../lib/common_functions"); // common functions
+var readability = require('node-readability');
 
 ACL.setBson(BSON);
 
@@ -21,10 +22,11 @@ function ensureAuthenticated(req, res, next) {
 
 //  check user login state
 function login(req,res){
+	
         if ( !req.user && typeof( req.session.passport.user ) === 'undefined' ){
             res.send(MSG.auth.c1502, 200);
         } else {
-	    res.send(MSG.auth.c1501, 200);
+	        res.send(MSG.auth.c1501, 200);
         }
 }
 
@@ -140,10 +142,43 @@ function validate(dbid, doc, callback){
 		});
 	});
 }
-
+function rend(req,res){
+	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
+		selector =q.selector, options = q.options, fields = q.fields, provider =providers.getProvider(Model.ADMIN_DB);
+	res.header('Content-Type', 'text/html');
+        var dbQuery = {type:Model.DATABASE, name:dbn};
+        var docQuery = {name:docn};
+	var reg = new  RegExp('[0-9a-f]{24}');
+	if(reg.test(dbn)){
+        	dbQuery = {type:Model.DATABASE, _id:new BSON.ObjectID(dbn)};
+        }	
+	if(reg.test(docn)){
+        	docQuery = { _id:new BSON.ObjectID(docn)};
+        }
+		provider.findOne(dbQuery, [], {}, function(err, db){
+			if (err || db == null) {
+				res.render('page_404', {});
+				return;
+			}
+			provider = providers.getProvider(db._id);
+			provider.findOne(docQuery, fields, options, function(err,doc){
+		                if (err || doc == null) {
+				    res.render('page_404', {});
+				    return;
+		                }  
+			        var data =  new Object();
+		                data.db = db;
+		                data.doc = doc;
+			        var data = JSON.stringify(data, null, 10);
+			        data = data.replace(/<\/script>/g, '<\\/script>');
+			        res.render('page', {data: data});
+			});
+			
+		});
+}
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
-	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, 
+	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
 	    selector = q.selector, options = q.options, fields = q.fields, provider = providers.getProvider(dbid);
 	res.header('Content-Type', 'application/json');
 	provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
@@ -343,20 +378,37 @@ function postTempFile(req,res){
 
 function acl(req,res,next){
 	var params = req.params, dbid = params.dbid, user = req.user, q = req.query, 
-	    doc = req.body, provider = providers.getProvider(dbid), docid = params.docid;
-
-	q.selector = JSON.parse(q.selector||"{}");
-	q.options = JSON.parse(q.options||"{}");
-	if(docid) q.selector["_id"] = docid;
-
-	ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type, function(error, selector){
-		if(error){
-			res.json({error:"Not Authorized!"});
-		}else{
-			q.selector = selector;
-			return next();
-		}
-	});
+	    doc = req.body, docid = params.docid, dbn = params.dbn, docn = params.docn,	provider = providers.getProvider(Model.ADMIN_DB);
+	var reg = new  RegExp('[0-9a-f]{24}');
+	if(reg.test(dbn)||dbid){
+                dbid = dbn ? dbn : dbid;
+		provider = providers.getProvider(dbid);
+		process();
+       } else {
+		dbQuery = {type:Model.DATABASE, name:dbn};
+		provider.findOne(dbQuery, [], {}, function(err, db){
+			if (err || db == null) {
+				res.render('page_404', {});
+				return;
+			}
+			provider = providers.getProvider(db._id);
+			process ();
+		});
+	}
+	function process (){
+		q.selector = JSON.parse(q.selector||"{}");
+		q.options = JSON.parse(q.options||"{}");
+		if(docid) q.selector["_id"] = docid;
+	
+		ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type, function(error, selector){
+			if(error){
+				res.json({error:"Not Authorized!"});
+			}else{
+				q.selector = selector;
+				return next();
+			}
+		});
+	}
 }
 
 function waatsRequest(req, res) {
@@ -613,6 +665,33 @@ console.log('{"type": '+payLogType+', "transID": '+order_no+'}');
 	});
 }
 
+function requestUrl(host,path,callback){
+    var http = require('http');
+
+    var options = {
+        host: '192.168.1.41',
+        port: 8080,
+        path: path,
+        method: 'GET'
+    };
+
+    var req = http.request(options, function(res) {
+        console.log("statusCode: ", res.statusCode);
+        console.log("headers: ", res.headers);
+
+        res.on('data', function(d) {
+            callback(d);
+        });
+    });
+    
+    
+    req.end();
+
+    req.on('error', function(e) {
+        console.error(e);
+    });
+};
+
 function md5(str) {
 	var crypto = require('crypto');
 	var md5sum = crypto.createHash('md5');
@@ -694,6 +773,11 @@ module.exports = function(agilenotes){
 
 			agilenotes.get('/logout', logout);
 			agilenotes.get('/login', login);
+			
+			 
+			
+	
+	
 
 			agilenotes.get('/dbs/:dbid/:docid?', acl, getDoc);
 			agilenotes.post('/dbs/:dbid', acl, postDoc);
@@ -724,6 +808,7 @@ module.exports = function(agilenotes){
 			agilenotes.get("/:username/:email/getpwd?(\/?|\/*)", MailLib.getPwdReq);
 			agilenotes.post("/:username/:email/getpwd", MailLib.getPwdReq);
 			agilenotes.post("/resetPwd", MailLib.resetPwd);
+			agilenotes.get('/dbn/:dbn/:docn?', acl, rend);
 
 		}
 	});
