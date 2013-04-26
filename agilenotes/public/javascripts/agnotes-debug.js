@@ -607,7 +607,7 @@ function showDialog(title, message, opts){
 		buttons.push({text:"OK",click:function(){$( this ).dialog( "close" );}});
 	}
 	
-	$("<div/>").dialog({
+	return $("<div/>").dialog({
 		title: title,
 		height: 220,
 		width: 360,
@@ -615,7 +615,7 @@ function showDialog(title, message, opts){
 		create: function(event, ui){ $(this).html(message); },
 		buttons: buttons,
 		close:function(e,ui){$(this).remove();}
-	});
+	}).data('dialog');
 }
 function openDialog(dbId,id,opts,method){
 	$("<div/>").dialog($.extend(true,{
@@ -1016,7 +1016,7 @@ ObjectId.prototype.toString = function () {
    },
    
    postTemp: function(input, options){
-	   var form = $('<form action="" method="POST"></form>').append(input.clone().attr("name","file")),	
+	   var form = $('<form action="" method="POST"></form>').append(input.attr("name","file")),	
 	       o = {url: "/tmp"};
 	   $.extend(o, options);
 	   form.ajaxSubmit(o);
@@ -4560,16 +4560,15 @@ function handler(event) {
 
 })(jQuery);/*!
  * jQuery Form Plugin
- * version: 3.09 (16-APR-2012)
- * @requires jQuery v1.3.2 or later
- *
+ * version: 3.32.0-2013.04.09
+ * @requires jQuery v1.5 or later
+ * Copyright (c) 2013 M. Alsup
  * Examples and documentation at: http://malsup.com/jquery/form/
  * Project repository: https://github.com/malsup/form
- * Dual licensed under the MIT and GPL licenses:
- *    http://malsup.github.com/mit-license.txt
- *    http://malsup.github.com/gpl-license-v2.txt
+ * Dual licensed under the MIT and GPL licenses.
+ * https://github.com/malsup/form#copyright-and-license
  */
-/*global ActiveXObject alert */
+/*global ActiveXObject */
 ;(function($) {
 "use strict";
 
@@ -4597,7 +4596,7 @@ function handler(event) {
             target: '#output'
         });
     });
-    
+
     You can also use ajaxForm with delegation (requires jQuery v1.7+), so the
     form does not have to exist when you invoke ajaxForm:
 
@@ -4605,7 +4604,7 @@ function handler(event) {
         delegation: true,
         target: '#output'
     });
-    
+
     When using ajaxForm, the ajaxSubmit function will be invoked for you
     at the appropriate time.
 */
@@ -4616,6 +4615,21 @@ function handler(event) {
 var feature = {};
 feature.fileapi = $("<input type='file'/>").get(0).files !== undefined;
 feature.formdata = window.FormData !== undefined;
+
+var hasProp = !!$.fn.prop;
+
+// attr2 uses prop when it can but checks the return type for
+// an expected string.  this accounts for the case where a form 
+// contains inputs with names like "action" or "method"; in those
+// cases "prop" returns the element
+$.fn.attr2 = function() {
+    if ( ! hasProp )
+        return this.attr.apply(this, arguments);
+    var val = this.prop.apply(this, arguments);
+    if ( ( val && val.jquery ) || typeof val === 'string' )
+        return val;
+    return this.attr.apply(this, arguments);
+};
 
 /**
  * ajaxSubmit() provides a mechanism for immediately submitting
@@ -4629,15 +4643,16 @@ $.fn.ajaxSubmit = function(options) {
         log('ajaxSubmit: skipping submit process - no element selected');
         return this;
     }
-    
+
     var method, action, url, $form = this;
 
     if (typeof options == 'function') {
         options = { success: options };
     }
 
-    method = this.attr('method');
-    action = this.attr('action');
+    method = this.attr2('method');
+    action = this.attr2('action');
+
     url = (typeof action === 'string') ? $.trim(action) : '';
     url = url || window.location.href || '';
     if (url) {
@@ -4671,7 +4686,7 @@ $.fn.ajaxSubmit = function(options) {
     if ( traditional === undefined ) {
         traditional = $.ajaxSettings.traditional;
     }
-    
+
     var elements = [];
     var qx, a = this.formToArray(options.semantic, elements);
     if (options.data) {
@@ -4695,7 +4710,7 @@ $.fn.ajaxSubmit = function(options) {
     var q = $.param(a, traditional);
     if (qx) {
         q = ( q ? (q + '&' + qx) : qx );
-    }    
+    }
     if (options.type.toUpperCase() == 'GET') {
         options.url += (options.url.indexOf('?') >= 0 ? '&' : '?') + q;
         options.data = null;  // data is null for 'get'
@@ -4725,14 +4740,18 @@ $.fn.ajaxSubmit = function(options) {
     }
 
     options.success = function(data, status, xhr) { // jQuery 1.4+ passes xhr as 3rd arg
-        var context = options.context || options;    // jQuery 1.4+ supports scope context 
+        var context = options.context || this ;    // jQuery 1.4+ supports scope context
         for (var i=0, max=callbacks.length; i < max; i++) {
             callbacks[i].apply(context, [data, status, xhr || $form, $form]);
         }
     };
 
     // are there files to upload?
-    var fileInputs = $('input:file:enabled[value]', this); // [value] (issue #113)
+
+    // [value] (issue #113), also see comment:
+    // https://github.com/malsup/form/commit/588306aedba1de01388032d5f42a60159eea9228#commitcomment-2180219
+    var fileInputs = $('input[type=file]:enabled[value!=""]', this);
+
     var hasFileInputs = fileInputs.length > 0;
     var mp = 'multipart/form-data';
     var multipart = ($form.attr('enctype') == mp || $form.attr('encoding') == mp);
@@ -4741,6 +4760,8 @@ $.fn.ajaxSubmit = function(options) {
     log("fileAPI :" + fileAPI);
     var shouldUseFrame = (hasFileInputs || multipart) && !fileAPI;
 
+    var jqxhr;
+
     // options.iframe allows user to force iframe mode
     // 06-NOV-09: now defaulting to iframe mode if file input is detected
     if (options.iframe !== false && (options.iframe || shouldUseFrame)) {
@@ -4748,19 +4769,21 @@ $.fn.ajaxSubmit = function(options) {
         // see:  http://groups.google.com/group/jquery-dev/browse_thread/thread/36395b7ab510dd5d
         if (options.closeKeepAlive) {
             $.get(options.closeKeepAlive, function() {
-                fileUploadIframe(a);
+                jqxhr = fileUploadIframe(a);
             });
         }
-          else {
-            fileUploadIframe(a);
-          }
+        else {
+            jqxhr = fileUploadIframe(a);
+        }
     }
     else if ((hasFileInputs || multipart) && fileAPI) {
-        fileUploadXhr(a);
+        jqxhr = fileUploadXhr(a);
     }
     else {
-        $.ajax(options);
+        jqxhr = $.ajax(options);
     }
+
+    $form.removeData('jqxhr').data('jqxhr', jqxhr);
 
     // clear element array
     for (var k=0; k < elements.length; k++)
@@ -4769,6 +4792,22 @@ $.fn.ajaxSubmit = function(options) {
     // fire 'notify' event
     this.trigger('form-submit-notify', [this, options]);
     return this;
+
+    // utility fn for deep serialization
+    function deepSerialize(extraData){
+        var serialized = $.param(extraData).split('&');
+        var len = serialized.length;
+        var result = [];
+        var i, part;
+        for (i=0; i < len; i++) {
+            // #252; undo param space replacement
+            serialized[i] = serialized[i].replace(/\+/g,' ');
+            part = serialized[i].split('=');
+            // #278; use array instead of object storage, favoring array serializations
+            result.push([decodeURIComponent(part[0]), decodeURIComponent(part[1])]);
+        }
+        return result;
+    }
 
      // XMLHttpRequest Level 2 file uploads (big hat tip to francois2metz)
     function fileUploadXhr(a) {
@@ -4779,9 +4818,10 @@ $.fn.ajaxSubmit = function(options) {
         }
 
         if (options.extraData) {
-            for (var p in options.extraData)
-                if (options.extraData.hasOwnProperty(p))
-                    formdata.append(p, options.extraData[p]);
+            var serializedData = deepSerialize(options.extraData);
+            for (i=0; i < serializedData.length; i++)
+                if (serializedData[i])
+                    formdata.append(serializedData[i][0], serializedData[i][1]);
         }
 
         options.data = null;
@@ -4790,15 +4830,15 @@ $.fn.ajaxSubmit = function(options) {
             contentType: false,
             processData: false,
             cache: false,
-            type: 'POST'
+            type: method || 'POST'
         });
-        
+
         if (options.uploadProgress) {
             // workaround because jqXHR does not expose upload property
             s.xhr = function() {
                 var xhr = jQuery.ajaxSettings.xhr();
                 if (xhr.upload) {
-                    xhr.upload.onprogress = function(event) {
+                    xhr.upload.addEventListener('progress', function(event) {
                         var percent = 0;
                         var position = event.loaded || event.position; /*event.position is deprecated*/
                         var total = event.total;
@@ -4806,39 +4846,32 @@ $.fn.ajaxSubmit = function(options) {
                             percent = Math.ceil(position / total * 100);
                         }
                         options.uploadProgress(event, position, total, percent);
-                    };
+                    }, false);
                 }
                 return xhr;
             };
         }
 
         s.data = null;
-          var beforeSend = s.beforeSend;
-          s.beforeSend = function(xhr, o) {
-              o.data = formdata;
-            if(beforeSend)
-                beforeSend.call(o, xhr, options);
+            var beforeSend = s.beforeSend;
+            s.beforeSend = function(xhr, o) {
+                o.data = formdata;
+                if(beforeSend)
+                    beforeSend.call(this, xhr, o);
         };
-        $.ajax(s);
+        return $.ajax(s);
     }
 
     // private function for handling file uploads (hat tip to YAHOO!)
     function fileUploadIframe(a) {
         var form = $form[0], el, i, s, g, id, $io, io, xhr, sub, n, timedOut, timeoutHandle;
-        var useProp = !!$.fn.prop;
+        var deferred = $.Deferred();
 
-        if ($(':input[name=submit],:input[id=submit]', form).length) {
-            // if there is an input with a name or id of 'submit' then we won't be
-            // able to invoke the submit fn on the form (at least not x-browser)
-            alert('Error: Form elements must not have name or id of "submit".');
-            return;
-        }
-        
         if (a) {
             // ensure that every serialized input is still enabled
             for (i=0; i < elements.length; i++) {
                 el = $(elements[i]);
-                if ( useProp )
+                if ( hasProp )
                     el.prop('disabled', false);
                 else
                     el.removeAttr('disabled');
@@ -4850,9 +4883,9 @@ $.fn.ajaxSubmit = function(options) {
         id = 'jqFormIO' + (new Date().getTime());
         if (s.iframeTarget) {
             $io = $(s.iframeTarget);
-            n = $io.attr('name');
+            n = $io.attr2('name');
             if (!n)
-                 $io.attr('name', id);
+                 $io.attr2('name', id);
             else
                 id = n;
         }
@@ -4876,6 +4909,14 @@ $.fn.ajaxSubmit = function(options) {
                 var e = (status === 'timeout' ? 'timeout' : 'aborted');
                 log('aborting upload... ' + e);
                 this.aborted = 1;
+
+                try { // #214, #257
+                    if (io.contentWindow.document.execCommand) {
+                        io.contentWindow.document.execCommand('Stop');
+                    }
+                }
+                catch(ignore) {}
+
                 $io.attr('src', s.iframeSrc); // abort op in progress
                 xhr.error = e;
                 if (s.error)
@@ -4900,10 +4941,12 @@ $.fn.ajaxSubmit = function(options) {
             if (s.global) {
                 $.active--;
             }
-            return;
+            deferred.reject();
+            return deferred;
         }
         if (xhr.aborted) {
-            return;
+            deferred.reject();
+            return deferred;
         }
 
         // add submitting element to data if we know it
@@ -4919,15 +4962,44 @@ $.fn.ajaxSubmit = function(options) {
                 }
             }
         }
-        
+
         var CLIENT_TIMEOUT_ABORT = 1;
         var SERVER_ABORT = 2;
-
+                
         function getDoc(frame) {
-            var doc = frame.contentWindow ? frame.contentWindow.document : frame.contentDocument ? frame.contentDocument : frame.document;
+            /* it looks like contentWindow or contentDocument do not
+             * carry the protocol property in ie8, when running under ssl
+             * frame.document is the only valid response document, since
+             * the protocol is know but not on the other two objects. strange?
+             * "Same origin policy" http://en.wikipedia.org/wiki/Same_origin_policy
+             */
+            
+            var doc = null;
+            
+            // IE8 cascading access check
+            try {
+                if (frame.contentWindow) {
+                    doc = frame.contentWindow.document;
+                }
+            } catch(err) {
+                // IE8 access denied under ssl & missing protocol
+                log('cannot get iframe.contentWindow document: ' + err);
+            }
+
+            if (doc) { // successful getting content
+                return doc;
+            }
+
+            try { // simply checking may throw in ie8 under ssl or mismatched protocol
+                doc = frame.contentDocument ? frame.contentDocument : frame.document;
+            } catch(err) {
+                // last attempt
+                log('cannot get iframe.contentDocument: ' + err);
+                doc = frame.document;
+            }
             return doc;
         }
-        
+
         // Rails CSRF hack (thanks to Yvan Barthelemy)
         var csrf_token = $('meta[name=csrf-token]').attr('content');
         var csrf_param = $('meta[name=csrf-param]').attr('content');
@@ -4939,7 +5011,7 @@ $.fn.ajaxSubmit = function(options) {
         // take a breath so that pending repaints get some cpu time before the upload starts
         function doSubmit() {
             // make sure form attrs are set
-            var t = $form.attr('target'), a = $form.attr('action');
+            var t = $form.attr2('target'), a = $form.attr2('action');
 
             // update form attrs in IE friendly way
             form.setAttribute('target',id);
@@ -4962,7 +5034,7 @@ $.fn.ajaxSubmit = function(options) {
             if (s.timeout) {
                 timeoutHandle = setTimeout(function() { timedOut = true; cb(CLIENT_TIMEOUT_ABORT); }, s.timeout);
             }
-            
+
             // look for server aborts
             function checkState() {
                 try {
@@ -4986,9 +5058,16 @@ $.fn.ajaxSubmit = function(options) {
                 if (s.extraData) {
                     for (var n in s.extraData) {
                         if (s.extraData.hasOwnProperty(n)) {
-                            extraInputs.push(
-                                $('<input type="hidden" name="'+n+'">').attr('value',s.extraData[n])
-                                    .appendTo(form)[0]);
+                           // if using the $.param format that allows for multiple values with the same name
+                           if($.isPlainObject(s.extraData[n]) && s.extraData[n].hasOwnProperty('name') && s.extraData[n].hasOwnProperty('value')) {
+                               extraInputs.push(
+                               $('<input type="hidden" name="'+s.extraData[n].name+'">').val(s.extraData[n].value)
+                                   .appendTo(form)[0]);
+                           } else {
+                               extraInputs.push(
+                               $('<input type="hidden" name="'+n+'">').val(s.extraData[n])
+                                   .appendTo(form)[0]);
+                           }
                         }
                     }
                 }
@@ -5002,7 +5081,15 @@ $.fn.ajaxSubmit = function(options) {
                         io.addEventListener('load', cb, false);
                 }
                 setTimeout(checkState,15);
-                form.submit();
+
+                try {
+					console.log(form.target);
+                    form.submit();
+                } catch(err) {
+                    // just in case form has element with name/id of 'submit'
+                    var submitFn = document.createElement('form').submit;
+                    submitFn.apply(form);
+                }
             }
             finally {
                 // reset attrs and remove "extra" input elements
@@ -5029,19 +5116,20 @@ $.fn.ajaxSubmit = function(options) {
             if (xhr.aborted || callbackProcessed) {
                 return;
             }
-            try {
-                doc = getDoc(io);
-            }
-            catch(ex) {
-                log('cannot access response document: ', ex);
+            
+            doc = getDoc(io);
+            if(!doc) {
+                log('cannot access response document');
                 e = SERVER_ABORT;
             }
             if (e === CLIENT_TIMEOUT_ABORT && xhr) {
                 xhr.abort('timeout');
+                deferred.reject(xhr, 'timeout');
                 return;
             }
             else if (e == SERVER_ABORT && xhr) {
                 xhr.abort('server abort');
+                deferred.reject(xhr, 'error', 'server abort');
                 return;
             }
 
@@ -5052,7 +5140,7 @@ $.fn.ajaxSubmit = function(options) {
             }
             if (io.detachEvent)
                 io.detachEvent('onload', cb);
-            else    
+            else
                 io.removeEventListener('load', cb, false);
 
             var status = 'success', errMsg;
@@ -5122,15 +5210,15 @@ $.fn.ajaxSubmit = function(options) {
                 try {
                     data = httpData(xhr, dt, s);
                 }
-                catch (e) {
+                catch (err) {
                     status = 'parsererror';
-                    xhr.error = errMsg = (e || status);
+                    xhr.error = errMsg = (err || status);
                 }
             }
-            catch (e) {
-                log('error caught: ',e);
+            catch (err) {
+                log('error caught: ',err);
                 status = 'error';
-                xhr.error = errMsg = (e || status);
+                xhr.error = errMsg = (err || status);
             }
 
             if (xhr.aborted) {
@@ -5146,6 +5234,7 @@ $.fn.ajaxSubmit = function(options) {
             if (status === 'success') {
                 if (s.success)
                     s.success.call(s.context, data, 'success', xhr);
+                deferred.resolve(xhr.responseText, 'success', xhr);
                 if (g)
                     $.event.trigger("ajaxSuccess", [xhr, s]);
             }
@@ -5154,6 +5243,7 @@ $.fn.ajaxSubmit = function(options) {
                     errMsg = xhr.statusText;
                 if (s.error)
                     s.error.call(s.context, xhr, status, errMsg);
+                deferred.reject(xhr, 'error', errMsg);
                 if (g)
                     $.event.trigger("ajaxError", [xhr, s, errMsg]);
             }
@@ -5218,6 +5308,8 @@ $.fn.ajaxSubmit = function(options) {
             }
             return data;
         };
+
+        return deferred;
     }
 };
 
@@ -5239,7 +5331,7 @@ $.fn.ajaxSubmit = function(options) {
 $.fn.ajaxForm = function(options) {
     options = options || {};
     options.delegation = options.delegation && $.isFunction($.fn.on);
-    
+
     // in jQuery 1.3+ we can fix mistakes with the ready state
     if (!options.delegation && this.length === 0) {
         var o = { s: this.selector, c: this.context };
@@ -5269,7 +5361,7 @@ $.fn.ajaxForm = function(options) {
         .bind('click.form-plugin', options, captureSubmittingElement);
 };
 
-// private event handlers    
+// private event handlers
 function doAjaxSubmit(e) {
     /*jshint validthis:true */
     var options = e.data;
@@ -5278,14 +5370,14 @@ function doAjaxSubmit(e) {
         $(this).ajaxSubmit(options);
     }
 }
-    
+
 function captureSubmittingElement(e) {
     /*jshint validthis:true */
     var target = e.target;
     var $el = $(target);
-    if (!($el.is(":submit,input:image"))) {
+    if (!($el.is("[type=submit],[type=image]"))) {
         // is this a child element of the submit el?  (ex: a span within a button)
-        var t = $el.closest(':submit');
+        var t = $el.closest('[type=submit]');
         if (t.length === 0) {
             return;
         }
@@ -5343,13 +5435,13 @@ $.fn.formToArray = function(semantic, elements) {
     for(i=0, max=els.length; i < max; i++) {
         el = els[i];
         n = el.name;
-        if (!n) {
+        if (!n || el.disabled) {
             continue;
         }
 
         if (semantic && form.clk && el.type == "image") {
             // handle image inputs on the fly when semantic == true
-            if(!el.disabled && form.clk == el) {
+            if(form.clk == el) {
                 a.push({name: n, value: $(el).val(), type: el.type });
                 a.push({name: n+'.x', value: form.clk_x}, {name: n+'.y', value: form.clk_y});
             }
@@ -5358,14 +5450,14 @@ $.fn.formToArray = function(semantic, elements) {
 
         v = $.fieldValue(el, true);
         if (v && v.constructor == Array) {
-            if (elements) 
+            if (elements)
                 elements.push(el);
             for(j=0, jmax=v.length; j < jmax; j++) {
                 a.push({name: n, value: v[j]});
             }
         }
-        else if (feature.fileapi && el.type == 'file' && !el.disabled) {
-            if (elements) 
+        else if (feature.fileapi && el.type == 'file') {
+            if (elements)
                 elements.push(el);
             var files = el.files;
             if (files.length) {
@@ -5379,7 +5471,7 @@ $.fn.formToArray = function(semantic, elements) {
             }
         }
         else if (v !== null && typeof v != 'undefined') {
-            if (elements) 
+            if (elements)
                 elements.push(el);
             a.push({name: n, value: v, type: el.type, required: el.required});
         }
@@ -5443,19 +5535,19 @@ $.fn.fieldSerialize = function(successful) {
  *      <input name="C" type="radio" value="C2" />
  *  </fieldset></form>
  *
- *  var v = $(':text').fieldValue();
+ *  var v = $('input[type=text]').fieldValue();
  *  // if no values are entered into the text inputs
  *  v == ['','']
  *  // if values entered into the text inputs are 'foo' and 'bar'
  *  v == ['foo','bar']
  *
- *  var v = $(':checkbox').fieldValue();
+ *  var v = $('input[type=checkbox]').fieldValue();
  *  // if neither checkbox is checked
  *  v === undefined
  *  // if both checkboxes are checked
  *  v == ['B1', 'B2']
  *
- *  var v = $(':radio').fieldValue();
+ *  var v = $('input[type=radio]').fieldValue();
  *  // if neither radio is checked
  *  v === undefined
  *  // if first radio is checked
@@ -5556,8 +5648,15 @@ $.fn.clearFields = $.fn.clearInputs = function(includeHidden) {
         else if (tag == 'select') {
             this.selectedIndex = -1;
         }
+		else if (t == "file") {
+			if (/MSIE/.test(navigator.userAgent)) {
+				$(this).replaceWith($(this).clone(true));
+			} else {
+				$(this).val('');
+			}
+		}
         else if (includeHidden) {
-            // includeHidden can be the valud true, or it can be a selector string
+            // includeHidden can be the value true, or it can be a selector string
             // indicating a special test; for example:
             //  $('#myForm').clearForm('.special:hidden')
             // the above would clean hidden inputs that have the class of 'special'
@@ -5622,7 +5721,7 @@ $.fn.ajaxSubmit.debug = false;
 
 // helper fn for console logging
 function log() {
-    if (!$.fn.ajaxSubmit.debug) 
+    if (!$.fn.ajaxSubmit.debug)
         return;
     var msg = '[jquery.form] ' + Array.prototype.join.call(arguments,'');
     if (window.console && window.console.log) {
@@ -7249,13 +7348,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			
 		}
 		
-		if (o.templates) {
-			var obj = {};
-			for (var i = 0; i < o.templates.length; i++) {
-				obj[o.templates[i].name] = o.templates[i].content;
-			}
-			
-			$.templates(obj);
+		if (o.template) {
+			o.template=$.templates(o.template);
 		}
 		
 		if(o.converters){
@@ -7312,7 +7406,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 	
 	replaceValue:function(index, value) {
 		var o = this.options, oldValue = [].concat(o.value);
-		o.value[index] = value;this.refresh();
+		o.value[index] = value;
+		this.refresh();
 		this._notify(oldValue, o.value);
 	},
 	
@@ -7322,8 +7417,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.browserTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7335,8 +7430,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.editorTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7536,6 +7631,168 @@ $.widget( "an.tabsxwidget", $.an.widget, {
 		this.content.tabsx("destroy");
 		this.element.unbind(".tabsxwidget").removeClass("an-tabsxwidget");
 		return $.an.widget.prototype.destroy.apply(this, arguments);;
+	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.pager", {
+	options:{
+		skip: 0,
+		limit: 10,
+		totalPage: 0,
+		currentPage:0,
+		selector:'',
+		className:'',
+		showInfo:false,
+		pagerHeight: 28
+	},
+	
+	_create: function(){
+		var o = this.options,self=this;
+
+		this.pager = $("<div class='pager'/>").css({
+			left:0,right:0,bottom:0,height:o.pagerHeight
+		}).appendTo(this.element);
+		this.pager.addClass(o.className);
+		$.each(["first","prev","goto","next","last"], function(k,v){
+			if(v == "goto"){
+				self.pager.append("<div class='goto-page'>Page<input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
+				self.pager.delegate("input", "change.pager", function(){
+					var $this = $(this), p = $(this).val();
+					if(p <= 0){
+						p = 1;
+						$this.val(p);
+					}else if(p > o.totalPage){
+						p = o.totalPage;
+						$this.val(p);
+					}
+					self.gotopage(p);
+				});
+			}else{
+				$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
+					label: v,
+					icons: {primary: "ui-icon-"+v+"-page"},
+					text:false,
+					disabled:true
+				}).click(function(e){
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					self[v+"page"]();
+				});
+			}
+		});
+
+		this.pager.append("<div class='info'>");
+		this._pagerLoadDocs();
+	},
+
+	option: function(key, value) {
+		var ret = $.Widget.prototype.option.apply(this, arguments ); 
+		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
+	},
+
+	_setOption: function(key, value){
+		var oldValue = this.options[key];
+		if(!equals(value,oldValue)){
+			$.Widget.prototype._setOption.apply(this, arguments );
+			this._handleChange && this._handleChange(key,value,oldValue);
+			this._trigger("optionchanged",null,{key:key,value:value,oldValue:oldValue});
+		}
+		return this;
+	},
+	
+	_refresh:function(){
+		var o = this.options;
+		if(!o.showPager || o.totalPage <= 1){
+			this.pager.hide();
+			return this;
+		}
+		this.pager.show();
+		this.pager.find(".pager-button").button("enable");
+		if(o.currentPage <= 1){
+			this.pager.find("#first").button("disable");
+			this.pager.find("#prev").button("disable");
+		}else if(o.currentPage >= o.totalPage){
+			this.pager.find("#last").button("disable");
+			this.pager.find("#next").button("disable");
+		}
+		this.pager.find("input.current-page").val(o.currentPage);
+		this.pager.find(".total-page").html(o.totalPage);
+		o.showInfo&&this.pager.find(".info").html("Displaying "+(o.limit*(o.currentPage-1)+1)+" to "+o.limit*o.currentPage+" of "+o.total+" items.");
+	},
+	reload:function(){
+		this._pagerLoadDocs();
+	},
+
+	firstpage:function(e,data){ 
+		this.options.skip = 0; 
+		this._pagerLoadDocs();
+	},
+	
+	prevpage:function(){
+		var o = this.options;
+		o.skip = o.skip - o.limit;
+		this._pagerLoadDocs(); 
+	},
+	
+	gotopage:function(page){
+		var o = this.options;
+		o.skip = (page-1)*o.limit;
+		this._pagerLoadDocs();
+	},
+	
+	nextpage:function(){
+		var o = this.options;
+		o.skip = o.skip + o.limit;
+		this._pagerLoadDocs();
+	},
+	
+	lastpage:function(){
+		var o = this.options;
+		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		this._pagerLoadDocs();
+	},
+
+	_pagerLoadDocs:function(){
+		var self = this, o = this.options, sel = o.selector, opts = {skip:o.skip,limit:o.limit};
+		if($.type(o.sort)=="string"){
+			opts.sort=eval("("+o.sort+")");
+		}
+		if($.type(sel)=="string"){
+			sel = eval("("+sel+")");
+			$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
+				var obj=self.element.data();
+				for(var q in obj){
+					if(/view/.test(obj[q]['widgetName'])){
+						obj[q]._docsLoaded(data.docs);
+						break;
+					}
+				}
+				o.total = data.total;
+				o.currentPage = Math.floor(o.skip/o.limit+1);
+				o.totalPage = Math.ceil(o.total/o.limit);
+				self._refresh();
+			});
+		}
+	},
+	
+	destroy: function() {
+		this.element.removeClass("show-pager");
+		this.pager && this.pager.remove();
+		delete this.pager;
+		$.Widget.prototype.destroy.apply(this,arguments);
 	}
 });
 })( jQuery );
@@ -11646,7 +11903,7 @@ $.widget( "an.form", {
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
 			grid:["5080143085ac60df09000001","5089e21f2b2255080a000005"],
-			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d052fcaa05a669e000000","514d5ef3ac8f27413200014e"],
+			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d0825caa05a669e0002ae","514d5ef3ac8f27413200014e"],
 			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a"],
 			select:["5080143085ac60df09000001","508259700b27990c0a000003"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
@@ -13170,7 +13427,6 @@ $.widget( "an.view", {
 		if(o.view&&o.view.limit) {
 			o.limit = o.view.limit = parseInt(o.view.limit);
 		}
-
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
 		var data = {};
 		data[this.widgetName] = this;
@@ -13214,17 +13470,21 @@ $.widget( "an.view", {
 
 	_loadDocs:function(){
 		var self = this, o = this.options, sel = o.view.selector, opts = {skip:o.skip,limit:o.limit};
-		if($.type(o.view.sort)=="string"){
-			opts.sort=eval("("+o.view.sort+")");
+		if(!o.view.showPager||self.widgetName=='gridview'){
+			if($.type(o.view.sort)=="string"){
+				opts.sort=eval("("+o.view.sort+")");
+			}
+			if($.type(sel)=="string"){
+				sel = eval("("+sel+")");
+				$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
+					self.docs = data.docs;
+					self._docsLoaded && self._docsLoaded();
+				});
+			}
+		}else{
+			self.pager&&self.pager.reload();
 		}
-		if($.type(sel)=="string"){
-			sel = eval("("+sel+")");
-			$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
-				self.docs = data.docs;
-				o.total = data.total;
-				self._docsLoaded && self._docsLoaded();
-			});
-		}
+		
 	},
 	
 	_getRow: function(row){
@@ -13394,6 +13654,15 @@ $.widget( "an.formview", $.an.view, {
 		o.itemHeight = o.view.itemHeight;
 		el.addClass("an-formview");
 		this.documents = $("<div class='content'/>").appendTo(el);
+		if(o.view.showPager){
+			el.pager($.extend({
+				dbId:o.dbId
+			},o.view));	
+			this.pager=el.data('pager');
+			this._loadDocs=function(){
+				el.data('pager')._pagerLoadDocs();
+			}
+		}
 	},
 
 	_showDocuments:function(){
@@ -13408,93 +13677,102 @@ $.widget( "an.formview", $.an.view, {
 		self.documents[0].appendChild(oFragment);
 	},
 	
-	_docsLoaded:function(){
-		var o = this.options;
-		o.currentPage = Math.floor(o.skip/o.limit+1);
-		o.totalPage = Math.ceil(o.total/o.limit);
-		this._refreshPager();
+	_docsLoaded:function(data){
+		if($.isArray(data)){
+			this.docs = data;
+		}
 		this.refresh();
 	},
+	
+	_design:function(){
+		this._showDocuments();
+	},
+	
+	_browser:function(){
+		this._showDocuments();
+	},
+	
+	save:function(){
+		var self = this, value = {};
+		$.extend(this.options.view.options, value);
+		return $.an.view.prototype.save.apply(this,arguments);
+	},
+	
+	print: function(){ 
+		var o = this.options, loc = window.location, 
+		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&viewid="+o.view._id;
+		print(url);
+	},
+	
+	destroy: function() {
+		this.element.unbind(".formview").removeClass("an-formview show-pager");
+		$.an.view.prototype.destroy.apply(this,arguments);
+	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
 
-	_refreshPager:function(){
-		var self = this, o = this.options;
-		if(!o.showPager || o.totalPage <= 1){
-			this.element.removeClass("show-pager");
-			this.pager && this.pager.remove();
-			delete this.pager;
-			return this;
+(function( $, undefined ) {
+
+$.widget( "an.customview", $.an.view, {
+	options: {
+		printable: false,
+		pagerPosition: "bottom" // bottom, both sides
+	},
+
+	_create: function(){
+		$.an.view.prototype._create.apply(this, arguments);
+		var o = this.options, el = this.element;
+		o.showPager = o.view.showPager;
+		o.templateTemp = o.view.templateTemp;
+		o.templateSelector = o.view.templateSelector;
+		o.templateConverts = o.view.templateConverts;
+		o.templateContent = o.view.templateContent;
+		el.addClass("an-customview");
+		this.documents = $(o.templateContent).appendTo(el);
+				
+		if (o.templateTemp) {
+			o.templateTemp=$.templates(o.templateTemp);
 		}
 		
-		if(!this.pager){
-			this.pager = $("<div class='pager'/>").appendTo($("<div class='bottom'/>").appendTo(this.element));
-			$.each(["first","prev","goto","next","last"], function(k,v){
-				if(v == "goto"){
-					self.pager.append("<div class='goto-page'><input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
-					self.pager.delegate("input", "change.formview", function(){
-						var $this = $(this), p = $(this).val();
-						if(p <= 0){
-							p = 1;
-							$this.val(p);
-						}else if(p > o.totalPage){
-							p = o.totalPage;
-							$this.val(p);
-						}
-						self.gotopage(p);
-					});
-				}else{
-					$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
-						label: v,
-			    		icons: {primary: "ui-icon-"+v+"-page"},
-						text:false,
-						disabled:true
-					}).click(function(e){
-						e.preventDefault();
-						e.stopImmediatePropagation();
-						self[v+"page"]();
-					});
-				}
-			});
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
 		}
 
-		this.pager.find(".pager-button").button("enable");
-		if(o.currentPage <= 1){
-			this.pager.find("#first").button("disable");
-			this.pager.find("#prev").button("disable");
-		}else if(o.currentPage >= o.totalPage){
-			this.pager.find("#last").button("disable");
-			this.pager.find("#next").button("disable");
+		if(o.view.showPager){
+			el.pager($.extend({
+				dbId:o.dbId
+			},o.view));
+			this.pager=el.data('pager');
+			this._loadDocs=function(){
+				el.data('pager')._pagerLoadDocs();
+			}
 		}
-		this.pager.find("input.current-page").val(o.currentPage);
-		this.pager.find(".total-page").html(o.totalPage);
 	},
 
-	firstpage:function(e,data){ 
-		this.options.skip = 0; 
-		this._loadDocs();
+	_showDocuments:function(){
+		var self = this, o = this.options;
+		if (o.templateTemp) {
+			var html = o.templateTemp.render(self.docs);
+			$(o.templateSelector, this.documents).html(html);
+		}
 	},
 	
-	prevpage:function(){
-		var o = this.options;
-		o.skip = o.skip - o.limit;
-		this._loadDocs(); 
-	},
-	
-	gotopage:function(page){
-		var o = this.options;
-		o.skip = (page-1)*o.limit;
-		this._loadDocs();
-	},
-	
-	nextpage:function(){
-		var o = this.options;
-		o.skip = o.skip + o.limit;
-		this._loadDocs();
-	},
-	
-	lastpage:function(){
-		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
-		this._loadDocs();
+	_docsLoaded:function(data){
+		if($.isArray(data)){
+			this.docs = data;
+		}
+		this.refresh();
 	},
 	
 	_design:function(){
@@ -13675,7 +13953,7 @@ $.widget( "an.editor", {
 							    view: d,
 							    create:function(){ self._trigger("tabcreated",event, $(this).data(vt)); }
 						    };
-						if(vt == "formview") optsx.form = o.form;
+						if(vt == "formview"||vt == "customview") optsx.form = o.form;
 						$p[vt]($.extend(true,optsx,opt));
 					}
 				}
@@ -13717,7 +13995,7 @@ $.widget( "an.editor", {
 						$this.page("option","form", form);
 					}else if($this.is(".an-gridview")){
 						$this.gridview("option","view", form);
-					}else if($this.is(".an-formview")){
+					}else if($this.is(".an-formview")||$this.is(".an-customview")){
 						$this.formview("option", "view", form);
 					}
 				});
@@ -13753,7 +14031,7 @@ $.widget( "an.editor", {
 							$this.page("option","form", forms[id]);
 						}else if($this.is(".an-gridview")){
 							$this.gridview("option","view", forms[id]);
-						}else if($this.is(".an-formview")){
+						}else if($this.is(".an-formview")||$this.is(".an-customview")){
 							$this.formview("option", "view", forms[id]);
 						}
 					});
@@ -13813,7 +14091,7 @@ $.widget( "an.editor", {
 							self.element.tabsx("select", form.option("form")._id);
 						}
 					}
-				}else	if($.inArray(i, ["gridview","formview"]) != -1){
+				}else	if($.inArray(i, ["gridview","formview","customview"]) != -1){
 					if((data[i].option("view")._id == o.document._id)&&data[i].option("isDirty")){
 						o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
 						data[i].option("isDirty", false);
@@ -13935,7 +14213,7 @@ $.widget( "an.editor", {
 		if(o.design && (id == o.document._id)) id = id+"-design";
 		var data = this.element.tabsx("panel", id).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -13943,7 +14221,7 @@ $.widget( "an.editor", {
 	_currentForm:function(){
 		var data = $(this.element.tabsx("option","selectedPanel")).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -14471,58 +14749,62 @@ $.widget( "an.workbench", {
     	this.reloadToolbar();
 	},
 
-	reloadToolbar: function(){
-		console.log("reloadToolbar............................!");
+	reloadToolbar: function(){	
+		var _this=this;
+		clearTimeout(_this.time);
+		_this.time=setTimeout(function(){
+			console.log("reloadToolbar............................!");
 
-		var editor = this.currentEditor(), actionSets = [];
-		if(editor){
-			function createActionSet(actions, context){
-				var actionSet = {};
-		    	$.each(actions, function(k,v){
-					filter = eval("(0,"+(v.filter||"function(){return true}")+")");
-					if(filter(context)){
-			    		actionSet[v._id] = {
-			    			_id: v._id,
-			    			type: v.actionType || "button",
-			    			label:v.title || v.name,
-			    			text: false,
-			    			icons:{primary: "ui-icon-"+v.name},
-			    			iconFile:v.icon,
-			    			handler: eval("(0,"+(v.handler||"function(){}")+")"),
-			    			enabled: eval("(0,"+(v.enabled||"function(){return false;}")+")"),
-			    			checked: eval("(0,"+(v.checked||"function(){return false;}")+")")
-			    		};
-			    		if(v.icon && (v.icon.length > 0)&& v.icon[0].metadata){
-			    			actionSet[v._id].iconFile = "/dbs/"+context.dbId+"/"+v._id+"/attachments/"+v.icon[0].metadata.filepath;
-			    		}
-					}
-		    	});
-				return actionSet;
+			var editor = _this.currentEditor(), actionSets = [];
+			if(editor){
+				function createActionSet(actions, context){
+					var actionSet = {};
+					$.each(actions, function(k,v){
+						filter = eval("(0,"+(v.filter||"function(){return true}")+")");
+						if(filter(context)){
+							actionSet[v._id] = {
+								_id: v._id,
+								type: v.actionType || "button",
+								label:v.title || v.name,
+								text: false,
+								icons:{primary: "ui-icon-"+v.name},
+								iconFile:v.icon,
+								handler: eval("(0,"+(v.handler||"function(){}")+")"),
+								enabled: eval("(0,"+(v.enabled||"function(){return false;}")+")"),
+								checked: eval("(0,"+(v.checked||"function(){return false;}")+")")
+							};
+							if(v.icon && (v.icon.length > 0)&& v.icon[0].metadata){
+								actionSet[v._id].iconFile = "/dbs/"+context.dbId+"/"+v._id+"/attachments/"+v.icon[0].metadata.filepath;
+							}
+						}
+					});
+					return actionSet;
+				}
+				
+				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||_this.options.dbId, 
+					context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarHeaderActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
+				if($.isArray(ass)) actionSets = actionSets.concat(ass);
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarMiddleActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarTailActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 			}
-			
-			var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||this.options.dbId, 
-			    context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarHeaderActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-			if($.isArray(ass)) actionSets = actionSets.concat(ass);
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarMiddleActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarTailActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-		}
-		this.toolbar.toolbar("option","actionSets", actionSets);
-		if(this.toolbar.toolbar("option","isEmpty")){
-			this.element.border("option",'north',{height:"0"});
-		}else{
-			var height = this.toolbar.outerHeight(true);
-			this.element.border("option",'north',{height:height ? height :"0"});
-		}
+			_this.toolbar.toolbar("option","actionSets", actionSets);
+			if(_this.toolbar.toolbar("option","isEmpty")){
+				_this.element.border("option",'north',{height:"0"});
+			}else{
+				var height = _this.toolbar.outerHeight(true);
+				_this.element.border("option",'north',{height:height ? height :"0"});
+			}
+		},900);
 	},
 	
 	currentEditor:function(){
 		var panel = $(this.centerTabs.tabsx("option","selectedPanel")), data = panel.data(), editor = null;
 		$.each(data||{}, function(k,v){
-			if($.inArray(k,["editor","gridview","formview", "page"]) != -1){
+			if($.inArray(k,["editor","gridview","formview","customview","page"]) != -1){
 				editor = v;
 				return false;
 			}
@@ -15053,10 +15335,10 @@ $.widget( "an.workbench", {
 			tabs.tabsx("select", pid);
 			if(el.is(".an-editor") && opts.mode != "design"){
 				el.editor("destroy");
-			} else if (el.is(".an-formview, .an-gridview") && opts.mode == "design"){
+			} else if (el.is(".an-formview, .an-gridview, .an-customview") && opts.mode == "design"){
 				var data = el.data();
 				for(var i in data){
-					if($.inArray(i, ["formview", "gridview"]) != -1) data[i].destroy();
+					if($.inArray(i, ["formview", "gridview", "customview"]) != -1) data[i].destroy();
 				}
 			}else{
 				return;

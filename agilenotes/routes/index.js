@@ -8,7 +8,6 @@ var mongo = require("mongodb"),
     MailLib = require("../lib/mail"), // mail module
     MSG = require("../config/global_message").GLOBAL_MSG, // global messages
     Functions = require("../lib/common_functions"); // common functions
-var readability = require('node-readability');
 
 ACL.setBson(BSON);
 
@@ -774,10 +773,6 @@ module.exports = function(agilenotes){
 			agilenotes.get('/logout', logout);
 			agilenotes.get('/login', login);
 			
-			 
-			
-	
-	
 
 			agilenotes.get('/dbs/:dbid/:docid?', acl, getDoc);
 			agilenotes.post('/dbs/:dbid', acl, postDoc);
