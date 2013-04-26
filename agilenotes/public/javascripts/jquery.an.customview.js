@@ -11,26 +11,36 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.formview", $.an.view, {
+$.widget( "an.customview", $.an.view, {
 	options: {
 		printable: false,
-		pagerPosition: "bottom", // bottom, both sides
-		itemWidth: 320,
-		itemHeight: 280
+		pagerPosition: "bottom" // bottom, both sides
 	},
 
 	_create: function(){
 		$.an.view.prototype._create.apply(this, arguments);
 		var o = this.options, el = this.element;
 		o.showPager = o.view.showPager;
-		o.itemWidth = o.view.itemWidth;
-		o.itemHeight = o.view.itemHeight;
-		el.addClass("an-formview");
-		this.documents = $("<div class='content'/>").appendTo(el);
+		o.templateTemp = o.view.templateTemp;
+		o.templateSelector = o.view.templateSelector;
+		o.templateConverts = o.view.templateConverts;
+		o.templateContent = o.view.templateContent;
+		el.addClass("an-customview");
+		this.documents = $(o.templateContent).appendTo(el);
+				
+		if (o.templateTemp) {
+			o.templateTemp=$.templates(o.templateTemp);
+		}
+		
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
+		}
+
 		if(o.view.showPager){
 			el.pager($.extend({
 				dbId:o.dbId
-			},o.view));	
+			},o.view));
 			this.pager=el.data('pager');
 			this._loadDocs=function(){
 				el.data('pager')._pagerLoadDocs();
@@ -40,14 +50,10 @@ $.widget( "an.formview", $.an.view, {
 
 	_showDocuments:function(){
 		var self = this, o = this.options;
-		this.documents.empty();
-		var oFragment = document.createDocumentFragment();
-		$.each(this.docs, function(k,doc){
-			var ed = $("<div class='grid-item'/>").css({width:o.itemWidth, height:o.itemHeight});
-			oFragment.appendChild(ed[0]);
-			ed.editor({ dbId:o.dbId, document: doc, forms:[o.form],readOnly:true });
-		});
-		self.documents[0].appendChild(oFragment);
+		if (o.templateTemp) {
+			var html = o.templateTemp.render(self.docs);
+			$(o.templateSelector, this.documents).html(html);
+		}
 	},
 	
 	_docsLoaded:function(data){

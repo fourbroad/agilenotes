@@ -101,7 +101,7 @@ $.widget( "an.editor", {
 							    view: d,
 							    create:function(){ self._trigger("tabcreated",event, $(this).data(vt)); }
 						    };
-						if(vt == "formview") optsx.form = o.form;
+						if(vt == "formview"||vt == "customview") optsx.form = o.form;
 						$p[vt]($.extend(true,optsx,opt));
 					}
 				}
@@ -143,7 +143,7 @@ $.widget( "an.editor", {
 						$this.page("option","form", form);
 					}else if($this.is(".an-gridview")){
 						$this.gridview("option","view", form);
-					}else if($this.is(".an-formview")){
+					}else if($this.is(".an-formview")||$this.is(".an-customview")){
 						$this.formview("option", "view", form);
 					}
 				});
@@ -179,7 +179,7 @@ $.widget( "an.editor", {
 							$this.page("option","form", forms[id]);
 						}else if($this.is(".an-gridview")){
 							$this.gridview("option","view", forms[id]);
-						}else if($this.is(".an-formview")){
+						}else if($this.is(".an-formview")||$this.is(".an-customview")){
 							$this.formview("option", "view", forms[id]);
 						}
 					});
@@ -239,7 +239,7 @@ $.widget( "an.editor", {
 							self.element.tabsx("select", form.option("form")._id);
 						}
 					}
-				}else	if($.inArray(i, ["gridview","formview"]) != -1){
+				}else	if($.inArray(i, ["gridview","formview","customview"]) != -1){
 					if((data[i].option("view")._id == o.document._id)&&data[i].option("isDirty")){
 						o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
 						data[i].option("isDirty", false);
@@ -361,7 +361,7 @@ $.widget( "an.editor", {
 		if(o.design && (id == o.document._id)) id = id+"-design";
 		var data = this.element.tabsx("panel", id).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -369,7 +369,7 @@ $.widget( "an.editor", {
 	_currentForm:function(){
 		var data = $(this.element.tabsx("option","selectedPanel")).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
 		}
 		return null;
 	},

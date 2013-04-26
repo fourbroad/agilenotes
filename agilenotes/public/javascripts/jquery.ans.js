@@ -263,7 +263,6 @@
    },
    
    postTemp: function(input, options){
-	   
 	   var form = $('<form action="" method="POST"></form>').append(input.attr("name","file")),	
 	       o = {url: "/tmp"};
 	   $.extend(o, options);

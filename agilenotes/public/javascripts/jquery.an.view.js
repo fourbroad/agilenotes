@@ -27,7 +27,6 @@ $.widget( "an.view", {
 		if(o.view&&o.view.limit) {
 			o.limit = o.view.limit = parseInt(o.view.limit);
 		}
-
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
 		var data = {};
 		data[this.widgetName] = this;
@@ -71,17 +70,21 @@ $.widget( "an.view", {
 
 	_loadDocs:function(){
 		var self = this, o = this.options, sel = o.view.selector, opts = {skip:o.skip,limit:o.limit};
-		if($.type(o.view.sort)=="string"){
-			opts.sort=eval("("+o.view.sort+")");
+		if(!o.view.showPager||self.widgetName=='gridview'){
+			if($.type(o.view.sort)=="string"){
+				opts.sort=eval("("+o.view.sort+")");
+			}
+			if($.type(sel)=="string"){
+				sel = eval("("+sel+")");
+				$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
+					self.docs = data.docs;
+					self._docsLoaded && self._docsLoaded();
+				});
+			}
+		}else{
+			self.pager&&self.pager.reload();
 		}
-		if($.type(sel)=="string"){
-			sel = eval("("+sel+")");
-			$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
-				self.docs = data.docs;
-				o.total = data.total;
-				self._docsLoaded && self._docsLoaded();
-			});
-		}
+		
 	},
 	
 	_getRow: function(row){
