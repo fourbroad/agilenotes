@@ -581,6 +581,11 @@ function equals(a1,a2){
 
 }
 
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
+	return r != null? unescape(r[2]):null;
+} 
+
 function attributes(node){
 	var attrs = {}, as = node.attributes;
 	for(var i=0; i < as.length; i++) {
@@ -607,7 +612,7 @@ function showDialog(title, message, opts){
 		buttons.push({text:"OK",click:function(){$( this ).dialog( "close" );}});
 	}
 	
-	return $("<div/>").dialog({
+	$("<div/>").dialog({
 		title: title,
 		height: 220,
 		width: 360,
@@ -615,7 +620,7 @@ function showDialog(title, message, opts){
 		create: function(event, ui){ $(this).html(message); },
 		buttons: buttons,
 		close:function(e,ui){$(this).remove();}
-	}).data('dialog');
+	});
 }
 function openDialog(dbId,id,opts,method){
 	$("<div/>").dialog($.extend(true,{
@@ -5780,7 +5785,7 @@ $.widget( "an.widget", {
 			}
 		});
 	},
-	
+
 	_init: function(){
 		this.refresh();
 	},
@@ -6307,7 +6312,7 @@ $.widget( "an.inputfield", $.an.field, {
 	
 	_browser:function(){
 		this.input.hide();
-		this.content.html(this.options.value+"").show();
+		this.content.html(this.options.value+"").css("display","inline-block");
 	},
 	
 	_edit:function(){
@@ -6673,6 +6678,7 @@ $.widget( "an.datetimefield", $.an.inputfield, {
 			dateFormat: this.options.dateFormat?this.options.dateFormat:'mm/dd/yy',
 			minDate: this.options.minDate && eval("("+ this.options.minDate +")") || null,
 			maxDate: this.options.maxDate && eval("("+ this.options.maxDate +")") || null,
+			yearRange: this.options.yearRange?this.options.yearRange:'c-10:c+10',
 			changeMonth:true,
 			changeYear:true,
 			onClose: function() {
@@ -7348,8 +7354,13 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			
 		}
 		
-		if (o.template) {
-			o.template=$.templates(o.template);
+		if (o.templates) {
+			var obj = {};
+			for (var i = 0; i < o.templates.length; i++) {
+				obj[o.templates[i].name] = o.templates[i].content;
+			}
+			
+			$.templates(obj);
 		}
 		
 		if(o.converters){
@@ -7406,8 +7417,7 @@ $.widget( "an.jsrenderfield", $.an.field, {
 	
 	replaceValue:function(index, value) {
 		var o = this.options, oldValue = [].concat(o.value);
-		o.value[index] = value;
-		this.refresh();
+		o.value[index] = value;this.refresh();
 		this._notify(oldValue, o.value);
 	},
 	
@@ -7417,8 +7427,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.browserTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.template) {
-				var html = o.template.render(o.value);
+			if (o.templates) {
+				var html = $.render[o.templates[0].name](o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7430,8 +7440,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.editorTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.template) {
-				var html = o.template.render(o.value);
+			if (o.templates) {
+				var html = $.render[o.templates[0].name](o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7631,168 +7641,6 @@ $.widget( "an.tabsxwidget", $.an.widget, {
 		this.content.tabsx("destroy");
 		this.element.unbind(".tabsxwidget").removeClass("an-tabsxwidget");
 		return $.an.widget.prototype.destroy.apply(this, arguments);;
-	}
-});
-})( jQuery );
-/*!
- * Agile Notes 1.0
- *
- * Copyright 2013, Sihong Zhu and other contributors
-* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
-* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
-* This software is not distributed under version 3 or later of the GPL.
- *
- * http://agilemore.com/agilenotes
- */
-
-(function( $, undefined ) {
-
-$.widget( "an.pager", {
-	options:{
-		skip: 0,
-		limit: 10,
-		totalPage: 0,
-		currentPage:0,
-		selector:'',
-		className:'',
-		showInfo:false,
-		pagerHeight: 28
-	},
-	
-	_create: function(){
-		var o = this.options,self=this;
-
-		this.pager = $("<div class='pager'/>").css({
-			left:0,right:0,bottom:0,height:o.pagerHeight
-		}).appendTo(this.element);
-		this.pager.addClass(o.className);
-		$.each(["first","prev","goto","next","last"], function(k,v){
-			if(v == "goto"){
-				self.pager.append("<div class='goto-page'>Page<input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
-				self.pager.delegate("input", "change.pager", function(){
-					var $this = $(this), p = $(this).val();
-					if(p <= 0){
-						p = 1;
-						$this.val(p);
-					}else if(p > o.totalPage){
-						p = o.totalPage;
-						$this.val(p);
-					}
-					self.gotopage(p);
-				});
-			}else{
-				$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
-					label: v,
-					icons: {primary: "ui-icon-"+v+"-page"},
-					text:false,
-					disabled:true
-				}).click(function(e){
-					e.preventDefault();
-					e.stopImmediatePropagation();
-					self[v+"page"]();
-				});
-			}
-		});
-
-		this.pager.append("<div class='info'>");
-		this._pagerLoadDocs();
-	},
-
-	option: function(key, value) {
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
-		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
-	},
-
-	_setOption: function(key, value){
-		var oldValue = this.options[key];
-		if(!equals(value,oldValue)){
-			$.Widget.prototype._setOption.apply(this, arguments );
-			this._handleChange && this._handleChange(key,value,oldValue);
-			this._trigger("optionchanged",null,{key:key,value:value,oldValue:oldValue});
-		}
-		return this;
-	},
-	
-	_refresh:function(){
-		var o = this.options;
-		if(!o.showPager || o.totalPage <= 1){
-			this.pager.hide();
-			return this;
-		}
-		this.pager.show();
-		this.pager.find(".pager-button").button("enable");
-		if(o.currentPage <= 1){
-			this.pager.find("#first").button("disable");
-			this.pager.find("#prev").button("disable");
-		}else if(o.currentPage >= o.totalPage){
-			this.pager.find("#last").button("disable");
-			this.pager.find("#next").button("disable");
-		}
-		this.pager.find("input.current-page").val(o.currentPage);
-		this.pager.find(".total-page").html(o.totalPage);
-		o.showInfo&&this.pager.find(".info").html("Displaying "+(o.limit*(o.currentPage-1)+1)+" to "+o.limit*o.currentPage+" of "+o.total+" items.");
-	},
-	reload:function(){
-		this._pagerLoadDocs();
-	},
-
-	firstpage:function(e,data){ 
-		this.options.skip = 0; 
-		this._pagerLoadDocs();
-	},
-	
-	prevpage:function(){
-		var o = this.options;
-		o.skip = o.skip - o.limit;
-		this._pagerLoadDocs(); 
-	},
-	
-	gotopage:function(page){
-		var o = this.options;
-		o.skip = (page-1)*o.limit;
-		this._pagerLoadDocs();
-	},
-	
-	nextpage:function(){
-		var o = this.options;
-		o.skip = o.skip + o.limit;
-		this._pagerLoadDocs();
-	},
-	
-	lastpage:function(){
-		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
-		this._pagerLoadDocs();
-	},
-
-	_pagerLoadDocs:function(){
-		var self = this, o = this.options, sel = o.selector, opts = {skip:o.skip,limit:o.limit};
-		if($.type(o.sort)=="string"){
-			opts.sort=eval("("+o.sort+")");
-		}
-		if($.type(sel)=="string"){
-			sel = eval("("+sel+")");
-			$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
-				var obj=self.element.data();
-				for(var q in obj){
-					if(/view/.test(obj[q]['widgetName'])){
-						obj[q]._docsLoaded(data.docs);
-						break;
-					}
-				}
-				o.total = data.total;
-				o.currentPage = Math.floor(o.skip/o.limit+1);
-				o.totalPage = Math.ceil(o.total/o.limit);
-				self._refresh();
-			});
-		}
-	},
-	
-	destroy: function() {
-		this.element.removeClass("show-pager");
-		this.pager && this.pager.remove();
-		delete this.pager;
-		$.Widget.prototype.destroy.apply(this,arguments);
 	}
 });
 })( jQuery );
@@ -13654,13 +13502,17 @@ $.widget( "an.formview", $.an.view, {
 		o.itemHeight = o.view.itemHeight;
 		el.addClass("an-formview");
 		this.documents = $("<div class='content'/>").appendTo(el);
+		
 		if(o.view.showPager){
+			if(el.data('pager')){
+				el.data('pager').destroy();	
+			}
 			el.pager($.extend({
 				dbId:o.dbId
-			},o.view));	
+			},o.view));
 			this.pager=el.data('pager');
 			this._loadDocs=function(){
-				el.data('pager')._pagerLoadDocs();
+				el.data('pager').reload();
 			}
 		}
 	},
@@ -13675,97 +13527,6 @@ $.widget( "an.formview", $.an.view, {
 			ed.editor({ dbId:o.dbId, document: doc, forms:[o.form],readOnly:true });
 		});
 		self.documents[0].appendChild(oFragment);
-	},
-	
-	_docsLoaded:function(data){
-		if($.isArray(data)){
-			this.docs = data;
-		}
-		this.refresh();
-	},
-	
-	_design:function(){
-		this._showDocuments();
-	},
-	
-	_browser:function(){
-		this._showDocuments();
-	},
-	
-	save:function(){
-		var self = this, value = {};
-		$.extend(this.options.view.options, value);
-		return $.an.view.prototype.save.apply(this,arguments);
-	},
-	
-	print: function(){ 
-		var o = this.options, loc = window.location, 
-		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&viewid="+o.view._id;
-		print(url);
-	},
-	
-	destroy: function() {
-		this.element.unbind(".formview").removeClass("an-formview show-pager");
-		$.an.view.prototype.destroy.apply(this,arguments);
-	}
-});
-})( jQuery );
-/*!
- * Agile Notes 1.0
- *
- * Copyright 2013, Sihong Zhu and other contributors
-* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
-* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
-* This software is not distributed under version 3 or later of the GPL.
- *
- * http://agilemore.com/agilenotes
- */
-
-(function( $, undefined ) {
-
-$.widget( "an.customview", $.an.view, {
-	options: {
-		printable: false,
-		pagerPosition: "bottom" // bottom, both sides
-	},
-
-	_create: function(){
-		$.an.view.prototype._create.apply(this, arguments);
-		var o = this.options, el = this.element;
-		o.showPager = o.view.showPager;
-		o.templateTemp = o.view.templateTemp;
-		o.templateSelector = o.view.templateSelector;
-		o.templateConverts = o.view.templateConverts;
-		o.templateContent = o.view.templateContent;
-		el.addClass("an-customview");
-		this.documents = $(o.templateContent).appendTo(el);
-				
-		if (o.templateTemp) {
-			o.templateTemp=$.templates(o.templateTemp);
-		}
-		
-		if(o.templateConverts&&typeof o.templateConverts=='string'){
-			o.templateConverts=eval("("+o.templateConverts+")");			
-			$.views.converters(o.templateConverts);
-		}
-
-		if(o.view.showPager){
-			el.pager($.extend({
-				dbId:o.dbId
-			},o.view));
-			this.pager=el.data('pager');
-			this._loadDocs=function(){
-				el.data('pager')._pagerLoadDocs();
-			}
-		}
-	},
-
-	_showDocuments:function(){
-		var self = this, o = this.options;
-		if (o.templateTemp) {
-			var html = o.templateTemp.render(self.docs);
-			$(o.templateSelector, this.documents).html(html);
-		}
 	},
 	
 	_docsLoaded:function(data){
