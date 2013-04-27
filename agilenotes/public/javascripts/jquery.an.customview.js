@@ -38,12 +38,15 @@ $.widget( "an.customview", $.an.view, {
 		}
 
 		if(o.view.showPager){
+			if(el.data('pager')){
+				el.data('pager').destroy();	
+			}
 			el.pager($.extend({
 				dbId:o.dbId
 			},o.view));
 			this.pager=el.data('pager');
 			this._loadDocs=function(){
-				el.data('pager')._pagerLoadDocs();
+				el.data('pager').reload();
 			}
 		}
 	},
@@ -72,7 +75,7 @@ $.widget( "an.customview", $.an.view, {
 	},
 	
 	save:function(){
-		var value = {};
+		var self = this, value = {};
 		$.extend(this.options.view.options, value);
 		return $.an.view.prototype.save.apply(this,arguments);
 	},
