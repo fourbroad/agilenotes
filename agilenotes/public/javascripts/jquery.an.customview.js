@@ -72,7 +72,7 @@ $.widget( "an.customview", $.an.view, {
 	},
 	
 	save:function(){
-		var self = this, value = {};
+		var value = {};
 		$.extend(this.options.view.options, value);
 		return $.an.view.prototype.save.apply(this,arguments);
 	},
