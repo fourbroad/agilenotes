@@ -26,6 +26,7 @@ $.widget( "an.datetimefield", $.an.inputfield, {
 			dateFormat: this.options.dateFormat?this.options.dateFormat:'mm/dd/yy',
 			minDate: this.options.minDate && eval("("+ this.options.minDate +")") || null,
 			maxDate: this.options.maxDate && eval("("+ this.options.maxDate +")") || null,
+			yearRange: this.options.yearRange?this.options.yearRange:'c-10:c+10',
 			changeMonth:true,
 			changeYear:true,
 			onClose: function() {
