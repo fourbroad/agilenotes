@@ -27,13 +27,17 @@ $.widget( "an.formview", $.an.view, {
 		o.itemHeight = o.view.itemHeight;
 		el.addClass("an-formview");
 		this.documents = $("<div class='content'/>").appendTo(el);
+		
 		if(o.view.showPager){
+			if(el.data('pager')){
+				el.data('pager').destroy();	
+			}
 			el.pager($.extend({
 				dbId:o.dbId
-			},o.view));	
+			},o.view));
 			this.pager=el.data('pager');
 			this._loadDocs=function(){
-				el.data('pager')._pagerLoadDocs();
+				el.data('pager').reload();
 			}
 		}
 	},
