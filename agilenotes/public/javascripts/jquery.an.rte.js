@@ -14,8 +14,8 @@
 $.widget( "an.rte", {
 	options: {
 		doctype: '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">',
-		cssfiles: [],
-		jsfiles: [],
+		cssFiles: [],
+		jsFiles: [],
 		mode: "design", // "design","sourcecode"
 		lang: 'en',
 		absoluteURLs: true,
@@ -88,10 +88,10 @@ $.widget( "an.rte", {
 		
 		/* put content into iframe */
 		var html = '<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
-		$.each(o.cssfiles, function() {
+		$.each(o.cssFiles, function() {
 			html += "<link rel='stylesheet' type='text/css' href='"+this+"'/>";
 		});
-		$.each(o.jsfiles,function(){
+		$.each(o.jsFiles,function(){
 			html +="<script type='text/javascript' language='javascript' src='"+this+"'></script>";
 		});
 		html += '<style id="stylesheet" type="text/css">'+(o.stylesheet||"")+'</style>';
@@ -729,7 +729,7 @@ $.widget( "an.rte", {
 			modal: true,
 			create: function(event, ui){
 				var $this = $(this);
-				Model.getForms(o.dbId, formIds, function(err, forms){
+				Model.getPages(o.dbId, formIds, function(err, forms){
 					if(forms){
 						$this.editor({document:attrs, forms:forms, dbId:o.dbId, mode:"edit", ignoreEscape:true});
 					}

@@ -92,7 +92,7 @@ $.widget( "an.editor", {
 						}, opt));
 					}else if (type == Model.PAGE){
 						$p.page($.extend(true,{
-							form: d, 
+							page:d, 
 							create:function(){ self._trigger("tabcreated",event, $(this).data("page")); }
 						},opt));
 					}else if (type == Model.VIEW){

@@ -53,7 +53,7 @@ $(function(){
 		loadValidateMethods(dbId, function(){
 			if(pageId){
 				$.ans.getDoc(dbId, pageId, null, function(err,page){
-				    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,form:page});
+				    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
 				});
 			}else if(viewId){
 				$.ans.getDoc(dbId, viewId, null, function(err,view){
@@ -104,7 +104,7 @@ $(function(){
 				$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
 					if(dbDoc.homePage){
 						$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
-						    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,form:page});
+						    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
 						});
 					}
 				});

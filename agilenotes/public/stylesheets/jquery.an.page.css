@@ -1,5 +1,10 @@
 @charset "UTF-8";
 /* CSS Document */
+
+.an-page .an-rte {
+	height:100%;
+}
+
 .page iframe {
     background: none repeat scroll 0 0 #FFFFFF;
     border: 0 solid;

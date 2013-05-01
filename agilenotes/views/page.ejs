@@ -46,7 +46,7 @@ $(function(){
 		loadValidateMethods(dbId, function(){
 			if( doctype == "000000000000000000000004" ){
 				var page = doc;
-				    $("#widget").page({title:page.title||page.name,dbId:dbId,form:page});
+				    $("#widget").page({title:page.title||page.name,dbId:dbId,page:page});
 			}else if( doctype == "000000000000000000000003" ){
 				var view = doc;
 				    $("#widget").gridview({
@@ -94,7 +94,7 @@ $(function(){
 				$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
 					if(dbDoc.homePage){
 						$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
-						    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,form:page});
+						    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
 						});
 					}
 				});

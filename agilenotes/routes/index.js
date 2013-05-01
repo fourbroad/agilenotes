@@ -175,6 +175,7 @@ function rend(req,res){
 			
 		});
 }
+
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,

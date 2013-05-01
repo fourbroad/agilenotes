@@ -56,7 +56,7 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.filefield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.gridfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.jsrenderfield.js"><\/script>\
-<script src="javascripts/widgets/jquery.an.buttonfield.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.buttonwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.tabsxwidget.js"><\/script>\
 <script src="javascripts/jquery.an.pager.js"><\/script>\
 <script src="javascripts/jquery.an.tree.js"><\/script>\
@@ -66,6 +66,7 @@ document.write('\
 <script src="javascripts/jquery.an.border.js"><\/script>\
 <script src="javascripts/jquery.an.rte.js"><\/script>\
 <script src="javascripts/jquery.an.tabsx.js"><\/script>\
+<script src="javascripts/jquery.an.page.js"><\/script>\
 <script src="javascripts/jquery.an.form.js"><\/script>\
 <script src="javascripts/jquery.an.outline.js"><\/script>\
 <script src="javascripts/jquery.an.agilegrid.js"><\/script>\
@@ -74,7 +75,6 @@ document.write('\
 <script src="javascripts/jquery.an.gridview.js"><\/script>\
 <script src="javascripts/jquery.an.formview.js"><\/script>\
 <script src="javascripts/jquery.an.customview.js"><\/script>\
-<script src="javascripts/jquery.an.page.js"><\/script>\
 <script src="javascripts/jquery.an.editor.js"><\/script>\
 <script src="javascripts/jquery.an.sideview.js"><\/script>\
 <script src="javascripts/jquery.an.workbench.js"><\/script>\
