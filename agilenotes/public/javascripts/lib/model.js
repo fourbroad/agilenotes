@@ -288,25 +288,26 @@ var Model = {
     	type = this.types[page.type];
 
     	function openEditor(type){
-			if(opts.mode && (opts.mode != "design")){
-				var doc = {};
-		    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
-		    	if(page.type==Model.PAGE){
-					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
-					opts.opened && opts.opened(element.data("page"));
-		    	}else if(page.type == Model.FORM){
-					element.editor($.extend(true, {title:title, dbId:dbId, document:doc, forms:[page]}, opts));
-					opts.opened && opts.opened(element.data("editor"));
-		    	}
-			}else{
+			if(opts.mode == "design"){
 	    		self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 	    			if(err){
 	    				console.log("Load forms "+type.forms+" error: "+err);
 	    			}else{
-	    				element.editor($.extend(true, { title:title, dbId:dbId, document:page, forms:forms, design:true, isPageEditor:true}, $.extend(true,{},opts,{mode:'edit'})));
+				    	if(opts.isNew) $.extend(true, page, eval("("+type.defaultValues+")"||"{}"));
+	    				element.editor($.extend(true, {title:title, dbId:dbId, document:page, forms:forms, design:true, isPageEditor:true}, $.extend(true,{},opts,{mode:'edit'})));
 	    				opts.opened && opts.opened(element.data("editor"));
 	    			}
 	    		});
+			}else{
+		    	if(page.type==Model.PAGE){
+					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+					opts.opened && opts.opened(element.data("page"));
+		    	}else if(page.type == Model.FORM){
+					var doc = {};
+			    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
+					element.editor($.extend(true, {title:title, dbId:dbId, document:doc, forms:[page]}, opts));
+					opts.opened && opts.opened(element.data("editor"));
+		    	}
 			}   
     	}
 

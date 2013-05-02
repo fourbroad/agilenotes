@@ -17,50 +17,39 @@ $.widget( "an.page", {
 		actionSets: [],
 		wrapper:"<div/>",
 		formIds:{
-		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
-		}
+		},
+		cssFiles:["stylesheets/rte/rte-design.css",
+		          "stylesheets/jquery-ui-1.8.24.custom.css",
+		          "stylesheets/jquery.ui.timepicker.css",
+		          "stylesheets/jquery.an.menu.css",
+		          "stylesheets/jquery.an.agilegrid.css",
+		          "stylesheets/jquery.an.tree.css",
+		          "stylesheets/jquery.an.border.css",
+		          "stylesheets/jquery.an.tabsx.css",
+		          "stylesheets/jquery.an.toolbar.css",
+		          "stylesheets/jquery.an.page.css",
+		          "stylesheets/jquery.an.editor.css",
+		          "stylesheets/jquery.an.formview.css",
+		          "stylesheets/jquery.an.widget.css",
+		          "stylesheets/jquery.an.tabsxwidget.css",
+		          "stylesheets/jquery.an.box.css",
+		          "stylesheets/jquery.an.fileinput.css",
+		          "stylesheets/jquery.an.filefield.css",
+		          "stylesheets/jquery.an.gridfield.css",
+		          "stylesheets/jquery.colorpicker.css",
+		          "stylesheets/jquery.ui.select.css",
+		          "stylesheets/rte/paddinginput.css",
+		          "stylesheets/jquery.an.rte.css",
+		          "stylesheets/base.css"],
+        jsFiles:["javascripts/jquery-1.8.2.js","javascripts/jquery.scrollto.js"]
 	},
 
 	_create: function() {
 		this.element.addClass("an-page");
-		var o = this.options, page = o[this.widgetName];
+		var page = this.options[this.widgetName];
 		$.extend(this, eval("try{("+(page.methods||"{}")+")}catch(e){}"));
-		
-		o.cssFiles = o.cssFiles || [];
-		o.jsFiles = o.jsFiles || [];
-		if(o.mobile){
-			o.cssFiles = [""].concat(o.cssFiles);
-			o.jsFiles = ["javascripts/jquery-1.8.2.js",
-			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
-		}else{
-			o.cssFiles = ["stylesheets/rte/rte-design.css",
-			          "stylesheets/jquery-ui-1.8.24.custom.css",
-			          "stylesheets/jquery.ui.timepicker.css",
-			          "stylesheets/jquery.an.menu.css",
-			          "stylesheets/jquery.an.agilegrid.css",
-			          "stylesheets/jquery.an.tree.css",
-			          "stylesheets/jquery.an.border.css",
-			          "stylesheets/jquery.an.tabsx.css",
-			          "stylesheets/jquery.an.toolbar.css",
-			          "stylesheets/jquery.an.page.css",
-			          "stylesheets/jquery.an.editor.css",
-			          "stylesheets/jquery.an.formview.css",
-			          "stylesheets/jquery.an.widget.css",
-			          "stylesheets/jquery.an.tabsxwidget.css",
-			          "stylesheets/jquery.an.box.css",
-			          "stylesheets/jquery.an.fileinput.css",
-			          "stylesheets/jquery.an.filefield.css",
-			          "stylesheets/jquery.an.gridfield.css",
-			          "stylesheets/jquery.colorpicker.css",
-			          "stylesheets/jquery.ui.select.css",
-			          "stylesheets/rte/paddinginput.css",
-			          "stylesheets/jquery.an.rte.css",
-			          "stylesheets/base.css"].concat(o.cssFiles);
-	        o.jsFiles = ["javascripts/jquery-1.8.2.js",
-	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);	
-		}
-		
 		this._initPage();
 	},
 	

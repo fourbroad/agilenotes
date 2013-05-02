@@ -226,7 +226,7 @@ $.widget( "an.editor", {
 			var data = $(this).data();;
 			for(var i in data){
 				if($.inArray(i, ["form","page"]) != -1){
-					if((data[i].option("form")._id == o.document._id) && data[i].option("isDirty")){
+					if((data[i].option(i)._id == o.document._id) && data[i].option("isDirty")){
 						o.document.content = data[i].option("content");
 						data[i].option("isDirty", false);
 						o.isDocDirty = true;
