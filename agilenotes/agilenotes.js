@@ -67,6 +67,8 @@ agilenotes.configure(function() {
 	agilenotes.use(passport.initialize());
 	agilenotes.use(passport.session());
 	agilenotes.use(agilenotes.router);
+	agilenotes.set('views', __dirname + '/views');
+	agilenotes.set('view engine', 'ejs');
 	agilenotes.use(express.static(__dirname + '/public'));
 	
 	agilenotes.set('passport', passport);

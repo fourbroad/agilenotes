@@ -25,7 +25,7 @@
 ..\javascripts\widgets\jquery.an.filefield.js 
 ..\javascripts\widgets\jquery.an.gridfield.js
 ..\javascripts\widgets\jquery.an.jsrenderfield.js
-..\javascripts\widgets\jquery.an.buttonfield.js 
+..\javascripts\widgets\jquery.an.buttonwidget.js 
 ..\javascripts\widgets\jquery.an.tabsxwidget.js 
 ..\javascripts\jquery.an.tree.js 
 ..\javascripts\jquery.cookie.js 

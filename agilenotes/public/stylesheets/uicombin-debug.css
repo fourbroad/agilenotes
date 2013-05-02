@@ -1430,88 +1430,91 @@ li.ui-draggable{
 	overflow: hidden;
 }
 
-.an-formview.show-pager>.content {
+.an-formview.show-pager>.content,.an-customview.show-pager>.content {
 	padding-bottom: 18px;
 }
 
-.an-formview>.bottom>.pager {
+.an-formview>.bottom>.pager,.an-customview.bottom>.pager {
 	margin-left: auto;
     margin-right: auto;
     width: 260px;
 }
 
-.an-formview .pager .ui-icon{
+.an-formview .pager .ui-icon,.an-customview .pager .ui-icon{
     background-image:url("images/ui-icons_888888_256x240.png");
 }
 
 .an-formview .pager .ui-button-icon-only,
-.an-formview .pager .ui-button-text {
+.an-formview .pager .ui-button-text,.an-customview .pager .ui-button-icon-only,
+.an-customview .pager .ui-button-text {
     display: inline-block;
 	height: 25px;
     width: 25px;
     margin-top: 2px;
 }
 
-.an-formview .pager .ui-button-text{
+.an-formview .pager .ui-button-text,.an-customview .pager .ui-button-text{
 	padding-top:0px;
 }
 
 .an-formview .pager label.ui-button-icon-only,
-.an-formview .pager label.ui-button-text {
+.an-formview .pager label.ui-button-text,.an-customview .pager label.ui-button-icon-only,
+.an-customview .pager label.ui-button-text {
 	display: inline-block;
 }
 
 .an-formview .pager label.ui-button-icon-only>span.ui-button-text,
-.an-formview .pager label.ui-button-text>span.ui-button-text {
+.an-formview .pager label.ui-button-text>span.ui-button-text,.an-customview .pager label.ui-button-icon-only>span.ui-button-text,
+.an-customview .pager label.ui-button-text>span.ui-button-text  {
     height: 16px;
     width: 16px;
 }
 
-.an-formview .pager button.disabled {
+.an-formview .pager button.disabled,.an-customview .pager button.disabled {
     opacity: 0.3;
 }
 
-.an-formview .pager .goto-page {
+.an-formview .pager .goto-page ,.an-customview .pager .goto-page {
 	display: inline-block;
     margin-left: 5px;
 	margin-right: 5px;
 	font-weight: normal;
 }
 
-.an-formview .pager input {
+.an-formview .pager input,.an-customview .pager input {
 	width: 30px;
 	text-align:center;
 	margin-left: 5px;
 	margin-right: 5px;
 }
 
-.an-formview .pager .total-page {
+.an-formview .pager .total-page,.an-customview .pager .total-page {
 	display: inline-block;
 	text-align:center;
 	margin-left: 5px;
 	margin-right: 5px;
 }
 
-.an-formview .pager .info {
+.an-formview .pager .info,.an-customview .pager .info {
 	display: inline-block;
 	font-weight: normal;
 	margin-left: 5px;
 	margin-right: 5px;
 }
 
-.an-formview .pager .ui-icon-first-page {
+.an-formview .pager .ui-icon-first-page,.an-customview .pager .ui-icon-first-page {
 	background-position: -80px -160px;
 }
 
-.an-formview .pager .ui-icon-prev-page {
+.an-formview .pager .ui-icon-prev-page,.an-customview .pager .ui-icon-prev-page {
 	background-position: -48px -160px;
 }
 
-.an-formview .pager .ui-icon-next-page {
+.an-formview .pager .ui-icon-next-page ,.an-customview .pager .ui-icon-next-page {
 	background-position: -32px -160px;
 }
 
-.an-formview .pager .ui-icon-last-page {
+.an-formview .pager .ui-icon-last-page,.an-customview .pager .ui-icon-last-page {
 	background-position: -64px -160px;
 }@charset "UTF-8";
 /* CSS Document */

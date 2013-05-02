@@ -1,10 +1,6 @@
 @charset "UTF-8";
 /* CSS Document */
 
-.an-form .an-rte {
-	height:100%;
-}
-
 .an-form label.error {
 	margin-left: 10px;
 	 color: red;

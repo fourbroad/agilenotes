@@ -137,7 +137,6 @@ $.widget( "an.workbench", {
 			self._initMainToolbar();
 			// load opened documents.
 			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
-			
 			// load side views.
 			$.each(o.sideViews, function(){ self.showSideView(this.id, this.anchor, this.options); });
 		});
@@ -390,58 +389,62 @@ $.widget( "an.workbench", {
     	this.reloadToolbar();
 	},
 
-	reloadToolbar: function(){
-		console.log("reloadToolbar............................!");
+	reloadToolbar: function(){	
+		var _this=this;
+		clearTimeout(_this.time);
+		_this.time=setTimeout(function(){
+			console.log("reloadToolbar............................!");
 
-		var editor = this.currentEditor(), actionSets = [];
-		if(editor){
-			function createActionSet(actions, context){
-				var actionSet = {};
-		    	$.each(actions, function(k,v){
-					filter = eval("(0,"+(v.filter||"function(){return true}")+")");
-					if(filter(context)){
-			    		actionSet[v._id] = {
-			    			_id: v._id,
-			    			type: v.actionType || "button",
-			    			label:v.title || v.name,
-			    			text: false,
-			    			icons:{primary: "ui-icon-"+v.name},
-			    			iconFile:v.icon,
-			    			handler: eval("(0,"+(v.handler||"function(){}")+")"),
-			    			enabled: eval("(0,"+(v.enabled||"function(){return false;}")+")"),
-			    			checked: eval("(0,"+(v.checked||"function(){return false;}")+")")
-			    		};
-			    		if(v.icon && (v.icon.length > 0)&& v.icon[0].metadata){
-			    			actionSet[v._id].iconFile = "/dbs/"+context.dbId+"/"+v._id+"/attachments/"+v.icon[0].metadata.filepath;
-			    		}
-					}
-		    	});
-				return actionSet;
+			var editor = _this.currentEditor(), actionSets = [];
+			if(editor){
+				function createActionSet(actions, context){
+					var actionSet = {};
+					$.each(actions, function(k,v){
+						filter = eval("(0,"+(v.filter||"function(){return true}")+")");
+						if(filter(context)){
+							actionSet[v._id] = {
+								_id: v._id,
+								type: v.actionType || "button",
+								label:v.title || v.name,
+								text: false,
+								icons:{primary: "ui-icon-"+v.name},
+								iconFile:v.icon,
+								handler: eval("(0,"+(v.handler||"function(){}")+")"),
+								enabled: eval("(0,"+(v.enabled||"function(){return false;}")+")"),
+								checked: eval("(0,"+(v.checked||"function(){return false;}")+")")
+							};
+							if(v.icon && (v.icon.length > 0)&& v.icon[0].metadata){
+								actionSet[v._id].iconFile = "/dbs/"+context.dbId+"/"+v._id+"/attachments/"+v.icon[0].metadata.filepath;
+							}
+						}
+					});
+					return actionSet;
+				}
+				
+				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||_this.options.dbId, 
+					context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarHeaderActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
+				if($.isArray(ass)) actionSets = actionSets.concat(ass);
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarMiddleActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
+				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarTailActions, context);
+				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 			}
-			
-			var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||this.options.dbId, 
-			    context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarHeaderActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-			if($.isArray(ass)) actionSets = actionSets.concat(ass);
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarMiddleActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-			actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||this.toolbarTailActions, context);
-			if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-		}
-		this.toolbar.toolbar("option","actionSets", actionSets);
-		if(this.toolbar.toolbar("option","isEmpty")){
-			this.element.border("option",'north',{height:"0"});
-		}else{
-			var height = this.toolbar.outerHeight(true);
-			this.element.border("option",'north',{height:height ? height :"0"});
-		}
+			_this.toolbar.toolbar("option","actionSets", actionSets);
+			if(_this.toolbar.toolbar("option","isEmpty")){
+				_this.element.border("option",'north',{height:"0"});
+			}else{
+				var height = _this.toolbar.outerHeight(true);
+				_this.element.border("option",'north',{height:height ? height :"0"});
+			}
+		},900);
 	},
 	
 	currentEditor:function(){
 		var panel = $(this.centerTabs.tabsx("option","selectedPanel")), data = panel.data(), editor = null;
 		$.each(data||{}, function(k,v){
-			if($.inArray(k,["editor","gridview","formview", "page"]) != -1){
+			if($.inArray(k,["editor","gridview","formview","customview","page"]) != -1){
 				editor = v;
 				return false;
 			}
@@ -764,15 +767,8 @@ $.widget( "an.workbench", {
 			    tabshow:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 			    tabcreated:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 				saved:function(err,doc,bl){
-					var m = "openDocument";
-					if(doc.type == Model.FORM){
-						m = "openForm";
-					}else if(doc.type == Model.VIEW){
-						m = "openView";
-					}else if(doc.type == Model.PAGE){
-						m = "openPage";
-					}
-					var data={method:m, id:doc._id};
+					var type={"000000000000000000000001":"openDocument","000000000000000000000002":"openForm","000000000000000000000003":"openView","000000000000000000000004":"openPage"};
+					var data={method:type[doc.type], id:doc._id};
 					if(bl){
 						self.options.openedDocuments.push(data);
 						self._saveOptions();
@@ -781,8 +777,10 @@ $.widget( "an.workbench", {
 		    },opts);
 		if(typeId == Model.FORM){
 			pid = pid+"-form";
+			optsx.isFormEditor = true; 
 		}else if(typeId == Model.PAGE){
 			pid = pid+"-page";
+			optsx.isPageEditor = true; 
 		}else if(typeId == Model.VIEW){
 			pid = pid+"-view";
 		}else{
@@ -861,6 +859,7 @@ $.widget( "an.workbench", {
 	
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = formId+"-form"; 
@@ -891,7 +890,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openForm", id:formId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, formId, optsx);
+			Model.openPage(el, dbId, formId, optsx);
 		}
 		
 		var el = null;
@@ -917,7 +916,7 @@ $.widget( "an.workbench", {
 	openPage:function(pageId, opts){
 		opts = opts || {};
 		$.extend(true,opts,{isPageEditor:true});
-
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = pageId+"-page"; 
 		if(!opts.preview && tabs.tabsx("panel",pid).size() > 0){
@@ -947,7 +946,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openPage", id:pageId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, pageId, optsx);
+			Model.openPage(el, dbId, pageId, optsx);
 		}
 		
 		var el = null;
@@ -979,10 +978,10 @@ $.widget( "an.workbench", {
 			tabs.tabsx("select", pid);
 			if(el.is(".an-editor") && opts.mode != "design"){
 				el.editor("destroy");
-			} else if (el.is(".an-formview, .an-gridview") && opts.mode == "design"){
+			} else if (el.is(".an-formview, .an-gridview, .an-customview") && opts.mode == "design"){
 				var data = el.data();
 				for(var i in data){
-					if($.inArray(i, ["formview", "gridview"]) != -1) data[i].destroy();
+					if($.inArray(i, ["formview", "gridview", "customview"]) != -1) data[i].destroy();
 				}
 			}else{
 				return;

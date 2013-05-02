@@ -7,12 +7,17 @@
 }
 
 .an-gridfield .titlebar {
-	position: relative;
 	height: 32px;
 	border: medium none;
 }
 
+.an-gridfield>.content {
+	height:100%;
+	width:100%;
+}
+
 .an-gridfield .an-agilegrid {
+	top: 32px;
 	border-top:1px solid darkgrey;
 }
 

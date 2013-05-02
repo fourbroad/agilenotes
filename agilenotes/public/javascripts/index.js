@@ -1,5 +1,5 @@
 var designMode='develop';
-    
+
 if(designMode=='develop'){
 document.write('\
 <link rel="stylesheet" href="stylesheets/jquery-ui-1.8.24.custom.css" type="text/css">\
@@ -56,9 +56,9 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.filefield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.gridfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.jsrenderfield.js"><\/script>\
-<script src="javascripts/widgets/jquery.an.buttonfield.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.buttonwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.tabsxwidget.js"><\/script>\
-<script src="javascripts/jquery.tmpl.js"><\/script>\
+<script src="javascripts/jquery.an.pager.js"><\/script>\
 <script src="javascripts/jquery.an.tree.js"><\/script>\
 <script src="javascripts/jquery.cookie.js"><\/script>\
 <script src="javascripts/jquery.hotkeys.js"><\/script>\
@@ -66,6 +66,7 @@ document.write('\
 <script src="javascripts/jquery.an.border.js"><\/script>\
 <script src="javascripts/jquery.an.rte.js"><\/script>\
 <script src="javascripts/jquery.an.tabsx.js"><\/script>\
+<script src="javascripts/jquery.an.page.js"><\/script>\
 <script src="javascripts/jquery.an.form.js"><\/script>\
 <script src="javascripts/jquery.an.outline.js"><\/script>\
 <script src="javascripts/jquery.an.agilegrid.js"><\/script>\
@@ -73,7 +74,7 @@ document.write('\
 <script src="javascripts/jquery.an.view.js"><\/script>\
 <script src="javascripts/jquery.an.gridview.js"><\/script>\
 <script src="javascripts/jquery.an.formview.js"><\/script>\
-<script src="javascripts/jquery.an.page.js"><\/script>\
+<script src="javascripts/jquery.an.customview.js"><\/script>\
 <script src="javascripts/jquery.an.editor.js"><\/script>\
 <script src="javascripts/jquery.an.sideview.js"><\/script>\
 <script src="javascripts/jquery.an.workbench.js"><\/script>\
