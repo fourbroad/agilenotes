@@ -180,7 +180,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openPage(el, dbId, formId, optsx);
+		Model.openForm(el, dbId, formId, optsx);
 		return this;
 	},
 
@@ -212,7 +212,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(page);
 	    		}
 	        });
-		Model.openPage(el, dbId, pageId, optsx);
+		Model.openForm(el, dbId, pageId, optsx);
 		return this;
 	},
 	
@@ -245,7 +245,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
+				var opts = {mode:"browser",dbId:o.odbId||o.dbId}, id = o.targetId;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -292,7 +292,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var id = o.targetId, ob = {dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId};
+				var id = o.targetId, ob = {mode:"browser",dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId};
 				if(link == "documentType"){
 					this.newDocument(id, oe);
 				}else if(link == "document"){
