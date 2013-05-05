@@ -12,6 +12,10 @@
 (function( $, undefined ) {
 
 $.widget( "an.passwordfield", $.an.inputfield, {
+	options:{
+		width:120,
+		height:21
+	},
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
@@ -19,18 +23,13 @@ $.widget( "an.passwordfield", $.an.inputfield, {
 	},
 
 	_browser:function(){
-		this.input.hide();
-		this.content.html("********").show();
-	},
-	
-	_edit:function(){
-		this.content.hide();
-		this.input.val(this.options.value).show();
+		$.an.inputfield.prototype._browser.apply(this, arguments);
+		this.content.html("********");
 	},
 	
 	_design:function(){
-		this.input.hide();
-		this.content.html("********").show();
+		$.an.inputfield.prototype._design.apply(this, arguments);
+		this.content.html("********");
 	},
 
 	destroy: function() {

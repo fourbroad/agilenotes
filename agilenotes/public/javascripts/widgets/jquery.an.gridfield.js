@@ -14,7 +14,8 @@
 $.widget( "an.gridfield", $.an.field, {
 	options: {
 		mode: "browser",
-		title: "",
+		width: 400,
+		height: 300,
 		addItemLabel: "Add",
 		editItemLabel: "Edit",
 		deleteItemLabel: "Delete",
@@ -23,24 +24,27 @@ $.widget( "an.gridfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, c = this.content;
 		this.element.addClass("an-gridfield");
+	},
+	
+	_createControl:function(){
+		var self = this, o = this.options, c = this.content.css({width:o.width, height:o.height});
 		this.titlebar = $("<div class='titlebar ui-widget-header'/>").appendTo(c);
-		this.title = $("<span class='title'/>").html(o.title).appendTo(this.titlebar);
+		this.title = $("<span class='title'/>").html(o.label).appendTo(this.titlebar);
 		this.toolbar = $("<span class='toolbar'/>").appendTo(this.titlebar);
 		if(o.converter){
 			o.converter=eval("("+o.converter+")");
 			if(!$.isFunction(o.converter)){
 				o.converter=function(row,col,v){
 					return v;
-				}
+				};
 			}
 		}
 		var lng=window.database.local;
 		if(lng&&lng!='en'){
 			$.extend(o,$.i18n.gridfield);
 		}
-		this.grid = $("<div/>").css({top: this.titlebar.outerHeight()}).appendTo(c)
+		this.grid = $("<div/>").appendTo(c)
 		      .agilegrid($.extend({
 					dbId:o.dbId,
 					cellRender: function(row, col){
@@ -63,6 +67,10 @@ $.widget( "an.gridfield", $.an.field, {
 		});
 	},
 
+	_createLabel:function(){},
+
+	_makeResizable:function(){},
+	
 	_updateMetadata:function(){
 		var opts = {
 				colModel: this.grid.agilegrid("option","colModel"),
@@ -144,7 +152,7 @@ $.widget( "an.gridfield", $.an.field, {
 	
 	_handleChange:function(key, value, oldValue){
 		$.an.field.prototype._handleChange.apply(this, arguments);
-		if(key === "title") this.title.html(value);
+		if(key === "label") this.title.html(value);
 	},
 	
 	_browser:function(){
@@ -163,8 +171,20 @@ $.widget( "an.gridfield", $.an.field, {
 		this.toolbar.show();
 	},
 	
+	// TODO: Editing column is not correct in design mode.
 	_design:function(){
-		var o = this.options;
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
+		
 		this.grid.agilegrid($.extend(true,{},{
 			rowCount: (o.value&&o.value.length)||0,
 			isColumnResizable: true,

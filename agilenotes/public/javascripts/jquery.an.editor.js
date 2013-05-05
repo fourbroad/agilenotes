@@ -56,7 +56,7 @@ $.widget( "an.editor", {
 							mode:(o.design && /-design$/.test(id)) ? "design" : o.mode,
 							ignoreEscape:o.ignoreEscape,
 							change:function(){ 
-								o.change();
+								o.change&&o.change();
 							},
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){

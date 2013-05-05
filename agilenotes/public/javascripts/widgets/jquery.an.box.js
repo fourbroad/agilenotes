@@ -170,6 +170,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
+
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts, {
@@ -202,6 +204,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openPage:function(pageId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isPageEditor:true});
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts,{

@@ -12,6 +12,10 @@
 (function( $, undefined ) {
 
 $.widget( "an.textfield", $.an.inputfield, {
+	options:{
+		width:120,
+		height:21
+	},
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);

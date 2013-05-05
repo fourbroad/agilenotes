@@ -15,40 +15,64 @@ $.widget( "an.inputfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		this.element.addClass("an-inputfield").find("input").remove();
-		this.input = this._createInput().appendTo(this.element);
+		this.element.addClass("an-inputfield");
 	},
 	
-	_createInput:function(){
+	_createControl:function(){
 		var self = this, o = this.options;
-		var input = $("<input type='"+o.type+"'/>").attr({name:o.id})
+		this.input = $("<input type='"+o.type+"'/>").attr({name:o.id})
 		    .addClass("ui-widget-content ui-corner-all").bind("change.inputfield keyup.inputfield",function(e){
 			var value = self.input.val(), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 			}
-		}).bind("dblclick.inputfield",function(e){e.stopImmediatePropagation();}).hide();
+		}).bind("dblclick.inputfield",function(e){e.stopImmediatePropagation();});
 		
 		if(!$.isEmptyObject(o.validate)){
-			input.addClass($.toJSON({validate:o.validate}));
+			this.input.addClass($.toJSON({validate:o.validate}));
 		}
-		return input;
+		this.input.css({width:o.width, height:o.height}).appendTo(this.element);
 	},
 	
+	_makeResizable:function(){},
+	
 	_browser:function(){
-		this.input.hide();
-		this.content.html(this.options.value+"").css("display","inline-block");
+		this.input.css("display","none");
+		var c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(this.options.value+"").css("display","");
 	},
 	
 	_edit:function(){
-		this.input.val(this.options.value).removeAttr("style");
+		this.input.val(this.options.value).css("display","");
 		this.content.hide();
 	},
 	
 	_design:function(){
 		this.input.hide();
-		this.content.html(this.options.value+"").show();
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(o.value+"").css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.input && this.input.remove();
+			this.element.children("label").remove();
+			this._createControl();
+			this._createLabel();
+		}else {
+			$.an.field.prototype._handleChange.apply(this, arguments);
+		}
 	},
 	
 	highlight: function(highlight){
@@ -56,7 +80,7 @@ $.widget( "an.inputfield", $.an.field, {
 	},
 	
 	destroy: function() {
-		this.input.unbind(".inputfield").remove();
+		this.input&&this.input.unbind(".inputfield").remove();
 		this.element.removeClass("an-inputfield");
 		return $.an.field.prototype.destroy.apply(this, arguments);
 	}

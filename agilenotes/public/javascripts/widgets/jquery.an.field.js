@@ -13,20 +13,41 @@
 
 $.widget( "an.field", $.an.widget, {
 	options:{
-		value:""
+	    value:"",
 	},
 
 	_create: function() {
 		$.an.widget.prototype._create.apply(this, arguments);
 		var o = this.options, el = this.element;
 		el.addClass("an-field");
+
+		var css = {};
+		if(o.width) css.width = o.width;
+		if(o.height) css.height = o.height;
+		
 		this.content.empty();
-		o.isTransient = el.attr("transient"); 
+		if(!$.isEmptyObject(css)){
+			this.content.css(css);
+		}
+		
+		o.isTransient = el.attr("transient");
+		
+		this._createControl();
+		this._createLabel();
+	},
+
+	_createControl:function(){},
+	
+	_createLabel:function(){
+		var o = this.options, el = this.element;
+		if(o.label){
+		    $("<label/>").attr("for",o.id).html(o.label).prependTo(el);
+		}
 	},
 	
 	destroy: function() {
 		this.content.remove();
-		this.element.removeClass("an-field");
+		this.element.removeClass("an-field").children("label").remove();
 		return $.an.widget.prototype.destroy.apply(this, arguments);
 	}
 });

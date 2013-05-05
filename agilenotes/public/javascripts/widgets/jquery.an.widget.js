@@ -78,7 +78,7 @@ $.widget( "an.widget", {
 			});	
 		}
 	},
-	
+
 	option: function(key, value) {
 		var o = this.options;
 		if(key === "mode" && value==="edit" && o.readonly){
@@ -117,13 +117,14 @@ $.widget( "an.widget", {
 	_reloadMetadata:function(md, oldmd){
 		this.options.metadata = md;
 		this.option(md[this.widgetName]);
+		this.refresh();
 		this._trigger("optionchanged",null,{key:"metadata", value:md, oldValue:oldmd});
 	},
 	
 	_updateMetadata:function(){
-		var o = this.options, oldmd = this.element.getMetadata();
+		var o = this.options, el = this.element, oldmd = el.getMetadata();
 		if(!equals(o.metadata, oldmd)){
-			this.element.setMetadata(o.metadata);
+			el.setMetadata(o.metadata);
 			this._trigger("optionchanged",null,{key:"metadata", value:o.metadata, oldValue:oldmd});
 		}
 	},
@@ -148,7 +149,7 @@ $.widget( "an.widget", {
 	
 	destroy: function() {
 		this.element.resizable("destroy").unbind(".widget").removeAttr("contenteditable")
-		    .removeClass("an-widget browser design edit fill-width auto-width fill-height auto-height selected");
+		    .removeClass("an-widget browser design edit selected");
 		return $.Widget.prototype.destroy.apply( this, arguments );
 	}
 });

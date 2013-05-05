@@ -1,27 +1,18 @@
 @charset "UTF-8";
 /* CSS Document */
 .widget{
-	position: relative;
+	position:relative;
 	display:inline-block;
 	*display:inline;
-	vertical-align: middle;
+	vertical-align:middle;
 }
 
-.widget.auto-width{
-	width:auto;
-}
-.widget.auto-height {
-	height:auto;
+.widget>.content {
+    display:inline-block;	
 }
 
-.widget.fill-width{
-    width:100%;
-}
-
-.widget.fill-height {
-	position: absolute;
-	top: 1px;
-	bottom: 1px;
+.widget.design {
+	margin:2px;
 }
 
 .widget.an-state-hover,
@@ -30,12 +21,13 @@
 	 border: 2px dashed darkgray !important;
 }
 
+.field[type=textarea]>label{
+	float:left;
+	margin:4px;
+}
+
 .field[type=textarea]>.textarea-wrapper{
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+    display:inline-block;	
 }
 
 .field[type=textarea]>.textarea-wrapper>textarea{
@@ -53,6 +45,7 @@
 }
 
 .widget[type=tabsx].design>div,
+.widget[type=button].design div,
 .widget[type=tabsx].design>.an-tabsx>div,
 .widget[type=box].design>div,
 .widget[type=box].design>.title-bar>div,
@@ -65,12 +58,21 @@
 	outline:none;
 }
 
+.widget.design[type=radio]>label {
+	margin:4px;
+}
+
 .widget[type=box].design,
 .widget[type=box].design.raw .widget,
 .widget[type=tabsx].design,
 .widget[type=grid].design>.content>.titlebar,
 .widget.field.design, .widget.field.design .widget.field.design{
-	border: 1px solid #AAAAAA;
+	border:1px dotted #AAAAAA;
+	border-width: 1px;
+}
+
+.widget.field.design>.content {
+	border:1px solid #AAAAAA;
 	border-width: 1px;
 }
 
@@ -79,37 +81,41 @@
 .widget[type=grid].design .an-agilegrid>.top-left,
 .widget[type=grid].design th>div,
 .widget[type=grid].design td>div{
-	border-width: 1px;
-}
-
-
-.field[type=radio].design,
-.field[type=checkbox].design,
-.field[type=button].design{
-	border:none;
-}
-
-.field[type=text]>input,
-.field[type=password]>input,
-.field[type=datetime]>input {
-	width:100%;
-	height:100%;
+	border-width:1px;
 }
 
 .field[type=text].design,
 .field[type=password].design,
 .field[type=datetime].design {
-	padding: 3px 3px;
-	margin-left:0;
+	padding:2px;
 }
 
-.field[type=checkbox].design,
-.widget[type=box].design.raw .field[type=checkbox].design {
+.field[type=text].design>label,
+.field[type=password].design>label,
+.field[type=datetime].design>label,
+.field[type=file].design>label{
+	float:left;
+	margin:4px;
+}
+
+.field[type=checkbox].design>label{
+	float:right;
+	margin:4px;
+}
+
+.field[type=checkbox].design>.content,
+.widget[type=box].design.raw .field[type=checkbox].design>.content {
+	width:21px;
+	height:21px;
+	border-width:0;
 	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF;
 }
 
-.widget[type=box].design.raw .field[type=radio].design,
-.field[type=radio].design {
+.widget[type=box].design.raw .field[type=radio].design>.content,
+.field[type=radio].design>.content {
+	width:21px;
+	height:21px;
+	border-width:0;
 	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF;
 }
 
@@ -120,15 +126,15 @@
 	padding-right:3px;
 }
 
-.field[type=select]>select{
-	width:100%;
-	height:100%;
-}
-
 .widget[type=box].design.raw .field[type=select].design,
 .field[type=select].design {
 	background:url("/stylesheets/images/select.png") no-repeat scroll right center #FFFFFF;
-    padding: 3px;
+    padding: 2px;
+}
+
+.field[type=select].design>label{
+	float:left;
+	margin:4px;
 }
 
 .widget[type=box].design.raw .field[type=select][size].design,
@@ -141,16 +147,6 @@
 	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important; 
 	font-weight: normal; 
 	color: #555555;
-}
-
-.field[type=checkbox].design.selected{
-	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF !important;
-	border: 1px dashed darkgray !important;
-}
-
-.field[type=radio].design.selected {
-	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF !important;
-	border: 1px dashed darkgray !important;
 }
 
 /********************************

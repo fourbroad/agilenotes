@@ -20,7 +20,7 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 	},
 
 	destroy: function() {
-		this.content.button("destroy");
+		this.content.button("destroy").remove();
 		this.element.removeClass("an-buttonwidget");
 		return $.an.widget.prototype.destroy.apply(this, arguments);
 	}
