@@ -12,11 +12,6 @@
 (function( $, undefined ) {
 
 $.widget( "an.passwordfield", $.an.inputfield, {
-	options:{
-		width:120,
-		height:21
-	},
-
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-passwordfield");
@@ -28,8 +23,18 @@ $.widget( "an.passwordfield", $.an.inputfield, {
 	},
 	
 	_design:function(){
-		$.an.inputfield.prototype._design.apply(this, arguments);
-		this.content.html("********");
+		this.input.hide();
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html("********").css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
 	},
 
 	destroy: function() {

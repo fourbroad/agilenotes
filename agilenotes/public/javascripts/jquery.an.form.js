@@ -54,12 +54,6 @@ $.widget( "an.form", $.an.page, {
 			self.field(id, value);
 		});
 		
-		el.bind("dblclick.form",function(e){
-			if(o.mode == "design" && self.labelActive()){
-				self.label();
-			}
-		});
-		
 		$.an.page.prototype._initPage.apply(this, arguments);
 	},
 

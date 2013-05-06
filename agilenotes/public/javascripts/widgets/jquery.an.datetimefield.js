@@ -12,10 +12,6 @@
 (function( $, undefined ) {
 
 $.widget( "an.datetimefield", $.an.inputfield, {
-	options:{
-		width:120,
-		height:21
-	},
 	
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);

@@ -32,25 +32,24 @@ $.widget( "an.inputfield", $.an.field, {
 		if(!$.isEmptyObject(o.validate)){
 			this.input.addClass($.toJSON({validate:o.validate}));
 		}
-		this.input.css({width:o.width, height:o.height}).appendTo(this.element);
+		this.input.css({width:o.width, height:o.height});
 	},
 	
 	_makeResizable:function(){},
 	
 	_browser:function(){
-		this.input.css("display","none");
+		this.input.detach();
 		var c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
 		c.html(this.options.value+"").css("display","");
 	},
 	
 	_edit:function(){
-		this.input.val(this.options.value).css("display","");
-		this.content.hide();
+		this.input.val(this.options.value).appendTo(this.content);
 	},
 	
 	_design:function(){
-		this.input.hide();
+		this.input.detach();
 		var self = this, o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
 		c.html(o.value+"").css({width:o.width, height:o.height, display:""}).resizable({
@@ -74,7 +73,7 @@ $.widget( "an.inputfield", $.an.field, {
 			$.an.field.prototype._handleChange.apply(this, arguments);
 		}
 	},
-	
+
 	highlight: function(highlight){
 		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover",highlight);
 	},
