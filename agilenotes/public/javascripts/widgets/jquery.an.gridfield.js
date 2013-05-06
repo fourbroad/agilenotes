@@ -14,8 +14,6 @@
 $.widget( "an.gridfield", $.an.field, {
 	options: {
 		mode: "browser",
-		width: 400,
-		height: 300,
 		addItemLabel: "Add",
 		editItemLabel: "Edit",
 		deleteItemLabel: "Delete",
@@ -28,7 +26,7 @@ $.widget( "an.gridfield", $.an.field, {
 	},
 	
 	_createControl:function(){
-		var self = this, o = this.options, c = this.content.css({width:o.width, height:o.height});
+		var self = this, o = this.options, c = this.content;
 		this.titlebar = $("<div class='titlebar ui-widget-header'/>").appendTo(c);
 		this.title = $("<span class='title'/>").html(o.label).appendTo(this.titlebar);
 		this.toolbar = $("<span class='toolbar'/>").appendTo(this.titlebar);

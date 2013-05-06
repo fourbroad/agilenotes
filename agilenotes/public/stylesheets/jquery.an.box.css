@@ -47,6 +47,13 @@
 	top: 32px;
 }
 
+.an-box.title-bar>.content {
+    position:absolute;
+    top:32px;
+    bottom:0;
+    width: 100%;
+}
+
 .an-box.title-bar.auto-height>.content{
 	top: 0px;
 }

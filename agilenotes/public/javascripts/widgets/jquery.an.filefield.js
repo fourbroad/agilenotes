@@ -217,15 +217,18 @@ $.widget( "an.filefield", $.an.inputfield, {
 	refresh:function(){
 		var self = this, o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
-		c.css({width:o.width, height:o.height, display:""}).resizable({
-			stop:function(e,ui){
-				o.width = c.width();
-				o.height = c.height();
-				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
-				self._updateMetadata();
-				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
-			}
-		});
+		c.css({width:o.width, height:o.height, display:""});
+		if(o.mode == "design" || o.resizable){
+			c.resizable({
+				stop:function(e,ui){
+					o.width = c.width();
+					o.height = c.height();
+					$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+					self._updateMetadata();
+					self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+				}
+			});
+		}
 
 		this.loadIcons();
 	},

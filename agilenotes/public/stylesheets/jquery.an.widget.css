@@ -22,20 +22,19 @@
 
 .widget.an-state-hover,
 .widget>input.an-state-hover,
-.field[type=textarea]>.textarea-wrapper>textarea.an-state-hover {
+.field[type=textarea]>.content>textarea.an-state-hover {
 	 border: 2px dashed darkgray !important;
 }
 
 .field[type=textarea]>label{
 	float:left;
-	margin:4px;
 }
 
-.field[type=textarea]>.textarea-wrapper{
+.field[type=textarea]>.content{
     display:inline-block;	
 }
 
-.field[type=textarea]>.textarea-wrapper>textarea{
+.field[type=textarea]>.content>textarea{
 	width:100%; 
 	height:100%; 
 	zoom:1; 
@@ -81,10 +80,28 @@
 	margin:4px;
 }
 
+.field[type=text]>.content,
+.field[type=password]>.content,
+.field[type=datetime]>.content,
+.field[type=select]>.content,
+.field[type=textarea]>.content {
+	min-width:80px;
+	min-height:21px;
+}
+
+.field[type=text]>.content>input,
+.field[type=password]>.content>input,
+.field[type=datetime]>.content>input,
+.field[type=select]>.content>select {
+	width:100%;
+	height:100%;
+}
+
+
 .field[type=text].design>label,
 .field[type=password].design>label,
 .field[type=datetime].design>label,
-.field[type=file].design>label{
+.field[type=file]>label{
 	float:left;
 }
 
@@ -117,13 +134,17 @@
 
 .widget[type=box].design.raw .field[type=select].design,
 .field[type=select].design {
-	background:url("/stylesheets/images/select.png") no-repeat scroll right center #FFFFFF;
     padding: 2px;
 }
 
+.widget[type=box].design.raw .field[type=select].design>.content,
+.field[type=select].design>.content {
+	background:url("/stylesheets/images/select.png") no-repeat scroll right center #FFFFFF;
+}
+
+
 .field[type=select].design>label{
 	float:left;
-	margin:4px;
 }
 
 .widget[type=box].design.raw .field[type=select][size].design,

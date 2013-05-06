@@ -12,7 +12,6 @@
 (function( $, undefined ) {
 
 $.widget( "an.textareafield", $.an.field, {
-	options:{resizable:true},
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
@@ -20,13 +19,11 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 	
 	_createControl:function(){
-		var self = this, o = this.options, el = this.element;
-		this.textareaWrapper = $("<div class='textarea-wrapper'/>").css({width:o.width, height:o.height})
-		    .appendTo(el);
+		var self = this, o = this.options;
 		this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
-		    .addClass("ui-widget-content ui-corner-all").appendTo(this.textareaWrapper);
+		    .addClass("ui-widget-content ui-corner-all");
 
-		if(o.resizable) this.textareaWrapper.resizable();
+		if(o.resizable) this.content.resizable();
 		
 		if(!$.isEmptyObject(o.validate)){
 			this.textarea.addClass($.toJSON({validate:o.validate}));
@@ -46,7 +43,7 @@ $.widget( "an.textareafield", $.an.field, {
 	_makeResizable:function(){},
 	
 	_browser:function(){
-		this.textareaWrapper.hide();
+		this.textarea.detach();
 
 		var o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
@@ -54,13 +51,11 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.content.hide();
-		this.textarea.val(this.options.value);
-		this.textareaWrapper.css("display","");
+		this.textarea.val(this.options.value).appendTo(this.content);
 	},
 
 	_design:function(){
-		this.textareaWrapper.hide();
+		this.textarea.detach();
 
 		var self = this, o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
