@@ -14,7 +14,7 @@
 $.widget( "an.box", $.an.widget, {
 	options:{
 		visibleButtonCount: 3,
-		height: "auto",
+//		height: "auto",
 		link: "raw" // raw, documentType, document, form, view, page
 	},
 

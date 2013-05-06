@@ -11,6 +11,11 @@
     display:inline-block;	
 }
 
+.widget[type=tabsx]>.content{
+	width:100%;
+	height:100%;
+}
+
 .widget.design {
 	margin:2px;
 }
@@ -40,24 +45,6 @@
 	resize: none;
 }
 
-.field[type=textarea].fill-width.fill-height>.textarea-wrapper>textarea{
-	border: none;
-}
-
-.widget[type=tabsx].design>div,
-.widget[type=button].design div,
-.widget[type=tabsx].design>.an-tabsx>div,
-.widget[type=box].design>div,
-.widget[type=box].design>.title-bar>div,
-.widget[type=box].design>.content>div,
-.widget[type=box].design.link>.content div,
-.widget[type=box].design>.content>div.bottom>div,
-.widget.field.design, .widget.field.design div {
-	border-width:0;
-	background-image:none;
-	outline:none;
-}
-
 .widget.design[type=radio]>label {
 	margin:4px;
 }
@@ -84,10 +71,14 @@
 	border-width:1px;
 }
 
-.field[type=text].design,
-.field[type=password].design,
-.field[type=datetime].design {
+.field[type=text],
+.field[type=password],
+.field[type=datetime] {
 	padding:2px;
+}
+
+.field > label {
+	margin:4px;
 }
 
 .field[type=text].design>label,
@@ -95,12 +86,10 @@
 .field[type=datetime].design>label,
 .field[type=file].design>label{
 	float:left;
-	margin:4px;
 }
 
 .field[type=checkbox].design>label{
 	float:right;
-	margin:4px;
 }
 
 .field[type=checkbox].design>.content,
@@ -160,4 +149,9 @@
 
 .an-field>.content>pre{
 	margin: 0;
+}
+
+.design .ui-resizable-handle{
+	background:none;
+	border:0 none;
 }

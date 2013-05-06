@@ -19,6 +19,16 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 		this.content.button({label:this.options.label});
 	},
 
+	_makeResizable:function(){},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.content.button("option","label",value);
+		}else {
+			$.an.widget.prototype._handleChange.apply(this, arguments);
+		}
+	},
+	
 	destroy: function() {
 		this.content.button("destroy").remove();
 		this.element.removeClass("an-buttonwidget");
