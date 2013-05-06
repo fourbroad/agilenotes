@@ -14,7 +14,6 @@
 $.widget( "an.box", $.an.widget, {
 	options:{
 		visibleButtonCount: 3,
-//		height: "auto",
 		link: "raw" // raw, documentType, document, form, view, page
 	},
 
@@ -59,7 +58,6 @@ $.widget( "an.box", $.an.widget, {
 	_showTitleBar:function(show){
 		var o = this.options, el = this.element;
 		if(show){
-			el.addClass("title-bar");
 			if(!this.titleBar){
 				this.titleBar = $("<div class='title-bar ui-widget-header ui-corner-top'/>").prependTo(this.element);
 				this.title = $("<div class='title'/>").html(o.title).appendTo(this.titleBar);
@@ -108,7 +106,6 @@ $.widget( "an.box", $.an.widget, {
 		var self = this, el = this.element;
 		if(buttons && buttons.length > 0){
 			if(!this.footArea){
-				el.addClass("foot-area");
 				this.footArea = $("<div class='foot-area'/>").appendTo(el);
 			}else{
 				this.footArea.empty();

@@ -4,6 +4,7 @@
 .an-box {
 	position: relative;
 	border:1px solid #E8E8E8;
+	min-width:80px;
 }
 
 .an-box>.title-bar {
@@ -43,37 +44,21 @@
 	background-position:  0px -18px;
 }
 
-.an-box.title-bar>.content{
-	top: 32px;
-}
-
-.an-box.title-bar>.content {
-    position:absolute;
-    top:32px;
-    bottom:0;
+.an-box>.content {
     width: 100%;
-}
-
-.an-box.title-bar.auto-height>.content{
-	top: 0px;
-}
-
-.an-box>.content.link>div {
-	border-width: 0;
+    min-height:25px;
 }
 
 .an-box>.content>pre{
 	margin: 0;
 }
 
-.an-box.foot-area>.content{
-    bottom: 50px;	
+.an-box>.foot-area {
+    position:absolute;
+    right:20px;
+    bottom:5px;
 }
 
-.an-box>.foot-area {
-	padding-right: 40px; 
-}
 .an-box>.foot-area>.ui-button {
-	float: right;
-    margin: 5px 8px 30px;
+    margin: 5px;
 }

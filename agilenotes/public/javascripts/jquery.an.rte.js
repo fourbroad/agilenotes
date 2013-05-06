@@ -1397,7 +1397,7 @@ $.widget( "an.rte", {
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
     		n = $n.get(0);
     	}
-    	var oldmd = $n.getMetadata(), oldattrs = attributes(n),
+    	var oldmd = $.extend(true,opts,$n.getMetadata()), oldattrs = attributes(n),
        	      title = type.substring(0,1).toUpperCase()+type.substring(1) + " Properties";
     	if(oldattrs.id) oldattrs.id = oldattrs.id.replace(/-/g,".");
  		this._showDialog(title, $.extend({},oldmd,oldattrs), formIds, function(attrs){

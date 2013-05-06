@@ -45,7 +45,7 @@ $.widget( "an.inputfield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.input.val(this.options.value).appendTo(this.content);
+		this.input.detach().val(this.options.value).appendTo(this.content.empty());
 	},
 	
 	_design:function(){

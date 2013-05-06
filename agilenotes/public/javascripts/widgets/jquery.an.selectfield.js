@@ -53,7 +53,8 @@ $.widget( "an.selectfield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.select.val(this.options.value).appendTo(this.content);
+		this.select.detach().val(this.options.value).appendTo(this.content.empty());
+
 	},
 	
 	_design:function(){

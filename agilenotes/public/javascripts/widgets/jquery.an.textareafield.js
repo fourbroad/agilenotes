@@ -51,7 +51,7 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.textarea.val(this.options.value).appendTo(this.content);
+		this.textarea.detach().val(this.options.value).appendTo(this.content.empty());
 	},
 
 	_design:function(){
