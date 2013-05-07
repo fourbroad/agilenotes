@@ -293,7 +293,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var id = o.targetId, ob = {dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId};
+				var id = o.targetId, ob = {dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId}; 
 				if(link == "documentType"){
 					this.newDocument(id, oe);
 				}else if(link == "document"){

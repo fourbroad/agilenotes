@@ -11,15 +11,18 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.textfield", $.an.inputfield, {
+$.widget( "an.buttonfield",  $.an.field, {
+
 	_create: function() {
-		$.an.inputfield.prototype._create.apply(this, arguments);
-		this.element.addClass("an-textfield");
+		$.an.field.prototype._create.apply(this, arguments);
+		this.element.addClass("an-buttonfield");
+		this.content.button({label:this.options.label});
 	},
 
 	destroy: function() {
-		this.element.removeClass("an-textfield" );
-		return $.an.inputfield.prototype.destroy.apply( this, arguments );
+		this.content.button("destroy");
+		this.element.removeClass("an-buttonfield");
+		return $.an.field.prototype.destroy.apply(this, arguments);
 	}
 });
 })( jQuery );
