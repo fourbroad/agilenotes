@@ -55,7 +55,7 @@ passport.use(new LocalStrategy(
 ));
 
 agilenotes.configure(function() {
-	agilenotes.set('port', process.env.PORT || 8080);
+	agilenotes.set('port', process.env.PORT || 80);
 	// agilenotes.set('views', __dirname + '/views');
 	// agilenotes.set('view engine', 'jade');
 	agilenotes.use(express.favicon());
