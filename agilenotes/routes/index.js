@@ -183,6 +183,12 @@ function getDoc(req,res){
 	res.header('Content-Type', 'application/json');
 	provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
 		if(options.exec){
+			options.query = q;
+			delete(options.query.options);
+			if (options.query.selector) delete(options.query.selector);
+			options.ip = Functions.getClientIP(req);
+			options.method = req.method;
+			options.headers = req.headers;
 			function process(data, response, callback){
 				var doc = data.shift();
 				if(doc){
@@ -204,8 +210,18 @@ function getDoc(req,res){
 
 			var response = [];
 			process(docid ?[data]:data.docs, response, function(error, response){
-				if(!docid) data.docs = response;
-				res.send(data || error || {success:false, result :"document not found or not authorized!", msg :"document not found or not authorized!"});
+				if (!docid) data.docs = response;
+				var resp = data ? { error : data.error, result : data.result, success : (data.error ? false : true) ,msg:data.result}
+						: null;
+				if (options.redirect) {
+					res.set('Content-Type', 'text/html');
+					res.send(data.error || data.result);
+				} else {
+					res.send(resp
+						|| error
+						|| { success : false, result : "document not found or not authorized!",
+							msg : "document not found or not authorized!" });
+				}
 			});
 		}else{
 			res.send(data || error || {success:false, result :"document not found or not authorized!", msg :"document not found or not authorized!"});
@@ -215,45 +231,101 @@ function getDoc(req,res){
 
 //TODO 支持文档批量上传。
 function postDoc(req,res){
-	var params = req.params, dbid = params.dbid, doc = req.body;
+	var params = req.params, dbid = params.dbid, doc = req.body,  docid = params.docid, q = req.query, options = q.options;
 	res.header('Content-Type', 'application/json');
-	if(doc && doc.type){
-		var q = req.query, options = q.options, provider = providers.getProvider(dbid, doc.type);
-		if(typeof(doc._id)=="string") doc._id = new BSON.ObjectID(doc._id);
-		validate(dbid, doc, function(error, doc, fileFields){
-			if(error) {
-				res.send({result:error}, 416);
-			}else{
-				doc._create_at = new Date();
-				if(doc.type == Model.TASK && doc.taskType == "interval"){
-					doc.userId = req.user._id;
+	if (typeof(docid) != 'undefined') {
+		if (!options) {
+			options = {};
+		}
+		
+		options.query = q;
+		if (typeof(options.query.options) != 'undefined') delete(options.query.options);
+		options.ip = Functions.getClientIP(req);
+		options.method = req.method;
+		options.body = req.body;
+		options.headers = req.headers;
+		
+		function process(data, response, callback) {
+			var doc = data.shift();
+			if (doc) {
+				if (doc.type == Model.TASK) {
+					providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
+						if (error) doc.error = error;
+						if (result) doc.result = result;
+						response.push(doc);
+						process(data, response, callback);
+					});
+				} else {
+					response.push(doc);
+					process(data, response, callback);
 				}
-				doc._ownerID = req.user._id;
-				provider.insert(doc, options, function(error,docs){
-					if(error) {
-						res.send(403);
+			} else {
+				callback(null, response);
+			}
+		}
+
+		var provider = providers.getProvider(dbid);
+		provider.findOne({ _id : new BSON.ObjectID(docid) }, null, null, function(err, data) {
+			if (err) {
+				res.send({ success : false, result : err }, 200);
+			} else {
+				var response = [];
+				process(docid ? [ data ] : data.docs, response, function(error, response) {
+					if (!docid) data.docs = response;
+					console.log(data);
+					var resp = data ? { error : data.error, result : data.result, success : (data.error ? false : true), msg:data.result}
+					: null;
+					if (options.body.redirect || options.redirect) {
+						res.set('Content-Type', 'text/html');
+						res.send(data.error || data.result);
 					} else {
-						if(fileFields.length > 0){
-							cleanFileFields(provider, docs[0]._id.toString(), docs[0], fileFields, function(error, doc){
-								var clone = JSON.parse(JSON.stringify(doc)), selector = {_id: doc._id};
-								delete clone._id;
-								provider.update(selector, {$set:clone}, null, function(error,result){
-									if(error) {
-										res.send(403);
-									} else {
-										res.send(docs[0], 201);
-									}
-								});
-							});
-						}else{
-							res.send(docs[0], 201);
-						}
+							res.send(resp
+									|| error
+									|| { success : false, result : "document not found or not authorized!",
+										msg : "document not found or not authorized!" });
 					}
 				});
 			}
 		});
-	}else{
-		res.send("{'error': 'document is invalid!'}",201);
+	} else {
+		if(doc && doc.type){
+			var q = req.query, options = q.options, provider = providers.getProvider(dbid, doc.type);
+			if(typeof(doc._id)=="string") doc._id = new BSON.ObjectID(doc._id);
+			validate(dbid, doc, function(error, doc, fileFields){
+				if(error) {
+					res.send({result:error}, 416);
+				}else{
+					doc._create_at = new Date();
+					if(doc.type == Model.TASK && doc.taskType == "interval"){
+						doc.userId = req.user._id;
+					}
+					doc._ownerID = req.user._id;
+					provider.insert(doc, options, function(error,docs){
+						if(error) {
+							res.send(403);
+						} else {
+							if(fileFields.length > 0){
+								cleanFileFields(provider, docs[0]._id.toString(), docs[0], fileFields, function(error, doc){
+									var clone = JSON.parse(JSON.stringify(doc)), selector = {_id: doc._id};
+									delete clone._id;
+									provider.update(selector, {$set:clone}, null, function(error,result){
+										if(error) {
+											res.send(403);
+										} else {
+											res.send(docs[0], 201);
+										}
+									});
+								});
+							}else{
+								res.send(docs[0], 201);
+							}
+						}
+					});
+				}
+			});
+		}else{
+			res.send("{'error': 'document is invalid!'}",201);
+		}
 	}
 }
 
@@ -400,7 +472,7 @@ function acl(req,res,next){
 		q.options = JSON.parse(q.options||"{}");
 		if(docid) q.selector["_id"] = docid;
 	
-		ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type, function(error, selector){
+		ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type || doc && docid, function(error, selector){
 			if(error){
 				res.json({error:"Not Authorized!"});
 			}else{
@@ -410,295 +482,6 @@ function acl(req,res,next){
 		});
 	}
 }
-
-function waatsRequest(req, res) {
-	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query,
-	/* selector = q.selector, */options = q.options, fields = q.fields, provider = providers.getProvider(dbid);
-
-	res.header('Content-Type', 'application/json');
-	var process = function(provider, configid, callback) {
-		if (configid) {
-			provider.findOne({ _id : new BSON.ObjectID(configid) }, {}, {}, function(err, data) {
-				callback(err, data);
-			});
-		} else {
-			callback(false, require("../config/waats").WaatsConfig);
-		}
-	};
-
-	provider.findOne({ _id : new BSON.ObjectID(docid) }, fields, options, function(err, data) {
-		if (err) {
-			res.send({ success : false, msg : err }, 200);
-		} else if (!data) {
-			res.send({ success : false, msg : "Policy Data Not Found!" }, 200);
-		} else {
-			if (!q.type) q.type = "NSell";
-			data.policyState = 'paid';
-			if (data.policyState != 'paid') {
-				res.send({ success : false, msg : "Policy Not Paided!" }, 200);
-			} else {
-				process(provider, q.configid, function(err, cfg) {
-					var WaatsLib = require('../lib/waats');
-					var waats = new WaatsLib(provider, cfg, data, q.type);
-					waats.query(function(err, data) {
-						if (err) {
-							res.send({success:false, msg:err}, 200);
-						} else {
-							res.send({success:true, msg:"OK", policyNumber:data}, 200);
-						}
-					});
-				});
-			}
-		}
-	});
-}
-
-/**
- * 
- * @param req
- * @param res
- */
-function mailPolicy(req, res) {
-	// q.configid="5140407ccaa05a466900006c" the mail smtp config docid
-	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, options = q.options, fields = q.fields, provider = providers
-			.getProvider(dbid);
-
-	res.header('Content-Type', 'application/json');
-	var process = function(data) {
-		//var WaatsLib = require("../lib/waats");
-		//var waats = new WaatsLib(provider, data, "");
-		var waats = require("../lib/mail");
-		waats.mailPolicy(provider, { _id : new BSON.ObjectID(docid) }, data, options, function(err, data) {
-			if (err) {
-				res.send({ success : false, msg : err }, 200);
-			} else {
-				res.send({ success : true, msg : data }, 200);
-			}
-		});
-	};
-
-	if (q.configid) {
-		provider.findOne({ _id : new BSON.ObjectID(q.configid) }, fields, options, function(err, data) {
-			if (err) {
-				res.send({ success : false, msg : err }, 200);
-			} else {
-				process(data);
-			}
-		});
-	} else {
-		process(require("../config/waats").WaatsConfig);
-	}
-}
-
-var payLogType = "513d8e3ed58d1c7045000665";
-function pay(req, res){
-        var docid = req.body._id
-        , params = req.params
-        , dbid = params.dbid
-        , fields = req.query.fields
-        , options = req.query.options;
-        var provider = providers.getProvider(dbid);
-        var o_id = new BSON.ObjectID(docid);
-
-        provider.findOne({_id: o_id}, fields, options, function(err, doc){
-		console.log("print doc:%j", doc);
-                if (err){
-                        console.log(err);
-                 }else if (doc.policyState == "pending" ){
-			var subject = doc.productName + " (" + doc.insureds[0].name + " 等 " + doc.insureds.length + "人)";
-			var body = "";
-			var totalPremium  = doc.totalPremium;
-			var defaultbank = req.body.defaultbank != "undefined" ?  req.body.defaultbank : '' ;
-                        var dt = new Date();
-                        //var transID = doc._id.toString().substr(0,8) + dt.getMilliseconds().toString(); 
-			provider.counter("transID", function(err, transID){
-				var paylog = {
-						 "_id": new BSON.ObjectID(),
-						 "type": payLogType,
-						 "payType": "Alipay",
-						 "transID": transID,
-						 "policyID": doc._id,
-						 "value": totalPremium,
-						 "ip": Functions.getClientIP(req),
-						 "startTime": new Date(),
-						 "code": "",
-						 "memo": subject
-					       };
-				provider.insert(paylog, {}, function(error, logs){
-					      if (error){
-							return error;
-						} else {
-							var sURI = Alipay.alipayto(subject, body, totalPremium, defaultbank ,transID);
-							res.redirect(sURI);
-						}
-				});
-			});
-		} else { 
-			res.send({ success : false , msg : " policy state error "});
-		}
-        });
-}
-
-function paynotify(req, res){
-        
-        var params = req.params
-        , dbid = params.dbid;
-
-	var params=req.query;
-	var trade_no = req.query.trade_no;                         
-	var order_no = req.query.out_trade_no;              
-	var total_fee = req.query.total_fee;               
-	var subject = req.query.subject;
-	var buyer_email = req.query.buyer_email;            
-	var trade_status = req.query.trade_status;         
-	var body = "";
-        var provider = providers.getProvider(dbid);
-	if(req.body != null && req.method == 'POST'){
-		params = req.body;
-               	var trade_no = req.body.trade_no;                         
-	        var order_no = req.body.out_trade_no;              
-		var total_fee = req.body.total_fee;               
-		var subject = req.body.subject;
-		var buyer_email = req.body.buyer_email;            
-		var trade_status = req.body.trade_status;         
-	}
-	Alipay.AlipayNotify.verity(params,function(result){
-		if(result){
-			if(trade_status=="TRADE_FINISHED" || trade_status=="TRADE_SUCCESS"){
-				provider.findOne({"type": payLogType, "transID": parseInt(order_no)}, [], {}, function(error, doc){
-console.log('{"type": '+payLogType+', "transID": '+order_no+'}');
-					if (error) {
-						console.log(error);
-					} else if (doc){
-                                               var pid =doc.policyID + "";
-						provider.update({_id: new BSON.ObjectID(pid)}, {"$set": {"policyState": "paid", "datePay": new Date()}}, {}, function(error, ret){
-							console.log("update policyState: %j", ret);
-							provider.findOne({_id: new BSON.ObjectID(pid)}, [], {}, function(error, pdoc){
-								if (error) {
-									console.log(error);
-								} else if (pdoc.waats) {
-									var WaatsLib = require('../lib/waats');
-									var cfg = require("../config/waats").WaatsConfig;
-									var waats = new WaatsLib(provider, cfg, pdoc, "NSell");
-									waats.query(function(err, policyNum) {
-										if (err) {
-											console.log("issued policy error: %j", err);
-										} else {
-											provider.update({_id: new BSON.ObjectID(pid)}, {"$set": {"policyNumber": policyNum, policyState: "issued", dateIssue: new Date()}}, {}, function(error, ret){
-												if (ret) {
-													console.log("inssue policy success. polciyNumber: %s", policyNum);
-													// send mail
-													var process = function(data) {
-														var mailLib = require("../lib/mail");
-														mailLib.mailPolicy(provider, { _id : new BSON.ObjectID(pid) }, data, {}, function(err, data) {
-															
-														});
-													};
-
-													if (req.query.configid) {
-														provider.findOne({ _id : new BSON.ObjectID(req.query.configid) }, fields, options, function(err, data) {
-															if (err) {
-																// res.send({ success : false, msg : err }, 200);
-																console.log("get mail config error!");
-															} else {
-																process(data);
-															}
-														});
-													} else {
-														process(require("../config/waats").WaatsConfig);
-													}
-												} else {
-													console.log("update policyNumber error");
-												}
-											});	
-										}
-									});
-								} else {
-									provider.counter(pdoc.productCode, function(err, serNumber){
-										provider.update({_id: new BSON.ObjectID(pid)}, {"$set": {"policyNumber": pdoc.productCode + serNumber, policyState: "issued", dateIssue: new Date()}}, {}, function(error, ret){
-											if (ret) {
-												// send mail
-												var process = function(data) {
-													var mailLib = require("../lib/mail");
-													mailLib.mailPolicy(provider, { _id : new BSON.ObjectID(pid) }, data, {}, function(err, data) {
-														
-													});
-												};
-
-												if (req.query.configid) {
-													provider.findOne({ _id : new BSON.ObjectID(req.query.configid) }, fields, options, function(err, data) {
-														if (err) {
-															// res.send({ success : false, msg : err }, 200);
-															console.log("get mail config error!");
-														} else {
-															process(data);
-														}
-													});
-												} else {
-													process(require("../config/waats").WaatsConfig);
-												}
-												console.log("inssue policy success. polciyNumber: %s", pdoc.productCode + serNumber);
-											} else {
-												console.log("update policyNumber error");
-											}
-										});
-									});
-								}
-							});					
-						});
-						provider.update({transID: parseInt(order_no), "type": payLogType}, {"$set": {"successTime": new Date(), "code": trade_no}}, {}, function(error, ret){
-							console.log("update payLog: %j", ret);
-						});
-					} else {
-						console.log("can not find policy by trandsID");
-					}
-				});
-			}
-                    console.log("pay success >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-			res.end("success"); 
-
-		} else{
-                    console.log("pay fail >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-		    res.end("fail");
-		}
-
-	});
-}
-
-function requestUrl(host,path,callback){
-    var http = require('http');
-
-    var options = {
-        host: '192.168.1.41',
-        port: 8080,
-        path: path,
-        method: 'GET'
-    };
-
-    var req = http.request(options, function(res) {
-        console.log("statusCode: ", res.statusCode);
-        console.log("headers: ", res.headers);
-
-        res.on('data', function(d) {
-            callback(d);
-        });
-    });
-    
-    
-    req.end();
-
-    req.on('error', function(e) {
-        console.error(e);
-    });
-};
-
-function md5(str) {
-	var crypto = require('crypto');
-	var md5sum = crypto.createHash('md5');
-	md5sum.update(str);
-	str = md5sum.digest('hex');
-	return str;
-};
 
 module.exports = function(agilenotes){
 	providers.init(agilenotes);
@@ -766,17 +549,12 @@ module.exports = function(agilenotes){
 						}
 					})(req, res, next);});
 
-                        //alipay routes
-		        agilenotes.post('/dbs/:dbid/pay', pay);
-			agilenotes.get('/dbs/:dbid/payreturn', paynotify);
-			agilenotes.post('/dbs/:dbid/paynotify', paynotify);
-
 			agilenotes.get('/logout', logout);
 			agilenotes.get('/login', login);
 			
 
 			agilenotes.get('/dbs/:dbid/:docid?', acl, getDoc);
-			agilenotes.post('/dbs/:dbid', acl, postDoc);
+			agilenotes.post('/dbs/:dbid/:docid?', acl, postDoc);
 			agilenotes.put('/dbs/:dbid/:docid?', acl, putDoc);
 			agilenotes.del('/dbs/:dbid/:docid?', acl, delDoc);
 
@@ -795,16 +573,11 @@ module.exports = function(agilenotes){
                         
 			
 			// agilenotes.get('/mailtest', getMailTest);
-			agilenotes.post("/dbs/:dbid/:docid/mailtest(\/?|\/*)", MailLib.getMailTest);
-			agilenotes.get("/dbs/:dbid/:docid/mailtest", acl, MailLib.getMailTest);
-			agilenotes.get("/dbs/:dbid/:docid/readmail", MailLib.readMailTest);
-			agilenotes.post("/dbs/:dbid/:docid/sendmail(\/?|\/*)", acl, MailLib.sendObject);
-			agilenotes.get("/dbs/:dbid/:docid/waats", acl, waatsRequest);
-			agilenotes.get("/dbs/:dbid/:docid/mailpolicy", acl, mailPolicy);
-			agilenotes.get("/:username/:email/getpwd?(\/?|\/*)", MailLib.getPwdReq);
-			agilenotes.post("/:username/:email/getpwd", MailLib.getPwdReq);
-			agilenotes.post("/resetPwd", MailLib.resetPwd);
-			agilenotes.get('/dbn/:dbn/:docn?', acl, rend);
+			agilenotes.get("/dbs/:dbid/:docid/readmail(\/?|\/*)", acl, MailLib.readMail);
+			agilenotes.post("/dbs/:dbid/:docid/sendmail(\/?|\/*)", MailLib.sendObject);
+			
+			// sms module
+			agilenotes.post("/sms", Functions.sendSms);
 
 		}
 	});

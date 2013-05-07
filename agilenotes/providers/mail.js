@@ -6,9 +6,12 @@ Mail = function(db) {
 	Document.call(this, db);
 };
 
-Mail.receive = function(doc, callback) {
-	MailLib.setProviders(this);
-	MailLib.receive(doc, doc.server_type, callback);
+Mail.readmail = function() {
+	
+};
+
+Mail.sendmail = function(dbid, config, doc, opts, callback) {
+	MailLib.sendMail(dbid, config, doc, opts, callback);
 };
 
 Utils.extend(Mail, Document);

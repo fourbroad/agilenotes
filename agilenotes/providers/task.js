@@ -17,6 +17,7 @@ Utils.extend(Task, Document);
 
 Task.prototype.exec = function(user, task, options, callback) {
 	// TODO: Non-reentrant?
+	var self = this;
 	if(this.intervalIds[task._id]){
 		clearInterval(this.intervalIds[task._id]);
 		delete this.intervalIds[task._id];
@@ -64,17 +65,53 @@ Task.prototype.exec = function(user, task, options, callback) {
 							provider.remove(selector, options, callback);
 						});
 					},
-                                        move: function(docId, parentId, callback){
+                    move: function(docId, parentId, callback){
 						ACL.acl(user, provider, "get", {}, null, function(error, selector){
 							if(error) return callback(error);
 							provider.move(docId, parentId, callback);
 						});
 					},
-					receive:function(doc, callback) {
+					counter: function(selector, callback){
 						ACL.acl(user, provider, "get", {}, null, function(error, selector){
-							if (error) return callback(error);
-							Mail.receive(doc, callback);
+							if(error) return callback(error);
+							provider.counter(selector, callback);
 						});
+					},
+					receive:function(doc, callback) {
+							Mail.receive(doc, callback);
+					},
+					
+					sendmail:function(dbid, config, doc, opts, callback) {
+						Mail.sendmail(dbid, config, doc, opts, callback);
+					},
+					
+					queryWaats:function(provider, config, doc, type, callback) {
+						var waats = require("./waats");
+						waats.queryWaats(provider, config, doc, type, callback);
+					},
+					
+					exec: function(uid, taskid, options, callback) {
+						providers.getProvider("000000000000000000000000").findOne({_id:new BSON.ObjectID(uid)}, null,  null, function(err, user) {
+							if (err || !user) {
+								callback(err || "data not found!", null);
+							} else {
+								provider.findOne({_id:new BSON.ObjectID(taskid)}, null, null, function(err, task) {
+									if (err || !task) {
+										callback(err || "data not found!", null);
+									} else {
+										self.exec(user, task, options, callback);	
+									}
+								});
+							}
+						});
+					},
+					alipayto:function(config, options, callback) {
+						var alipay = require("./alipay");
+						alipay.alipayto(config, options, callback);
+					}, 
+					alipayVerity:function(config, options, callback) {
+						var alipay = require("./alipay");
+						alipay.verity(config, options, callback);
 					}
 				};
 
@@ -82,7 +119,6 @@ Task.prototype.exec = function(user, task, options, callback) {
 		};
 	}
 	
-	var self = this;
 	function exec(db, task, provider, options){
 		try{
 			var handler = eval("("+task.handler+")");
