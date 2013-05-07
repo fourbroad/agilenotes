@@ -64,7 +64,7 @@ Document.prototype.count = function(selector, callback) {
 Document.prototype.counter = function counter(name, callback) {
 	this.getCollection(function(error, collection) {
 		if (collection) {
-		     collection.findAndModify({ key: name }, [], { $inc: { next: 1} }, { new: true, upsert: true }, function (err, ret){
+		     collection.findAndModify({ key: name }, [], { $inc: { next: 1} }, { "new": true, upsert: true }, function (err, ret){
 			if (err) {
 				return callback(err);
 		     	} else {
@@ -73,7 +73,7 @@ Document.prototype.counter = function counter(name, callback) {
 		     });
 		}
 	});
-}
+};
 
 Document.prototype.findOne = function(selector, fields, options, callback) {
 	selector = selector || {};
