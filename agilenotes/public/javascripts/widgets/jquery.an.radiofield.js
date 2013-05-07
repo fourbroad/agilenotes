@@ -53,6 +53,7 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	_makeResizable:function(){},
 
 	_handleChange:function(key, value, oldValue){
+		var o = this.options;
 		if(key == "value"){
 			this.inputs.filter("[value="+o.value+"]").prop("checked",true);
 		}else if(key == "selectItems"){
