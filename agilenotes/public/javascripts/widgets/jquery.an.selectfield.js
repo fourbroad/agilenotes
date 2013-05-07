@@ -58,13 +58,23 @@ $.widget( "an.selectfield", $.an.field, {
 	},
 	
 	_design:function(){
-		var self = this, o = this.options;
 		this.select.detach();
-		this.content.css({width:o.width, height:o.height});
+
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
-				self.content.html(this.label).show();
+				c.html(this.label);
 				return false;
+			}
+		});
+		c.css({width:o.width, height:o.height}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
 			}
 		});
 	},
