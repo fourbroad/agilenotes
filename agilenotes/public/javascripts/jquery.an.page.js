@@ -397,6 +397,10 @@ $.widget( "an.page", {
 		return this.rte && this.rte.rte("rteWidgetActive", type);
 	},
 
+	labelActive:function(){
+		return this.rte && this.rte.rte("labelActive");
+	},
+
 	sourceCode:function(){
 		if(this.rte){
 			var mode = this.rte.rte("option", "mode");

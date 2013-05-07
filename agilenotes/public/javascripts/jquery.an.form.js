@@ -163,10 +163,6 @@ $.widget( "an.form", $.an.page, {
 		return this;
 	},
 	
-	labelActive:function(){
-		return this.rte && this.rte.rte("labelActive");
-	},
-	
 	validate:function(){
 		return this.validator?this.validator.form():true;
 	},

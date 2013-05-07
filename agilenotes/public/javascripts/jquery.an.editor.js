@@ -58,6 +58,7 @@ $.widget( "an.editor", {
 							change:function(){ 
 								o.change();
 							},
+							readOnly:o.readOnly,
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){
 								if(data.key == "isDirty"){
