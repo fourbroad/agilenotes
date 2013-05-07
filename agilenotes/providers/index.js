@@ -14,11 +14,13 @@ var mdb = require('mongodb'),
     Group = require("./group"),
     Role = require("./role"),
     Model = require("../lib/model"),
-    Mail = require("./mail");
+    Mail = require("./mail"),
+    Waats = require("./waats"),
+    Alipay = require("./alipay");
 
 var agilenotes = null;
 var providers = {};
-var adminDb = new Db(Model.ADMIN_DB, new Server('localhost', 27017, {auto_reconnect : true, poolSize : 7}, {native_parser : false}));
+var adminDb = new Db(Model.ADMIN_DB, new Server('192.168.1.40', 27017, {auto_reconnect : true, poolSize : 7}, {native_parser : false}));
 var dbs = {};
 dbs[Model.ADMIN_DB] = adminDb;
 
@@ -77,8 +79,14 @@ function getProvider(db, type){
 		case Model.ROLE:
 			pro = new Role(dbInst);
 			break;
-		case "MailLib":
+		case "MAIL":
 			pro = new Mail(dbInst);
+			break;
+		case "WAATS":
+			pro = new Waats(dbInst);
+			break;
+		case "Alipay":
+			pro = new Alipay(dbInst);
 			break;
 		}
 		providers[db][type] = pro;

@@ -126,7 +126,7 @@ function acl(user, provider, method, selector, type, callback){
 	
 	switch(method){
 	case "post":
-		console.log(BSON);
+		// console.log(BSON);
 		provider.findOne({_id: new BSON.ObjectID(type)}, null, null, function(error, meta){
 			if(meta){
 				if(meta._authz && meta._authz.post){

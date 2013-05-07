@@ -67,7 +67,7 @@ Waats.prototype.parseUrl = function(url) {
 Waats.prototype._genMsgId = function(waats_GDSCode) {
 	var date = new Date();
 	var msg = sprintf("%s%04d%02d%02d%02d%02d%02d", waats_GDSCode, date.getFullYear(), date.getMonth() + 1, date
-			.getDate(), date.getHours(),  date.getMinutes(), date.getSeconds());
+			.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
 	var rand = "00000" + Math.round(Math.random() * 100000);
 
 	return msg + rand.substring(rand.length - 6, rand.length);
@@ -173,8 +173,8 @@ Waats.prototype.doModule = function(buffer, callback) {
 
 						var options = { sort : { StartTime : 0 } };
 						provider.findOne(selector, fields, options, function(err, last_msg) {
-							var log_waats = { 'transAmount' : 0 - g_doc['totalPremium'],
-								'policyNumber' : g_doc['policyNumber'], 'dataRecv' : 'done', 'errorCode' : 0 };
+							var log_waats = { 'transAmount' : 0 - g_doc['TotalPremium'],
+								'PolicyNumber' : g_doc['PolicyNumber'], 'dataRecv' : 'done', 'errorCode' : 0 };
 
 							this.provider.update({ category : "log_waats", MsgID : last_msg['msgID'] }, log_waats, {},
 									function(err, data) {
@@ -186,8 +186,8 @@ Waats.prototype.doModule = function(buffer, callback) {
 
 										this.provider.insert(log_policy, {}, {}, function(err, data) {
 											var policy_new = this.g_policy;
-											policy_new.policyNumber = "";
-											policy_new.policyState = 'canceled';
+											policy_new.PolicyNumber = "";
+											policy_new.PolicyState = 'canceled';
 
 											this.provider.update({ category : "policy", _id : this.pid }, policy_new,
 													{}, function(err, data) {
@@ -196,7 +196,7 @@ Waats.prototype.doModule = function(buffer, callback) {
 										});
 									});
 						});
-						
+
 						callback(false, xml);
 						return true;
 					}
@@ -218,11 +218,10 @@ Waats.prototype.doModule = function(buffer, callback) {
 					this.amount = xml.Segment.PolicyOut.TransactionPremAmt * 100;
 					this.store(function(err, data) {
 						var policy_new = m_policy;
-						policy_new.policyNumber = '';
-						policy_new.policyState = 'canceled';
+						policy_new.PolicyNumber = '';
+						policy_new.PolicyState = 'canceled';
 
-						provider.update({ category : "policy", _id : this.pid }, policy_new, {}, function(err,
-								data) {
+						provider.update({ category : "policy", _id : this.pid }, policy_new, {}, function(err, data) {
 
 						});
 						callback(false, xml.Segment.PolicyOut.PolicyNumber);
@@ -283,7 +282,7 @@ Waats.prototype.doModule = function(buffer, callback) {
 
 Waats.prototype.store = function(callback) {
 	var record = { 'msgID' : this.msgid, 'policyId' : this.pid, 'transType' : this.type, 'transNum' : 0,
-		'transAmount' : this.amount, 'policyNumber' : this.pnum, 'startTime' : this.start_time,
+		'transAmount' : this.amount, 'PolicyNumber' : this.pnum, 'startTime' : this.start_time,
 		'dataSent' : this.tidy_xml(this.xml), 'endTime' : new Date(), 'dataRecv' : this.result,
 		'errorCode' : this.error_code, 'category' : "log_waats" };
 
@@ -299,10 +298,12 @@ Waats.prototype.store = function(callback) {
 };
 
 Waats.prototype.tidy_xml = function(string) {
-	string.replace(/<(Header|Address|Insured)>/i, "\n0\n");
-	string.replace(/<\w+?>\w+<\/\w+>/, "\n\0");
-	string.replace(/<(\w+)?\/(\w+)?>/, "\0\n");
-	string.replace(/\n{2}/, "\n");
+	if (string) {
+		string.replace(/<(Header|Address|Insured)>/i, "\n0\n");
+		string.replace(/<\w+?>\w+<\/\w+>/, "\n\0");
+		string.replace(/<(\w+)?\/(\w+)?>/, "\0\n");
+		string.replace(/\n{2}/, "\n");
+	}
 
 	return string;
 };
@@ -315,7 +316,7 @@ Waats.prototype.gen_xml_header = function() {
 };
 
 Waats.prototype._getTypeCode = function(doc) {
-	var birthday = new Date(doc.birthDt.replace(/-/g, "\/"));
+	var birthday = new Date(doc.BirthDt.replace(/-/g, "\/"));
 	var d = new Date();
 	var age = d.getFullYear()
 			- birthday.getFullYear()
@@ -338,34 +339,34 @@ Waats.prototype.gen_xml = function(policy) {
 		xml += "<AgencyPCC>" + this._MSG['waats_AgencyPCC'] + "</AgencyPCC>";
 		xml += "<AgencyCode>" + this._MSG['waats_AgencyCode'] + "</AgencyCode>";
 		xml += "<IATACntryCd>" + this._MSG['waats_IATACntryCd'] + "</IATACntryCd>";
-		xml += "<GDSProductCode>" + policy['productCode'] + "</GDSProductCode>";
+		xml += "<GDSProductCode>" + policy['ProductCode'] + "</GDSProductCode>";
 		xml += "<TransactionApplDate>" + date("m/d/Y h:i:s A") + "</TransactionApplDate>";
-		xml += "<InceptionDate>" + this.conv_date(policy['dateStart'], false) + "</InceptionDate>";
-		xml += "<ExpirationDate>" + this.conv_date(policy['dateEnd'], true) + "</ExpirationDate>";
-		xml += "<TransactionEffDate>" + this.conv_date(policy['dateStart'], false) + "</TransactionEffDate>";
-		xml += "<TransactionExpDate>" + this.conv_date(policy['dateEnd'], true) + "</TransactionExpDate>";
+		xml += "<InceptionDate>" + this.conv_date(policy['DateStart'], false) + "</InceptionDate>";
+		xml += "<ExpirationDate>" + this.conv_date(policy['DateEnd'], true) + "</ExpirationDate>";
+		xml += "<TransactionEffDate>" + this.conv_date(policy['DateStart'], false) + "</TransactionEffDate>";
+		xml += "<TransactionExpDate>" + this.conv_date(policy['DateStart'], true) + "</TransactionExpDate>";
 		xml += "</PolicyIn>";
 
-		for (i = 0; i < policy['insureds'].length; i++) {
-			var c = policy['insureds'][i];
+		for (i = 0; i < policy['Insured'].length; i++) {
+			var c = policy['Insured'][i];
 			this._getTypeCode(c);
-			xml += "<Insured><TitleNm/><FirstNm></FirstNm><MiNm/><LastNm>" + c['name'] + "</LastNm>";
+			xml += "<Insured><TitleNm/><FirstNm></FirstNm><MiNm/><LastNm>" + c['Name'] + "</LastNm>";
 			xml += "<InsuredTypCd>" + c['typeCode'] + "</InsuredTypCd>";
-			xml += "<BirthDt>" + this.conv_birth(c['birthDt']) + "</BirthDt>";
-			xml += "<PlanCode>" + policy['planCode'] + "</PlanCode>";
+			xml += "<BirthDt>" + this.conv_birth(c['BirthDt']) + "</BirthDt>";
+			xml += "<PlanCode>" + policy['PlanCode'] + "</PlanCode>";
 			xml += "<Address><EmailAddr>" + (c['mail'] ? c['mail'] : "") + "</EmailAddr></Address>";
 
 			if (c['bnfs']) {
 				var j = 0;
 				for (j = 0; j < c['bnfs'].length; j++) {
 					bnf = c['bnfs'][j];
-					xml += "<Beneficiary><FirstNm/><LastNm>" + bnf['name'] + "</LastNm><Relation>" + bnf['Relation']
+					xml += "<Beneficiary><FirstNm/><LastNm>" + bnf['Name'] + "</LastNm><Relation>" + bnf['Relation']
 							+ "</Relation><Percentage>" + bnf['ratio'] + "</Percentage></Beneficiary>";
 				}
 			}
 
 			xml += "<BenefitIn><BenefitCd>1</BenefitCd></BenefitIn>";
-			xml += "<IsInsuredFlag>" + policy['insureds'].length + "</IsInsuredFlag></Insured>";
+			xml += "<IsInsuredFlag>" + policy['Insured'].length + "</IsInsuredFlag></Insured>";
 		}
 
 		xml += "</Segment></TINS_XML_DATA>";
@@ -373,7 +374,7 @@ Waats.prototype.gen_xml = function(policy) {
 		this.xml = xml;
 		return xml;
 	} else if (this.type == 'Policy') {
-		if (!policy['policyNumber']) {
+		if (!policy['PolicyNumber']) {
 			error = "无法查询尚未获得合同编号的保单！";
 			return false;
 		}
@@ -381,7 +382,7 @@ Waats.prototype.gen_xml = function(policy) {
 		xml = "<TINS_XML_DATA>";
 		xml += this.gen_xml_header();
 		xml += "<Segment><TransactionType>Policy</TransactionType>";
-		xml += "<PolicyIn><PolicyNumber>" + policy['policyNumber'] + "</PolicyNumber>";
+		xml += "<PolicyIn><PolicyNumber>" + policy['PolicyNumber'] + "</PolicyNumber>";
 		xml += "<GDSCode>" + this._MSG['waats_GDSCode'] + "</GDSCode>";
 		xml += "<IATACntryCd>" + this._MSG['waats_IATACntryCd'] + "</IATACntryCd>";
 		xml += "</PolicyIn></Segment></TINS_XML_DATA>";
@@ -389,7 +390,7 @@ Waats.prototype.gen_xml = function(policy) {
 		this.xml = xml;
 		return xml;
 	} else if (this.type == 'NSell') {
-		if (policy['policyState'] != 'paid') {
+		if (policy['PolicyState'] != 'paid') {
 			this.error = "无法开出非“已付费”状态的保单！";
 			return false;
 		}
@@ -406,35 +407,35 @@ Waats.prototype.gen_xml = function(policy) {
 		xml += "<AgencyPCC>" + this._MSG['waats_AgencyPCC'] + "</AgencyPCC>";
 		xml += "<AgencyCode>" + this._MSG['waats_AgencyCode'] + "</AgencyCode>";
 		xml += "<IATACntryCd>" + this._MSG['waats_IATACntryCd'] + "</IATACntryCd>";
-		xml += "<GDSProductCode>" + policy['productCode'] + "</GDSProductCode>";
+		xml += "<GDSProductCode>" + policy['ProductCode'] + "</GDSProductCode>";
 		xml += "<TransactionApplDate>" + this.std_date() + "</TransactionApplDate>";
-		xml += "<InceptionDate>" + this.conv_date(policy['dateStart'], false) + "</InceptionDate>";
-		xml += "<ExpirationDate>" + this.conv_date(policy['dateEnd'], true) + "</ExpirationDate>";
-		xml += "<TransactionEffDate>" + this.conv_date(policy['dateStart'], false) + "</TransactionEffDate>";
-		xml += "<TransactionExpDate>" + this.conv_date(policy['dateEnd'], true) + "</TransactionExpDate>";
+		xml += "<InceptionDate>" + this.conv_date(policy['DateStart'], false) + "</InceptionDate>";
+		xml += "<ExpirationDate>" + this.conv_date(policy['DateEnd'], true) + "</ExpirationDate>";
+		xml += "<TransactionEffDate>" + this.conv_date(policy['DateStart'], false) + "</TransactionEffDate>";
+		xml += "<TransactionExpDate>" + this.conv_date(policy['DateEnd'], true) + "</TransactionExpDate>";
 		xml += "</PolicyIn>";
 
-		for (i = 0; i < policy['insureds'].length; i++) {
-			var c = policy['insureds'][i];
+		for (i = 0; i < policy['Insured'].length; i++) {
+			var c = policy['Insured'][i];
 			this._getTypeCode(c);
-			xml += "<Insured><TitleNm/><FirstNm></FirstNm><MiNm/><LastNm>" + c['name'] + "</LastNm>";
+			xml += "<Insured><TitleNm/><FirstNm></FirstNm><MiNm/><LastNm>" + c['Name'] + "</LastNm>";
 			xml += "<InsuredTypCd>" + c['typeCode'] + "</InsuredTypCd>";
-			xml += "<BirthDt>" + this.conv_birth(c['birthDt']) + "</BirthDt>";
-			xml += "<PlanCode>" + policy['planCode'] + "</PlanCode>";
-			xml += "<InsuredIdNo>" + c['idNo'] + "</InsuredIdNo>";
+			xml += "<BirthDt>" + this.conv_birth(c['BirthDt']) + "</BirthDt>";
+			xml += "<PlanCode>" + policy['PlanCode'] + "</PlanCode>";
+			xml += "<InsuredIdNo>" + c['IdNo'] + "</InsuredIdNo>";
 			xml += "<Address><EmailAddr>" + (c['mail'] ? c['mail'] : "") + "</EmailAddr></Address>";
 
-			if (c['bnfs']) {
+			if (c['Bnfs']) {
 				var j = 0;
-				for (j = 0; j < c['bnfs'].length; j++) {
-					bnf = c['bnfs'][j];
-					xml += "<Beneficiary><FirstNm/><LastNm>" + bnf['name'] + "</LastNm><Relation>" + bnf['Relation']
-							+ "</Relation><Percentage>" + bnf['per'] + "</Percentage></Beneficiary>";
+				for (j = 0; j < c['Bnfs'].length; j++) {
+					bnf = c['Bnfs'][j];
+					xml += "<Beneficiary><FirstNm/><LastNm>" + bnf['Name'] + "</LastNm><Relation>" + bnf['Relation']
+							+ "</Relation><Percentage>" + bnf['Per'] + "</Percentage></Beneficiary>";
 				}
 			}
 
 			xml += "<BenefitIn><BenefitCd>1</BenefitCd></BenefitIn>";
-			xml += "<IsInsuredFlag>" + policy['insureds'].length + "</IsInsuredFlag></Insured>";
+			xml += "<IsInsuredFlag>" + policy['Insured'].length + "</IsInsuredFlag></Insured>";
 		}
 
 		xml += "</Segment></TINS_XML_DATA>";
@@ -442,7 +443,7 @@ Waats.prototype.gen_xml = function(policy) {
 		this.xml = xml;
 		return xml;
 	} else if (this.type == 'Cancellation') {
-		if (policy['policyState'] != 'issued' || policy['dateStart'] < time()) {
+		if (policy['PolicyState'] != 'issued' || policy['dateStart'] < time()) {
 			this.error = "无法取消未开出或已过期的保单！";
 			return false;
 		}
@@ -457,10 +458,10 @@ Waats.prototype.gen_xml = function(policy) {
 		xml += "<AgencyPCC>" + this._MSG['waats_AgencyPCC'] + "</AgencyPCC>";
 		xml += "<AgencyCode>" + this._MSG['waats_AgencyCode'] + "</AgencyCode>";
 		xml += "<IATACntryCd>" + this._MSG['waats_IATACntryCd'] + "</IATACntryCd>";
-		xml += "<GDSProductCode>" + policy['productCode'] + "</GDSProductCode>";
+		xml += "<GDSProductCode>" + policy['ProductCode'] + "</GDSProductCode>";
 		xml += "<TransactionEffDate>" + this.conv_date(policy['dateStart'], false) + "</TransactionEffDate>";
 		xml += "<TransactionExpDate>" + this.conv_date(policy['dateEnd'], true) + "</TransactionExpDate>";
-		xml += "<PolicyNumber>" + policy['policyNumber'] + "</PolicyNumber>";
+		xml += "<PolicyNumber>" + policy['PolicyNumber'] + "</PolicyNumber>";
 		xml += "<TransactionNo>0</TransactionNo>";
 		xml += "</PolicyIn></Segment></TINS_XML_DATA>";
 
@@ -500,10 +501,10 @@ Waats.prototype.conv_birth = function(date) {
 
 Waats.prototype.std_date = function() {
 	var d = new Date();
-	var result = sprintf("%02d/%02d/%04d %02d:%02d:%02d ", d.getMonth() + 1, d.getDate(), d.getFullYear(), d
-			.getHours() % 12, d.getMinutes(), d.getSeconds());
-	
-	if (d.getHours()  > 11) {
+	var result = sprintf("%02d/%02d/%04d %02d:%02d:%02d ", d.getMonth() + 1, d.getDate(), d.getFullYear(),
+			d.getHours() % 12, d.getMinutes(), d.getSeconds());
+
+	if (d.getHours() > 11) {
 		result += "PM";
 	} else {
 		result += "AM";
