@@ -355,7 +355,7 @@ $.widget( "an.page", {
 
 	_controlActionSet:function(){
 		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["properties","cleanFormat","docStructure"],actions);
+		return this._createActionSet(["properties","cleanFormat"],actions);
 	},
 	
 	_formatActionSet:function(){

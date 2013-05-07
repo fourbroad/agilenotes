@@ -12,25 +12,29 @@
 (function( $, undefined ) {
 
 $.widget( "an.passwordfield", $.an.inputfield, {
-
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-passwordfield");
 	},
 
 	_browser:function(){
-		this.input.hide();
-		this.content.html("********").show();
-	},
-	
-	_edit:function(){
-		this.content.hide();
-		this.input.val(this.options.value).show();
+		$.an.inputfield.prototype._browser.apply(this, arguments);
+		this.content.html("********");
 	},
 	
 	_design:function(){
 		this.input.hide();
-		this.content.html("********").show();
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html("********").css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
 	},
 
 	destroy: function() {

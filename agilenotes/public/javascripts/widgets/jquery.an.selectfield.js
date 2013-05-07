@@ -15,9 +15,12 @@ $.widget( "an.selectfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, el = this.element;
-		el.addClass("an-selectfield");
-		var sel = this.select = $("<select />").attr("name",o.id).appendTo(el);
+		this.element.addClass("an-selectfield");
+	},
+	
+	_createControl:function(){
+		var self = this, o = this.options;
+		var sel = this.select = $("<select />").attr("name",o.id);
 		$("<option/>").attr("value","").html("").appendTo(sel);
 		$.each(o.selectItems||[], function(){
 			$("<option/>").attr("value",this.value).html(this.label).appendTo(sel);
@@ -40,7 +43,7 @@ $.widget( "an.selectfield", $.an.field, {
 	
 	_browser:function(){
 		var self = this, o = this.options;
-		this.select.hide();
+		this.select.detach();
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
 				self.content.html(this.label).show();
@@ -50,19 +53,32 @@ $.widget( "an.selectfield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.content.hide();
-		this.select.val(this.options.value).show();
+		this.select.detach().val(this.options.value).appendTo(this.content.empty());
+
 	},
 	
 	_design:function(){
 		var self = this, o = this.options;
-		this.select.hide();
+		this.select.detach();
+		this.content.css({width:o.width, height:o.height});
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
 				self.content.html(this.label).show();
 				return false;
 			}
 		});
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.element.children("label").remove();
+			this._createLabel();
+		}else if(key == "selectItems"){
+			this.select.remove();
+			this._createControl();
+		}else{
+			$.an.field.prototype._handleChange.apply(this, arguments);
+		}
 	},
 	
 	destroy: function() {

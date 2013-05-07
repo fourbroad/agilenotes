@@ -294,7 +294,7 @@ var Model = {
 	    				console.log("Load forms "+type.forms+" error: "+err);
 	    			}else{
 				    	if(opts.isNew) $.extend(true, page, eval("("+type.defaultValues+")"||"{}"));
-	    				element.editor($.extend(true, {title:title, dbId:dbId, document:page, forms:forms, design:true, isPageEditor:true}, $.extend(true,{},opts,{mode:'edit'})));
+	    				element.editor($.extend(true, {title:title, dbId:dbId, document:page, forms:forms, design:true}, $.extend(true,{},opts,{mode:'edit'})));
 	    				opts.opened && opts.opened(element.data("editor"));
 	    			}
 	    		});

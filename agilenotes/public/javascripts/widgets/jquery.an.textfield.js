@@ -12,7 +12,6 @@
 (function( $, undefined ) {
 
 $.widget( "an.textfield", $.an.inputfield, {
-
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-textfield");

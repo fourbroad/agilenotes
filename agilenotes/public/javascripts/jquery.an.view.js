@@ -84,7 +84,6 @@ $.widget( "an.view", {
 		}else{
 			self.pager&&self.pager.reload();
 		}
-		
 	},
 	
 	_getRow: function(row){

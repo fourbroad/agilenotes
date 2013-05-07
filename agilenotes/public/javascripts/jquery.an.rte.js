@@ -27,7 +27,6 @@ $.widget( "an.rte", {
 			standard:"5080143085ac60df09000001",
 			link: "508251eb0b27990c0a000001",
 			image:"5082d29f0b27990c0a000005",
-			label:"50af2f976cec663c0a00000e",
 			table:"5085f383eeeac1e909000001",
 			cell:"5086b873eeeac1e909000002",
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"]
@@ -77,7 +76,7 @@ $.widget( "an.rte", {
 				}catch(e){}
 			}
 
-			self.$body = $(body).addClass("rte-structure");
+			self.$body = $(body);
 			if(o.cssClass) self.$body.addClass(o.cssClass);
 			//o.history.push(self.$body.html());
 			//self.htStep=o.history.length-1;
@@ -409,7 +408,7 @@ $.widget( "an.rte", {
 	},
 	
 	_controlActionSet:function(){
-		return this._createActionSet(["properties","cleanFormat","docStructure"]);
+		return this._createActionSet(["properties","cleanFormat"]);
 	},
 	
 	_formatActionSet:function(){
@@ -544,11 +543,6 @@ $.widget( "an.rte", {
 		return this;
 	},
 	
-	toggleDocumentStructure: function(){
-		this.$body.toggleClass('rte-structure');
-		return this;
-	},
-
     bold: function(){
     	this.options.doc.execCommand("bold", false, null);
 		this.element.trigger("contentchange");
@@ -1394,46 +1388,16 @@ $.widget( "an.rte", {
 		return this;
     },
 
-    label:function(){
-    	var self = this, o = this.options, sel = o.selection, n = sel.getEnd(), $n = $(n), ids = o.formIds;
-    	if(!$n.is('label')){
-    		$n = $("<label>New Label</label>");
-    		n = $n.get(0);
-    	}
-       	var as = $.extend({},{content:$n.html()},attributes(n));
-       	if(as["for"]) as["for"] = as["for"].replace(/-/g,".");
-		this._showDialog("Label", as, [ids.standard, ids.label], function(attrs){
-			$n.html(attrs.content);
-			delete attrs.content;
-			$.each(attrs, function(k,v){
-				v = $.trim(v);
-				if(v){
-					if(k == "for") v = v.replace(/\./g,"-");
-					$n.attr(k,v);
-				}else{
-					$n.removeAttr(k);
-				}
-			});
-			if(!$n.parent().length) sel.insertNode(n);
-			self.element.trigger("contentchange");
-		});
-		return this;
-    },
-    
-    labelActive:function(){
-    	return $(this.options.selection.getEnd()).is('label');
-    },
-    
 	rteWidget: function(type, formIds, opts){
     	var o = this.options, sel = o.selection, n = sel.getStart(), $n = $(n);
     	if(!$n.is('.widget[type='+type+']')){
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
     		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime",
-    		                                          "textarea", "file","grid","jsrender","password","rte","button"])!=-1);
+    		                                          "textarea", "file","grid","jsrender","password","rte"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
     		n = $n.get(0);
     	}
-    	var oldmd = $n.getMetadata(), oldattrs = attributes(n),
+    	var oldmd = $.extend(true,opts,$n.getMetadata()), oldattrs = attributes(n),
        	      title = type.substring(0,1).toUpperCase()+type.substring(1) + " Properties";
     	if(oldattrs.id) oldattrs.id = oldattrs.id.replace(/-/g,".");
  		this._showDialog(title, $.extend({},oldmd,oldattrs), formIds, function(attrs){
@@ -1451,6 +1415,9 @@ $.widget( "an.rte", {
 			}else if($n.is("[type=tabsx]")){
 				md.tabsxwidget = attrs.tabsxwidget;
 				delete attrs.tabsxwidget;
+			}else if($n.is("[type=button]")){
+				md.buttonwidget = attrs.buttonwidget;
+				delete attrs.buttonwidget;
 			}else if($n.is(".box") && attrs[type+"box"]){
 				md[type+"box"] = attrs[type+"box"];
 				delete attrs[type+"box"];
@@ -2036,13 +2003,6 @@ $.widget( "an.rte", {
 		    	handler: function(){self.properties();},
 		    	enabled:function(){return self._propertiesEnable();}
 		    },
-		    docStructure:{
-	    		type: "checkbox",
-	   			label: "Toggle display document structure",
-	   			icons: {primary: "ui-icon-doc-struct"	},
-	   			handler: function(){self.toggleDocumentStructure();},
-	   			checked: function(){return self.$body&&self.$body.is('.rte-structure');}
-    		},
 	    	cleanFormat:{
 	    		type: "checkbox",
 	    		label: "Clean Format",

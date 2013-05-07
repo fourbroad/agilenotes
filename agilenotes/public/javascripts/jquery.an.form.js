@@ -17,7 +17,7 @@ $.widget( "an.form", $.an.page, {
 		printable: true,
 		formIds:{
 			text:["5080143085ac60df09000001","5092733215ca72150a000001"],
-			password:["5080143085ac60df09000001"],
+			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
 			checkbox:["5080143085ac60df09000001","50af2d266cec663c0a000009"],
 			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
@@ -26,8 +26,8 @@ $.widget( "an.form", $.an.page, {
 			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
 			grid:["5080143085ac60df09000001","5089e21f2b2255080a000005"],
 			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d0825caa05a669e0002ae","514d5ef3ac8f27413200014e"],
-			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a"],
-			select:["5080143085ac60df09000001","508259700b27990c0a000003"],
+			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a","51850c1ca092003b12000024"],
+			select:["5080143085ac60df09000001","51850b35a09200784a000122","508259700b27990c0a000003"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
 		    rte:["5080143085ac60df09000001"]
 		},
@@ -52,12 +52,6 @@ $.widget( "an.form", $.an.page, {
             el.trigger("documentchanged",e,[doc,oldDoc]);
 		}).bind("propchanged.form",function(e,id,value,oldValue,trans){
 			self.field(id, value);
-		});
-		
-		el.bind("dblclick.form",function(e){
-			if(o.mode == "design" && self.labelActive()){
-				self.label();
-			}
 		});
 		
 		$.an.page.prototype._initPage.apply(this, arguments);

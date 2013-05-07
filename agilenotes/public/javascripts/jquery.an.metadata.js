@@ -68,7 +68,7 @@ $.extend({
 			if ( settings.type == "elem" ) {
 				elem.children("script[type='text/json']").remove();
 				if(!$.isEmptyObject(metadata)){
-					elem.html("<script type='text/json'>"+$.toJSON(metadata)+"</script>");
+					$("<script type='text/json'>"+$.toJSON(metadata)+"</script>").prependTo(elem);
 				}
 			} else if (settings.type == "attr" ) {
 				elem.removeAttr(settings.name);
