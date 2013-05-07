@@ -14,7 +14,6 @@
 $.widget( "an.box", $.an.widget, {
 	options:{
 		visibleButtonCount: 3,
-		height: "auto",
 		link: "raw" // raw, documentType, document, form, view, page
 	},
 
@@ -59,7 +58,6 @@ $.widget( "an.box", $.an.widget, {
 	_showTitleBar:function(show){
 		var o = this.options, el = this.element;
 		if(show){
-			el.addClass("title-bar");
 			if(!this.titleBar){
 				this.titleBar = $("<div class='title-bar ui-widget-header ui-corner-top'/>").prependTo(this.element);
 				this.title = $("<div class='title'/>").html(o.title).appendTo(this.titleBar);
@@ -108,7 +106,6 @@ $.widget( "an.box", $.an.widget, {
 		var self = this, el = this.element;
 		if(buttons && buttons.length > 0){
 			if(!this.footArea){
-				el.addClass("foot-area");
 				this.footArea = $("<div class='foot-area'/>").appendTo(el);
 			}else{
 				this.footArea.empty();
@@ -170,6 +167,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
+
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts, {
@@ -180,7 +179,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openForm(el, dbId, formId, optsx);
+		Model.openPage(el, dbId, formId, optsx);
 		return this;
 	},
 
@@ -202,6 +201,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openPage:function(pageId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isPageEditor:true});
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts,{
@@ -212,7 +213,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(page);
 	    		}
 	        });
-		Model.openForm(el, dbId, pageId, optsx);
+		Model.openPage(el, dbId, pageId, optsx);
 		return this;
 	},
 	
@@ -245,7 +246,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var opts = {mode:"browser",dbId:o.odbId||o.dbId}, id = o.targetId;
+				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -292,7 +293,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var id = o.targetId, ob = {mode:"browser",dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId};
+				var id = o.targetId, ob = {dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId}; 
 				if(link == "documentType"){
 					this.newDocument(id, oe);
 				}else if(link == "document"){

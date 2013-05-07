@@ -12,46 +12,77 @@
 (function( $, undefined ) {
 
 $.widget( "an.radiofield", $.an.inputfield, {
+	options:{
+		orientation:"horizontal"
+	},
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, value = this.element.attr("value");
 		this.element.addClass("an-radiofield");
-		this.content.hide();
-		this.input.attr("value",value).css({width:"",height:""}).prop("checked", value == o.value).show();
-		this.input.unbind("change keypress").bind("change.checkboxfield",function(e){
-//			e.preventDefault();
-//			e.stopImmediatePropagation();
-			self._trigger("optionchanged",null,{key:"value", value:value, oldValue:null, isTransient:self.element.is(".isTransient")});
-		});
+		this.content.remove();
 	},
+
+	_createControl:function(){
+		var self = this, o = this.options, el = this.element;
+		$.each(o.selectItems||[], function(k,v){
+			$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+			    .addClass("ui-widget-content ui-corner-all").appendTo(el);
+			$("<div class='content'/>").hide().appendTo(el);
+			$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
+			if(o.orientation == "vertical") el.append("<br>");
+		});
+		
+		this.inputs = el.children("input");
+		this.contents = el.children(".content");
+		if(!$.isEmptyObject(o.validate)){
+			this.inputs.addClass($.toJSON({validate:o.validate}));
+		}
+		this.inputs.filter("[value="+o.value+"]").prop("checked",true);
+		
+		this.inputs.bind("change.radiofield",function(e){
+			var value = $(e.target).attr("value"), oldValue = o.value;
+			if(value != oldValue){
+				o.value = value;
+				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			}
+		}).bind("dblclick.radiofield",function(e){e.stopImmediatePropagation();});
+	},
+	
+	_createLabel:function(){},
 
 	_makeResizable:function(){},
 
-	option: function(key, value) {
+	_handleChange:function(key, value, oldValue){
 		if(key == "value"){
-			var v = this.element.attr("value");
-			if(value === undefined){
-				return this.input.prop("checked")? v : null;
-			}else{
-				this.input.prop("checked",value == v);
-				this.refresh();
-				return;
-			}
+			this.inputs.filter("[value="+o.value+"]").prop("checked",true);
+		}else if(key == "selectItems"){
+			this.inputs.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else if(key == "orientation"){
+			this.inputs.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else{
+			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
-		return $.an.inputfield.prototype.option.apply(this, arguments );
 	},
 	
 	_browser:function(){
-        this.input.attr("disabled","disabled");
+		this.contents.css("display","none");
+        this.inputs.attr("disabled","disabled");
 	},
 	
 	_edit:function(){
-        this.input.removeAttr("disabled");
+		this.contents.css("display","none");
+        this.inputs.removeAttr("disabled");
 	},
 
 	_design:function(){
-		this.input.hide();
+		this.inputs.hide();
+		this.contents.css("display","");
 	},
 
 	highlight: function(highlight){
@@ -59,7 +90,9 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
-		this.element.removeClass( "an-radiofield" );
+		this.inputs.unbind(".radiofield").remove();
+		this.contents.remove();
+		this.element.removeClass("an-radiofield" ).children("br").remove();
 		$.an.inputfield.prototype.destroy.apply( this, arguments );
 	}
 });

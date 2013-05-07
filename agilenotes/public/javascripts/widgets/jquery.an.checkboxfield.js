@@ -15,16 +15,34 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-checkboxfield");
-		var self = this;
 		this.content.hide();
-		this.input.unbind("change keypress").bind("change.checkboxfield",function(e){
-//			e.preventDefault();
-//			e.stopImmediatePropagation();
-			self.option("value",self.input.prop("checked"));
-		}).css({width:"",height:""}).show();
 	},
 
+	_createControl:function(){
+		var self = this, o = this.options;
+		this.input = $("<input type='checkbox'/>").attr({name:o.id})
+		    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
+			var value = self.input.prop("checked"), oldValue = o.value;
+			if(value != oldValue){
+				o.value = value;
+				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			}
+		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+		
+		if(!$.isEmptyObject(o.validate)){
+			this.input.addClass($.toJSON({validate:o.validate}));
+		}
+		this.input.appendTo(this.element);
+	},
+	
 	_makeResizable:function(){},
+	
+	_createLabel:function(){
+		var o = this.options, el = this.element;
+		if(o.label){
+		    $("<label/>").attr("for",o.id).html(o.label).appendTo(el);
+		}
+	},
 	
 	_browser:function(){
         this.input.prop('checked', this.options.value).attr("disabled","disabled");
@@ -36,7 +54,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	
 	_design:function(){
 		this.input.hide();
-		this.content.show();
+		this.content.css("display","");
 	},
 	
 	highlight: function(highlight){

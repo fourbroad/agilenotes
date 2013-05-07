@@ -24,10 +24,12 @@ $.widget( "an.filefield", $.an.inputfield, {
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, c = this.content;
 		this.element.addClass("an-filefield wrapper");
+	},
+
+	_createControl:function(){
+		var self = this, o = this.options, c = this.content;
 		this.files = $("<ul class='grid'/>").appendTo(c);
-		this.loadIcons();
 		c.delegate("li[data-id][data-id!=uploadButton]", "hover.filefield", function(e){
 			if(o.mode != "edit") return;
 			if(e.type == "mouseenter"){
@@ -64,10 +66,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			e.stopImmediatePropagation();
 			self.input.click();
 		});
-	},
-
-	_createInput:function(){
-		return $("<input type='file'/>").hide().appendTo(this.element).bind("change",$.proxy(this, "_uploadFile"));
+		this.input = $("<input type='file'/>").hide().appendTo(this.element).bind("change",$.proxy(this, "_uploadFile"));
+		this.loadIcons();
 	},
 	
 	_uploadFile:function(e){
@@ -203,14 +203,33 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 	
 	_handleChange:function(key, value, oldValue){
-		$.an.inputfield.prototype._setOption.apply(this, arguments );
 		if(key === "sortBy"){
 			var o = this.options;
 			this.sort(o.tags, o.sortBy);
+		}else if(key == "label"){
+			this.element.children("label").remove();
+			this._createLabel();
+		}else{
+			$.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
 	},
 	
 	refresh:function(){
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.css({width:o.width, height:o.height, display:""});
+		if(o.mode == "design" || o.resizable){
+			c.resizable({
+				stop:function(e,ui){
+					o.width = c.width();
+					o.height = c.height();
+					$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+					self._updateMetadata();
+					self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+				}
+			});
+		}
+
 		this.loadIcons();
 	},
 	

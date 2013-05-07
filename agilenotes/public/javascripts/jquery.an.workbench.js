@@ -777,8 +777,10 @@ $.widget( "an.workbench", {
 		    },opts);
 		if(typeId == Model.FORM){
 			pid = pid+"-form";
+			optsx.isFormEditor = true; 
 		}else if(typeId == Model.PAGE){
 			pid = pid+"-page";
+			optsx.isPageEditor = true; 
 		}else if(typeId == Model.VIEW){
 			pid = pid+"-view";
 		}else{
@@ -857,6 +859,7 @@ $.widget( "an.workbench", {
 	
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = formId+"-form"; 
@@ -887,7 +890,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openForm", id:formId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, formId, optsx);
+			Model.openPage(el, dbId, formId, optsx);
 		}
 		
 		var el = null;
@@ -913,7 +916,7 @@ $.widget( "an.workbench", {
 	openPage:function(pageId, opts){
 		opts = opts || {};
 		$.extend(true,opts,{isPageEditor:true});
-
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = pageId+"-page"; 
 		if(!opts.preview && tabs.tabsx("panel",pid).size() > 0){
@@ -943,7 +946,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openPage", id:pageId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, pageId, optsx);
+			Model.openPage(el, dbId, pageId, optsx);
 		}
 		
 		var el = null;

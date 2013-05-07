@@ -131,9 +131,9 @@ function newDocument(dbId,typeId, opts){
 function openDocument(dbId,docId, opts){
 	openDialog(dbId,docId,opts,'openDocument');
 }
-var openForm,openView,openPage,openSideView;
+var openPage,openView,openPage,openSideView;
 openForm=openView=openPage=openSideView=function(dbId,sid, opts){
-	openDialog(dbId,sid,opts,'openForm');
+	openDialog(dbId,sid,opts,'openPage');
 };
 
 /*

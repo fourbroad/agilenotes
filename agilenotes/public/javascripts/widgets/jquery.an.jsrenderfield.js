@@ -30,13 +30,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			
 		}
 		
-		if (o.templates) {
-			var obj = {};
-			for (var i = 0; i < o.templates.length; i++) {
-				obj[o.templates[i].name] = o.templates[i].content;
-			}
-			
-			$.templates(obj);
+		if (o.template) {
+			o.template=$.templates(o.template);
 		}
 		
 		if(o.converters){
@@ -93,7 +88,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 	
 	replaceValue:function(index, value) {
 		var o = this.options, oldValue = [].concat(o.value);
-		o.value[index] = value;this.refresh();
+		o.value[index] = value;
+		this.refresh();
 		this._notify(oldValue, o.value);
 	},
 	
@@ -103,8 +99,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.browserTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -116,8 +112,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.editorTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}

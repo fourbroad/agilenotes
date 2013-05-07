@@ -56,7 +56,7 @@ $.widget( "an.editor", {
 							mode:(o.design && /-design$/.test(id)) ? "design" : o.mode,
 							ignoreEscape:o.ignoreEscape,
 							change:function(){ 
-								o.change();
+								o.change&&o.change();
 							},
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){
@@ -92,7 +92,7 @@ $.widget( "an.editor", {
 						}, opt));
 					}else if (type == Model.PAGE){
 						$p.page($.extend(true,{
-							form: d, 
+							page:d, 
 							create:function(){ self._trigger("tabcreated",event, $(this).data("page")); }
 						},opt));
 					}else if (type == Model.VIEW){
@@ -226,7 +226,7 @@ $.widget( "an.editor", {
 			var data = $(this).data();;
 			for(var i in data){
 				if($.inArray(i, ["form","page"]) != -1){
-					if((data[i].option("form")._id == o.document._id) && data[i].option("isDirty")){
+					if((data[i].option(i)._id == o.document._id) && data[i].option("isDirty")){
 						o.document.content = data[i].option("content");
 						data[i].option("isDirty", false);
 						o.isDocDirty = true;

@@ -39,11 +39,10 @@ var Model = {
     ACTION_ROOT: "0000000000000000000e000b",
     DATABASE_ROOT: "0000000000000000000e000f",
 
-    // Cache of document type, form, view, page, side view.
+    // Cache of document type, page(form), view, side view.
     types:{},
-    forms:{},
-    views:{},
     pages:{},
+    views:{},
     sideViews:{},
     
     typeId:function(rootId){
@@ -128,39 +127,39 @@ var Model = {
     	}
     },
 
-    getForms: function(dbId, formIds, callback){
-    	var self = this, sel = {$or:[]}, forms = [], form;
-    	for(var f in formIds){
-    		form = this.forms[formIds[f]];
-    		if(form){
-    			forms.push(form);
+    getPages: function(dbId, ids, callback){
+    	var self = this, sel = {$or:[]}, pages = [], page;
+    	for(var f in ids){
+    		page = this.pages[ids[f]];
+    		if(page){
+    			pages.push(page);
     		}else{
-    			sel.$or.push({_id:formIds[f]});
+    			sel.$or.push({_id:ids[f]});
     		}
     	}
     	
-    	function sort(formIds, forms){
-    		var sortedForms=[];
-    		if(forms.length>0){
-    			for(var i in formIds){
-    				for(var j in forms){
-    					if(forms[j]._id == formIds[i]){
-    						sortedForms.push(forms[j]);
-    						self.forms[forms[j]._id] = forms[j];
+    	function sort(ids, pages){
+    		var sortedPages=[];
+    		if(pages.length>0){
+    			for(var i in ids){
+    				for(var j in pages){
+    					if(pages[j]._id == ids[i]){
+    						sortedPages.push(pages[j]);
+    						self.pages[pages[j]._id] = pages[j];
     						break;
     					}
     				}
     			}
     		}					
-    		return sortedForms;
+    		return sortedPages;
     	}
     	
     	if(sel.$or.length>0){
         	$.ans.getDoc(dbId, null, {selector:sel},function(err, data){
-        		callback(err, sort(formIds, forms.concat(data.docs)));
+        		callback(err, sort(ids, pages.concat(data.docs)));
         	});
     	}else{
-    		callback(null, sort(formIds, forms));
+    		callback(null, sort(ids, pages));
     	}
     },
 
@@ -195,7 +194,7 @@ var Model = {
     	function openDoc(doc){
     		if(doc.type == self.FORM || doc.type == self.PAGE){
     			doc.content = doc.content||"";
-    			self._doOpenForm(element, dbId, doc, $.extend(true,{mode:"design"},opts));
+    			self._doOpenPage(element, dbId, doc, $.extend(true,{mode:"design"},opts));
     		}else if(doc.type == self.VIEW){
     			doc.viewType = opts.viewType;
     			self._doOpenView(element, dbId, doc, $.extend(true,{mode:"design"},opts));
@@ -227,7 +226,7 @@ var Model = {
 			isDocumentEditor: true
 		}, opts), self = this;
 		if(optsx.formIds){
-			this.getForms(dbId, optsx.formIds, function(err, forms){
+			this.getPages(dbId, optsx.formIds, function(err, forms){
 				if(err){
 					console.log("Load forms "+optsx.formIds+" error: "+err);
 				}else{
@@ -243,7 +242,7 @@ var Model = {
 					var obj=type.defaultValues||"{}";
 					$.extend(true, optsx.document, eval("(" + obj + ")"));
 				}
-				self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+				self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 					if(err){
 						console.log("Load forms "+type.forms+" error: "+err);
 					}else{
@@ -284,59 +283,60 @@ var Model = {
     	}
     },
 
-    _doOpenForm: function(element, dbId, form, opts){
-    	var self = this, title = opts.title || form.title || form.name ||  form._id, 
-    	type = this.types[form.type];
+    _doOpenPage: function(element, dbId, page, opts){
+    	var self = this, title = opts.title || page.title || page.name ||  page._id, 
+    	type = this.types[page.type];
 
     	function openEditor(type){
-			if(opts.mode && (opts.mode != "design")){
-				var doc = {};
-		    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
-		    	if(form.type == Model.FORM){
-					element.editor($.extend(true, { title:title, dbId:dbId, document:doc, forms:[form]}, opts));
-					opts.opened && opts.opened(element.data("editor"));
-		    	}else if(form.type==Model.PAGE){
-					element.page($.extend(true, { title:title, dbId:dbId, form:form}, opts));
-					opts.opened && opts.opened(element.data("page"));
-		    	}
-			}else{
-	    		self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+			if(opts.mode == "design"){
+	    		self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 	    			if(err){
 	    				console.log("Load forms "+type.forms+" error: "+err);
 	    			}else{
-	    				element.editor($.extend(true, { title:title, dbId:dbId, document:form, forms:forms, design:true, isFormEditor:true}, $.extend(true,{},opts,{mode:'edit'})));
+				    	if(opts.isNew) $.extend(true, page, eval("("+type.defaultValues+")"||"{}"));
+	    				element.editor($.extend(true, {title:title, dbId:dbId, document:page, forms:forms, design:true}, $.extend(true,{},opts,{mode:'edit'})));
 	    				opts.opened && opts.opened(element.data("editor"));
 	    			}
 	    		});
+			}else{
+		    	if(page.type==Model.PAGE){
+					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+					opts.opened && opts.opened(element.data("page"));
+		    	}else if(page.type == Model.FORM){
+					var doc = {};
+			    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
+					element.editor($.extend(true, {title:title, dbId:dbId, document:doc, forms:[page]}, opts));
+					opts.opened && opts.opened(element.data("editor"));
+		    	}
 			}   
     	}
 
     	if(type){
     		openEditor(type);
     	}else{
-    		$.ans.getDoc(dbId, form.type, null, function(err,type){
+    		$.ans.getDoc(dbId, page.type, null, function(err,type){
     			if(err){
-    				console.log("Load document type "+form.type+" error: "+ err);
+    				console.log("Load document type "+page.type+" error: "+ err);
     			}else{
-    				self.types[form.type] = type;
+    				self.types[page.type] = type;
     				openEditor(type);
     			}
     		});
     	}
     },
 
-    openForm: function(element, dbId, formId, opts){
+    openPage: function(element, dbId, pageId, opts){
     	opts = opts || {};
     	var self = this;
-    	if(this.forms[formId]){
-    		this._doOpenForm(element, dbId, this.forms[formId], opts);
+    	if(this.pages[pageId]){
+    		this._doOpenPage(element, dbId, this.pages[pageId], opts);
     	}else{
-    		$.ans.getDoc(dbId, formId, null, function(err, form){
+    		$.ans.getDoc(dbId, pageId, null, function(err, page){
     			if(err){
-    				console.log("Load form "+ formId+" error: "+err);
+    				console.log("Load page "+ pageId+" error: "+err);
     			}else{
-    				self.forms[formId] = form;
-    				self._doOpenForm(element, dbId, form, opts);
+    				self.pages[pageId] = page;
+    				self._doOpenPage(element, dbId, page, opts);
     			}
     		});
     	}
@@ -350,7 +350,7 @@ var Model = {
     		if(opts.mode == "design"){
     			function openEditor(type){
     		    	if(opts.isNew) $.extend(true, viewDoc, eval("("+type.defaultValues+")"||"{}"));
-    				self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+    				self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
     					if(err){
     						console.log("Load forms "+type.forms+" error: "+err);
     					}else{
@@ -379,7 +379,7 @@ var Model = {
     	}
 
     	if(view.viewType == "formView"){
-    		var form = this.forms[view.formId];
+    		var form = this.pages[view.formId];
     		if(form){
 				opts.form = form;
 				openView(element, dbId, view, opts);
@@ -388,7 +388,7 @@ var Model = {
         			if(err){
         				console.log("Load form "+view.formId+" error: "+err);
         			}else{
-        				opts.form = self.forms[view.formId] = form;
+        				opts.form = self.pages[view.formId] = form;
         				openView(element, dbId, view, opts);
         			}
         		});
@@ -458,7 +458,7 @@ var Model = {
     
     _cleanCache:function(docId){
     	delete this.types[docId];
-        delete this.forms[docId];
+        delete this.pages[docId];
         delete this.views[docId];
         delete this.pages[docId];
         delete this.sideViews[docId];
