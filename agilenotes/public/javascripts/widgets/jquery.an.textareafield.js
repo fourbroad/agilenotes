@@ -73,7 +73,7 @@ $.widget( "an.textareafield", $.an.field, {
 	
 	_handleChange:function(key, value, oldValue){
 		if(key === "label"){
-			this.textareaWrapper.remove();
+			this.textarea.remove();
 			this.element.children("label").remove();
 			this._createControl();
 			this._createLabel();
