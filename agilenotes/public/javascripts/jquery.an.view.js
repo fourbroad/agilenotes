@@ -69,15 +69,16 @@ $.widget( "an.view", {
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, opts = {skip:o.skip,limit:o.limit};
+		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit};
 		if(!o.view.showPager||self.widgetName=='gridview'){
 			if($.type(o.view.sort)=="string"){
 				opts.sort=eval("("+o.view.sort+")");
 			}
 			if($.type(sel)=="string"){
 				sel = eval("("+sel+")");
-				$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
+				$.ans.getDoc(o.dbId,null,{selector:sel,filter:filter,options:opts},function(err,data){
 					self.docs = data.docs;
+					o.total = data.total;
 					self._docsLoaded && self._docsLoaded();
 				});
 			}
