@@ -6,8 +6,8 @@ Mail = function(db) {
 	Document.call(this, db);
 };
 
-Mail.readmail = function() {
-	
+Mail.readmail = function(dbid, config, opts, callback) {
+	MailLib.readMail(dbid, config, opts, callback);
 };
 
 Mail.sendmail = function(dbid, config, doc, opts, callback) {

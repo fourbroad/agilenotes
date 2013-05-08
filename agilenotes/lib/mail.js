@@ -33,7 +33,7 @@ function _genMessage(config, doc, attachments, callback) {
 
 function _saveMail(provider, doc, callback) {
 	doc._create_at = new Date();
-	doc.category = "inbox";
+	doc.category = "sendbox";
 	doc.type = "51554346ac8f275f140002ae";
 	provider.insert(doc, {}, function(err, data) {
 		callback(err, data);
@@ -276,93 +276,110 @@ function _createTmpFile(docid, buffer, callback) {
 	}
 }
 
-function readMail(req, res) {
-	var params = req.params, dbid = params.dbid, q = req.query, docid = params.docid;
-	var selector = { _id : new BSON.ObjectID(docid) }, options = q.options;
-	var fields = q.fields, provider = providers.getProvider(dbid);
-
-	res.header('Content-Type', 'application/json');
-
-	provider["findOne"](selector, fields, options, function(err, data) {
-		if (err) {
-			res.send({ result : "false" }, 200);
-		} else if (data) {
-			var $ = require("jquery");
-			data.dbid = dbid;
-			data = $.extend(data, data.imcoming);
-			data = $.extend(data, q);
-			receive(data, data.incoming.type, function(err, retdata) {
-				if (err) {
-					res.send({ success : false, msg : err }, 200);
-				} else {
-					// 获取邮件数量
-					provider["count"]({ cid : data._id }, function(error, count) {
-						retdata.count = count || 0;
-					});
-
-					provider["findOne"]({ cid : data._id, "message-id" : retdata["message-id"] }, fields, options,
-						function(err, tmpdat) {
-							if (!tmpdat) {
-								retdata.data._ownerID = data._ownerID;
-								retdata.data.attachments = []; // 附件信息
-								retdata.data.type = "51725c5cac8f275c93000024";
-								retdata.data.cid = docid;
-								provider.insert(retdata.data, {}, function(err, retresult) {
-									if (err) {
-										console.log(err);
-									} else {
-										if (retdata.attachments) {
-											var attachments = retdata.attachments;
-											for ( var i = 0; i < attachments.length; i++) {
-												_createTmpFile(retresult[0]._id, attachments[i], function(err, data) {
-													if (err) {
-														console.log(err);
-													} else {
-														provider.createAttachment(retresult[0]._id, "mail_file/"
-																+ data.fileName, data.fileName, data.contentType,
-															function(err, gridStore) {
-																gridStore.writeFile(data.path, function(err, data) {
-																	if (err) {
-																		console.log(err);
-																	}
-																	attachments.push(data);
-																});
-															});
-													}
+function readMail(dbid, config, opts, callback) {
+	var provider = providers.getProvider(dbid);
+	var fields = [];
+	var m_count = 0; // mail count
+	// 获取邮件数量
+	provider["count"]({ cid : config._id }, function(error, count) {
+		m_count = count || 0;
+		receive(config, function(err, retdata) {
+			if (err) {
+				callback({ success : false, msg : err }, 200);
+			} else {
+				provider["findOne"]({ cid : config._id, "message-id" : retdata["message-id"] }, fields, opts, function(
+						err, tmpdat) {
+					if (!tmpdat) {
+						retdata.count = m_count;
+						retdata.data._ownerID = config._ownerID;
+						retdata.data.attachments = []; // 附件信息
+						retdata.data.type = "5172608cac8f275c93000121";
+						retdata.data.cid = config._id.toString();
+						provider.insert(retdata.data, {}, function(err, retresult) {
+							if (err) {
+								console.log(err);
+							} else {
+								if (retdata.attachments) {
+									var attachments = retdata.attachments;
+									for ( var i = 0; i < attachments.length; i++) {
+										_createTmpFile(retresult[0]._id, attachments[i], function(err, data) {
+											if (err) {
+												console.log(err);
+											} else {
+												provider.createAttachment(retresult[0]._id, "mail_file/"
+														+ data.fileName, data.fileName, data.contentType, function(err,
+														gridStore) {
+													gridStore.writeFile(data.path, function(err, data) {
+														if (err) {
+															console.log(err);
+														}
+														attachments.push(data);
+													});
 												});
 											}
-
-											// 添加附件信息
-											provider.update({ "message-id" : retresult["message-id"],
-												category : "inbox" }, { "$set" : { "attachments" : attachments } }, {},
-												function(err, data) {
-													// console.log(err);
-													// console.log(data);
-												});
-										}
+										});
 									}
-								});
+
+									// 添加附件信息
+									provider.update({ "message-id" : retresult["message-id"], category : "inbox" },
+										{ "$set" : { "attachments" : attachments } }, {}, function(err, data) {
+											// console.log(err);
+											// console.log(data);
+										});
+								}
 							}
 						});
-				}
-			});
-		}
+					}
+				});
+			}
+		});
 	});
 
-	res.send({ result : "OK" }, 200);
+	callback(false, "OK");
 }
 
-function receive(doc, server_type, callback) {
-	return server_type == "IMAP" ? imapReceive(doc, callback) : pop3Receive(doc, callback);
+function receive(doc, callback) {
+	if (!doc) {
+		callback("Mail Config Not Found!", null);
+	} else {
+		if (!doc.incoming) {
+			callback("Mail Config Not Found!", null);
+		} else {
+			var config = doc.incoming;
+			config.user = doc.user;
+			config.password = doc.password;
+			if (!config.limit) {
+				config.limit = 15;
+			}
+			if (doc.incoming.type == "IMAP") {
+				imapReceive(config, callback);
+			} else {
+				pop3Receive(config, callback);
+			}
+		}
+	}
 }
 
 function pop3Receive(doc, callback) {
 	try {
-		doc.port = 995;
 		var currentmsg = 0;
 		var username = doc.user, password = doc.password;
 		var POP3Client = require("node-poplib");
-		var client = new POP3Client(doc.port, doc.host, { tlserrs : false, enabletls : true, debug : false });
+		var options = { tlserrs : false, enabletls : true, debug : false };
+
+		if (doc.ssl == 'SSL/TLS') {
+			options.enabletls = true;
+			if (doc.port && doc.port == 'auto' || !doc.port) {
+				doc.port = 995;
+			}
+		} else {
+			options.enabletls = false;
+			if (doc.port == 'auto' || !doc.port) {
+				options.port = 110;
+			}
+		}
+
+		var client = new POP3Client(doc.port, doc.host, options);
 
 		client.on("error", function(err) {
 			if (err.errno === 111)
@@ -379,10 +396,6 @@ function pop3Receive(doc, callback) {
 
 		client.on("invalid-state", function(cmd) {
 			console.log("Invalid state. You tried calling " + cmd);
-		});
-
-		client.on("locked", function(cmd) {
-			console.log("Current command has not finished yet. You tried calling " + cmd);
 		});
 
 		client.on("connect", function() {
@@ -404,7 +417,6 @@ function pop3Receive(doc, callback) {
 			if (status === false) {
 				console.log("LIST failed");
 				client.quit();
-
 			} else {
 				console.log("LIST success with " + msgcount + " element(s)");
 				if (msgcount > 0) {
@@ -422,7 +434,6 @@ function pop3Receive(doc, callback) {
 					function(status, msgnumber, data, rawdata) {
 						if (status === true) {
 							console.log("RETR success " + msgnumber);
-							currentmsg += 1;
 							var mailparser = new MailParser({ debug : false, streamAttachments : false,
 								defaultCharset : "UTF-8" });
 
@@ -430,6 +441,9 @@ function pop3Receive(doc, callback) {
 									.on(
 										"end",
 										function(mail_object) {
+											mail_object.state = "unread"; // set
+											// mail
+											// unread
 											mail_object.category = "inbox";
 											mail_object.user = doc.user;
 											mail_object.date = mail_object.headers.date;
@@ -452,6 +466,8 @@ function pop3Receive(doc, callback) {
 							mailparser.write(data);
 							mailparser.end();
 
+							client.dele(currentmsg);
+
 						} else {
 							console.log("RETR failed for msgnumber " + msgnumber);
 							client.rset();
@@ -461,7 +477,13 @@ function pop3Receive(doc, callback) {
 		client.on("dele", function(status, msgnumber, data, rawdata) {
 			if (status === true) {
 				console.log("DELE success for msgnumber " + msgnumber);
-				client.quit();
+				// client.quit();
+				currentmsg += 1;
+				if (currentmsg >= parseInt(doc.limit)) {
+					client.quit();
+				} else {
+					client.retr(currentmsg);
+				}
 			} else {
 				console.log("DELE failed for msgnumber " + msgnumber);
 				client.quit();
@@ -469,7 +491,6 @@ function pop3Receive(doc, callback) {
 		});
 
 		client.on("quit", function(status, rawdata) {
-
 			if (status === true)
 				console.log("QUIT success");
 			else console.log("QUIT failed");
@@ -483,7 +504,20 @@ function pop3Receive(doc, callback) {
 function imapReceive(doc, callback) {
 	var inbox = require("inbox");
 
-	var client = inbox.createConnection(false, doc.host, { secureConnection : true,
+	var ssl = false;
+	if (doc.ssl == 'SSL/TLS') {
+		ssl = true;
+		if (doc.port && doc.port == 'auto' || !doc.port) {
+			doc.port = 995;
+		}
+	} else {
+		ssl = false;
+		if (doc.port == 'auto' || !doc.port) {
+			options.port = 110;
+		}
+	}
+
+	var client = inbox.createConnection(false, doc.host, { secureConnection : ssl,
 		auth : { user : doc.user, pass : doc.password } });
 	client.connect();
 
@@ -519,6 +553,9 @@ function imapReceive(doc, callback) {
 																		.on(
 																			"end",
 																			function(mail_object) {
+																				mail_object.state = "unread"; // set
+																				// mail
+																				// unread
 																				mail_object.category = "inbox";
 																				mail_object.user = doc.user;
 																				mail_object.date = mail_object.headers.date;

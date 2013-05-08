@@ -77,8 +77,8 @@ Task.prototype.exec = function(user, task, options, callback) {
 							provider.counter(selector, callback);
 						});
 					},
-					receive:function(doc, callback) {
-							Mail.receive(doc, callback);
+					readmail:function(dbid, config, opts, callback) {
+							Mail.readmail(dbid, config, opts, callback);
 					},
 					
 					sendmail:function(dbid, config, doc, opts, callback) {
