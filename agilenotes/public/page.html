@@ -28,89 +28,87 @@ function loadValidateMethods(dbId, callback){
 	});
 }
 
-var dbId = getUrlParam("dbid");
-$.ans.getDB(dbId,null,function(error,db){
-	window.database=db||{};
-	document.title=db.title;
-	if(database.globalCss){
-		$('<style type="text/css">'+database.globalCss+'</style>').appendTo($(document).find('head'));
-	}
-	if(database.globalMethod){
-		$('<script type="text/javascript" charset="utf-8">'+database.globalMethod+'<\/script>').appendTo($(document).find('head'));
-	}
-	if(database.local=="zn"){
-		$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
-	}else{
-		$.ajax({url: "javascripts/i18n/en.js",async:false});
-	}
-});
-
 $(function(){
 	var dbId = getUrlParam("dbid"), pageId = getUrlParam("pageid"),
 	    viewId = getUrlParam("viewid"), docId = getUrlParam("docid"),
 	    formId = getUrlParam("formid"), mode = getUrlParam("edit");
-	if(dbId){
-		loadValidateMethods(dbId, function(){
-			if(pageId){
-				$.ans.getDoc(dbId, pageId, null, function(err,page){
-				    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
-				});
-			}else if(viewId){
-				$.ans.getDoc(dbId, viewId, null, function(err,view){
-				    $("#widget").gridview({
-					    title:view.title||view.name||viewId, 
-					    dbId:dbId, 
-						view:view,
-					    docdblclick:function(e,data){
-					        window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
-					    }
+	$.ans.getDB(dbId,null,function(error,db){
+		window.database=db||{};
+		document.title=db.title;
+		if(database.globalCss){
+			$('<style type="text/css">'+database.globalCss+'</style>').appendTo($(document).find('head'));
+		}
+		if(database.globalMethod){
+			$('<script type="text/javascript" charset="utf-8">'+database.globalMethod+'<\/script>').appendTo($(document).find('head'));
+		}
+		if(database.local=="zn"){
+			$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
+		}else{
+			$.ajax({url: "javascripts/i18n/en.js",async:false});
+		}
+		if(dbId){
+			loadValidateMethods(dbId, function(){
+				if(pageId){
+					$.ans.getDoc(dbId, pageId, null, function(err,page){
+						$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
 					});
-				});
-			}else if(docId){
-				$.ans.getDoc(dbId,docId,null,function(err,doc){
-					if(formId){
-						$.ans.getDoc(dbId,formId,null, function(error,form){
-						    $("#widget").editor({
-						    	title:doc.title||doc.name||doc._id, 
-								dbId:dbId,
-								document:doc, 
-								forms:[form] 
-							});
+				}else if(viewId){
+					$.ans.getDoc(dbId, viewId, null, function(err,view){
+						$("#widget").gridview({
+							title:view.title||view.name||viewId, 
+							dbId:dbId, 
+							view:view,
+							docdblclick:function(e,data){
+								window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
+							}
 						});
-					}else{
-						$.ans.getDoc(dbId,doc.type,null, function(error,type){
-							Model.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
-							    $("#widget").editor({
-							    	title:doc.title||doc.name||doc._id, 
+					});
+				}else if(docId){
+					$.ans.getDoc(dbId,docId,null,function(err,doc){
+						if(formId){
+							$.ans.getDoc(dbId,formId,null, function(error,form){
+								$("#widget").editor({
+									title:doc.title||doc.name||doc._id, 
 									dbId:dbId,
 									document:doc, 
-									forms:forms 
+									forms:[form] 
 								});
-							})
-						});
-					}
-				});
-			}else if(formId){
-				$.ans.getDoc(dbId,formId,null, function(error,form){
-				    $("#widget").editor({
-					    title: "New document",
-						document: {type:form._id},
-						forms: [form],
-						dbId: dbId,
-						mode: "edit"
+							});
+						}else{
+							$.ans.getDoc(dbId,doc.type,null, function(error,type){
+								Model.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+									$("#widget").editor({
+										title:doc.title||doc.name||doc._id, 
+										dbId:dbId,
+										document:doc, 
+										forms:forms 
+									});
+								})
+							});
+						}
 					});
-				});
-			}else{
-				$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
-					if(dbDoc.homePage){
-						$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
-						    $("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
+				}else if(formId){
+					$.ans.getDoc(dbId,formId,null, function(error,form){
+						$("#widget").editor({
+							title: "New document",
+							document: {type:form._id},
+							forms: [form],
+							dbId: dbId,
+							mode: "edit"
 						});
-					}
-				});
-			}			
-		});
-	}
+					});
+				}else{
+					$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
+						if(dbDoc.homePage){
+							$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
+								$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
+							});
+						}
+					});
+				}			
+			});
+		}
+	});
 });
 </script>
 </head>
