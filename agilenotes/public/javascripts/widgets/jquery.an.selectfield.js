@@ -41,6 +41,8 @@ $.widget( "an.selectfield", $.an.field, {
 		});
 	},
 	
+	_makeResizable:function(){},
+	
 	_browser:function(){
 		var self = this, o = this.options;
 		this.select.detach();

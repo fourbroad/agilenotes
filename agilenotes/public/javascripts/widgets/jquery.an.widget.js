@@ -111,6 +111,12 @@ $.widget( "an.widget", {
 			this.refresh();
 		}else if(key == "width" || key == "height"){
 			this._makeResizable();
+		}else if(key == "readonly"){
+			if(value == "true"){
+				this.option("mode", "browser");
+			}else{
+				this.refresh();
+			}
 		}
 	},
 	
