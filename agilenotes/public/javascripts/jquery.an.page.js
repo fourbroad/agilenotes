@@ -185,7 +185,7 @@ $.widget( "an.page", {
 		if(!this.rte){
 			var self = this, o = this.options, page = o[this.widgetName];
 			Model.getDb(o.dbId, function(error,db){
-				self._createRTE(db?db.globalCss+page.stylesheet:page.stylesheet);
+				self._createRTE(db&&db.globalCss?db.globalCss+page.stylesheet:page.stylesheet);
 			});
 		}else{
 			this.rte.show();

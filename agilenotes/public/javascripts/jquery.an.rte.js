@@ -1441,7 +1441,11 @@ $.widget( "an.rte", {
 	},
 
 	rteWidgetActive: function(type){
-    	return $(this.options.selection.getEnd()).is('.widget[type='+type+']');
+		var n = this.options.selection.getEnd();
+		if(n&&n.nodeName == "DIV"){
+			return $(n).is('.widget[type='+type+']'); 
+		}
+    	return false;
 	},
 	
     _alignEnable: function(){
