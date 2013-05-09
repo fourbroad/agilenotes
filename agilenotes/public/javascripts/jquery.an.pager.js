@@ -130,13 +130,18 @@ $.widget( "an.pager", {
 	},
 
 	_pagerLoadDocs:function(){
-		var self = this, o = this.options, sel = o.selector, ft = o.filter, opts = {skip:o.skip,limit:o.limit};
+		var self = this, o = this.options, sel = o.selector, ft = o.filter, opts = {skip:o.skip,limit:o.limit},selectorStr;
 		if($.type(o.sort)=="string"){
 			opts.sort=eval("("+o.sort+")");
 		}
 		if($.type(sel)=="string"){
 			sel = eval("("+sel+")");
-			$.ans.getDoc(o.dbId,null,{selector:sel,filter:ft, options:opts},function(err,data){
+			if(ft&&ft.replace(/\s/g,"")){
+				selectorStr={selector:sel,filter:ft,options:opts};
+			}else{
+				selectorStr={selector:sel,options:opts};
+			}
+			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 				var obj=self.element.data();
 				for(var q in obj){
 					if(/view/.test(obj[q]['widgetName'])){
