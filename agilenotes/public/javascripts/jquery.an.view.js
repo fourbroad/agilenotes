@@ -76,10 +76,10 @@ $.widget( "an.view", {
 			}
 			if($.type(sel)=="string"){
 				sel = eval("("+sel+")");
-				if(filter&&filter.replace(/\s/g,"")){
-					selectorStr={selector:sel,filter:filter,options:opts};
+				if($.type(filter)=="string"){
+					selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
 				}else{
-					selectorStr={selector:sel,options:opts};
+					selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
 				}
 				$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 					self.docs = data.docs;

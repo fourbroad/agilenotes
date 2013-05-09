@@ -136,10 +136,10 @@ $.widget( "an.pager", {
 		}
 		if($.type(sel)=="string"){
 			sel = eval("("+sel+")");
-			if(ft&&ft.replace(/\s/g,"")){
-				selectorStr={selector:sel,filter:ft,options:opts};
+			if($.type(ft)=="string"){
+				selectorStr=ft.replace(/\s/g,"")?{selector:sel,filter:eval("("+ft+")"),options:opts}:{selector:sel,options:opts};
 			}else{
-				selectorStr={selector:sel,options:opts};
+				selectorStr=ft?{selector:sel,filter:ft,options:opts}:{selector:sel,options:opts};
 			}
 			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 				var obj=self.element.data();
