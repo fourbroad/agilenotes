@@ -39,11 +39,10 @@ var Model = {
     ACTION_ROOT: "0000000000000000000e000b",
     DATABASE_ROOT: "0000000000000000000e000f",
 
-    // Cache of document type, form, view, page, side view.
+    // Cache of document type, page(form), view, side view.
     types:{},
-    forms:{},
-    views:{},
     pages:{},
+    views:{},
     sideViews:{},
     
     typeId:function(rootId){
@@ -128,39 +127,39 @@ var Model = {
     	}
     },
 
-    getForms: function(dbId, formIds, callback){
-    	var self = this, sel = {$or:[]}, forms = [], form;
-    	for(var f in formIds){
-    		form = this.forms[formIds[f]];
-    		if(form){
-    			forms.push(form);
+    getPages: function(dbId, ids, callback){
+    	var self = this, sel = {$or:[]}, pages = [], page;
+    	for(var f in ids){
+    		page = this.pages[ids[f]];
+    		if(page){
+    			pages.push(page);
     		}else{
-    			sel.$or.push({_id:formIds[f]});
+    			sel.$or.push({_id:ids[f]});
     		}
     	}
     	
-    	function sort(formIds, forms){
-    		var sortedForms=[];
-    		if(forms.length>0){
-    			for(var i in formIds){
-    				for(var j in forms){
-    					if(forms[j]._id == formIds[i]){
-    						sortedForms.push(forms[j]);
-    						self.forms[forms[j]._id] = forms[j];
+    	function sort(ids, pages){
+    		var sortedPages=[];
+    		if(pages.length>0){
+    			for(var i in ids){
+    				for(var j in pages){
+    					if(pages[j]._id == ids[i]){
+    						sortedPages.push(pages[j]);
+    						self.pages[pages[j]._id] = pages[j];
     						break;
     					}
     				}
     			}
     		}					
-    		return sortedForms;
+    		return sortedPages;
     	}
     	
     	if(sel.$or.length>0){
         	$.ans.getDoc(dbId, null, {selector:sel},function(err, data){
-        		callback(err, sort(formIds, forms.concat(data.docs)));
+        		callback(err, sort(ids, pages.concat(data.docs)));
         	});
     	}else{
-    		callback(null, sort(formIds, forms));
+    		callback(null, sort(ids, pages));
     	}
     },
 
@@ -195,7 +194,7 @@ var Model = {
     	function openDoc(doc){
     		if(doc.type == self.FORM || doc.type == self.PAGE){
     			doc.content = doc.content||"";
-    			self._doOpenForm(element, dbId, doc, $.extend(true,{mode:"design"},opts));
+    			self._doOpenPage(element, dbId, doc, $.extend(true,{mode:"design"},opts));
     		}else if(doc.type == self.VIEW){
     			doc.viewType = opts.viewType;
     			self._doOpenView(element, dbId, doc, $.extend(true,{mode:"design"},opts));
@@ -227,7 +226,7 @@ var Model = {
 			isDocumentEditor: true
 		}, opts), self = this;
 		if(optsx.formIds){
-			this.getForms(dbId, optsx.formIds, function(err, forms){
+			this.getPages(dbId, optsx.formIds, function(err, forms){
 				if(err){
 					console.log("Load forms "+optsx.formIds+" error: "+err);
 				}else{
@@ -243,7 +242,7 @@ var Model = {
 					var obj=type.defaultValues||"{}";
 					$.extend(true, optsx.document, eval("(" + obj + ")"));
 				}
-				self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+				self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 					if(err){
 						console.log("Load forms "+type.forms+" error: "+err);
 					}else{
@@ -284,59 +283,60 @@ var Model = {
     	}
     },
 
-    _doOpenForm: function(element, dbId, form, opts){
-    	var self = this, title = opts.title || form.title || form.name ||  form._id, 
-    	type = this.types[form.type];
+    _doOpenPage: function(element, dbId, page, opts){
+    	var self = this, title = opts.title || page.title || page.name ||  page._id, 
+    	type = this.types[page.type];
 
     	function openEditor(type){
-			if(opts.mode && (opts.mode != "design")){
-				var doc = {};
-		    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
-		    	if(form.type == Model.FORM){
-					element.editor($.extend(true, { title:title, dbId:dbId, document:doc, forms:[form]}, opts));
-					opts.opened && opts.opened(element.data("editor"));
-		    	}else if(form.type==Model.PAGE){
-					element.page($.extend(true, { title:title, dbId:dbId, form:form}, opts));
-					opts.opened && opts.opened(element.data("page"));
-		    	}
-			}else{
-	    		self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+			if(opts.mode == "design"){
+	    		self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 	    			if(err){
 	    				console.log("Load forms "+type.forms+" error: "+err);
 	    			}else{
-	    				element.editor($.extend(true, { title:title, dbId:dbId, document:form, forms:forms, design:true, isFormEditor:true}, $.extend(true,{},opts,{mode:'edit'})));
+				    	if(opts.isNew) $.extend(true, page, eval("("+type.defaultValues+")"||"{}"));
+	    				element.editor($.extend(true, {title:title, dbId:dbId, document:page, forms:forms, design:true}, $.extend(true,{},opts,{mode:'edit'})));
 	    				opts.opened && opts.opened(element.data("editor"));
 	    			}
 	    		});
+			}else{
+		    	if(page.type==Model.PAGE){
+					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+					opts.opened && opts.opened(element.data("page"));
+		    	}else if(page.type == Model.FORM){
+					var doc = {};
+			    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
+					element.editor($.extend(true, {title:title, dbId:dbId, document:doc, forms:[page]}, opts));
+					opts.opened && opts.opened(element.data("editor"));
+		    	}
 			}   
     	}
 
     	if(type){
     		openEditor(type);
     	}else{
-    		$.ans.getDoc(dbId, form.type, null, function(err,type){
+    		$.ans.getDoc(dbId, page.type, null, function(err,type){
     			if(err){
-    				console.log("Load document type "+form.type+" error: "+ err);
+    				console.log("Load document type "+page.type+" error: "+ err);
     			}else{
-    				self.types[form.type] = type;
+    				self.types[page.type] = type;
     				openEditor(type);
     			}
     		});
     	}
     },
 
-    openForm: function(element, dbId, formId, opts){
+    openPage: function(element, dbId, pageId, opts){
     	opts = opts || {};
     	var self = this;
-    	if(this.forms[formId]){
-    		this._doOpenForm(element, dbId, this.forms[formId], opts);
+    	if(this.pages[pageId]){
+    		this._doOpenPage(element, dbId, this.pages[pageId], opts);
     	}else{
-    		$.ans.getDoc(dbId, formId, null, function(err, form){
+    		$.ans.getDoc(dbId, pageId, null, function(err, page){
     			if(err){
-    				console.log("Load form "+ formId+" error: "+err);
+    				console.log("Load page "+ pageId+" error: "+err);
     			}else{
-    				self.forms[formId] = form;
-    				self._doOpenForm(element, dbId, form, opts);
+    				self.pages[pageId] = page;
+    				self._doOpenPage(element, dbId, page, opts);
     			}
     		});
     	}
@@ -350,7 +350,7 @@ var Model = {
     		if(opts.mode == "design"){
     			function openEditor(type){
     		    	if(opts.isNew) $.extend(true, viewDoc, eval("("+type.defaultValues+")"||"{}"));
-    				self.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+    				self.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
     					if(err){
     						console.log("Load forms "+type.forms+" error: "+err);
     					}else{
@@ -379,7 +379,7 @@ var Model = {
     	}
 
     	if(view.viewType == "formView"){
-    		var form = this.forms[view.formId];
+    		var form = this.pages[view.formId];
     		if(form){
 				opts.form = form;
 				openView(element, dbId, view, opts);
@@ -388,7 +388,7 @@ var Model = {
         			if(err){
         				console.log("Load form "+view.formId+" error: "+err);
         			}else{
-        				opts.form = self.forms[view.formId] = form;
+        				opts.form = self.pages[view.formId] = form;
         				openView(element, dbId, view, opts);
         			}
         		});
@@ -458,7 +458,7 @@ var Model = {
     
     _cleanCache:function(docId){
     	delete this.types[docId];
-        delete this.forms[docId];
+        delete this.pages[docId];
         delete this.views[docId];
         delete this.pages[docId];
         delete this.sideViews[docId];
@@ -645,9 +645,9 @@ function newDocument(dbId,typeId, opts){
 function openDocument(dbId,docId, opts){
 	openDialog(dbId,docId,opts,'openDocument');
 }
-var openForm,openView,openPage,openSideView;
+var openPage,openView,openPage,openSideView;
 openForm=openView=openPage=openSideView=function(dbId,sid, opts){
-	openDialog(dbId,sid,opts,'openForm');
+	openDialog(dbId,sid,opts,'openPage');
 };
 
 /*
@@ -1099,7 +1099,7 @@ $.extend({
 			if ( settings.type == "elem" ) {
 				elem.children("script[type='text/json']").remove();
 				if(!$.isEmptyObject(metadata)){
-					elem.html("<script type='text/json'>"+$.toJSON(metadata)+"</script>");
+					$("<script type='text/json'>"+$.toJSON(metadata)+"</script>").prependTo(elem);
 				}
 			} else if (settings.type == "attr" ) {
 				elem.removeAttr(settings.name);
@@ -5785,7 +5785,7 @@ $.widget( "an.widget", {
 			}
 		});
 	},
-
+	
 	_init: function(){
 		this.refresh();
 	},
@@ -5818,7 +5818,7 @@ $.widget( "an.widget", {
 			});	
 		}
 	},
-	
+
 	option: function(key, value) {
 		var o = this.options;
 		if(key === "mode" && value==="edit" && o.readonly){
@@ -5851,19 +5851,26 @@ $.widget( "an.widget", {
 			this.refresh();
 		}else if(key == "width" || key == "height"){
 			this._makeResizable();
+		}else if(key == "readonly"){
+			if(value){
+				this.option("mode", "browser");
+			}else{
+				this.option("mode", "edit");
+			}
 		}
 	},
 	
 	_reloadMetadata:function(md, oldmd){
 		this.options.metadata = md;
 		this.option(md[this.widgetName]);
+		this.refresh();
 		this._trigger("optionchanged",null,{key:"metadata", value:md, oldValue:oldmd});
 	},
 	
 	_updateMetadata:function(){
-		var o = this.options, oldmd = this.element.getMetadata();
+		var o = this.options, el = this.element, oldmd = el.getMetadata();
 		if(!equals(o.metadata, oldmd)){
-			this.element.setMetadata(o.metadata);
+			el.setMetadata(o.metadata);
 			this._trigger("optionchanged",null,{key:"metadata", value:o.metadata, oldValue:oldmd});
 		}
 	},
@@ -5888,7 +5895,7 @@ $.widget( "an.widget", {
 	
 	destroy: function() {
 		this.element.resizable("destroy").unbind(".widget").removeAttr("contenteditable")
-		    .removeClass("an-widget browser design edit fill-width auto-width fill-height auto-height selected");
+		    .removeClass("an-widget browser design edit selected");
 		return $.Widget.prototype.destroy.apply( this, arguments );
 	}
 });
@@ -5908,20 +5915,41 @@ $.widget( "an.widget", {
 
 $.widget( "an.field", $.an.widget, {
 	options:{
-		value:""
+	    value:"",
 	},
 
 	_create: function() {
 		$.an.widget.prototype._create.apply(this, arguments);
 		var o = this.options, el = this.element;
 		el.addClass("an-field");
+
+		var css = {};
+		if(o.width) css.width = o.width;
+		if(o.height) css.height = o.height;
+		
 		this.content.empty();
-		o.isTransient = el.attr("transient"); 
+		if(!$.isEmptyObject(css)){
+			this.content.css(css);
+		}
+		
+		o.isTransient = el.attr("transient");
+		
+		this._createControl();
+		this._createLabel();
+	},
+
+	_createControl:function(){},
+	
+	_createLabel:function(){
+		var o = this.options, el = this.element;
+		if(o.label){
+		    $("<label/>").attr("for",o.id).html(o.label).prependTo(el);
+		}
 	},
 	
 	destroy: function() {
 		this.content.remove();
-		this.element.removeClass("an-field");
+		this.element.removeClass("an-field").children("label").remove();
 		return $.an.widget.prototype.destroy.apply(this, arguments);
 	}
 });
@@ -5943,7 +5971,6 @@ $.widget( "an.field", $.an.widget, {
 $.widget( "an.box", $.an.widget, {
 	options:{
 		visibleButtonCount: 3,
-		height: "auto",
 		link: "raw" // raw, documentType, document, form, view, page
 	},
 
@@ -5988,7 +6015,6 @@ $.widget( "an.box", $.an.widget, {
 	_showTitleBar:function(show){
 		var o = this.options, el = this.element;
 		if(show){
-			el.addClass("title-bar");
 			if(!this.titleBar){
 				this.titleBar = $("<div class='title-bar ui-widget-header ui-corner-top'/>").prependTo(this.element);
 				this.title = $("<div class='title'/>").html(o.title).appendTo(this.titleBar);
@@ -6037,7 +6063,6 @@ $.widget( "an.box", $.an.widget, {
 		var self = this, el = this.element;
 		if(buttons && buttons.length > 0){
 			if(!this.footArea){
-				el.addClass("foot-area");
 				this.footArea = $("<div class='foot-area'/>").appendTo(el);
 			}else{
 				this.footArea.empty();
@@ -6099,6 +6124,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
+
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts, {
@@ -6109,7 +6136,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openForm(el, dbId, formId, optsx);
+		Model.openPage(el, dbId, formId, optsx);
 		return this;
 	},
 
@@ -6131,6 +6158,8 @@ $.widget( "an.box", $.an.widget, {
 
 	openPage:function(pageId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isPageEditor:true});
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:"edit"}, opts,{
@@ -6141,7 +6170,7 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(page);
 	    		}
 	        });
-		Model.openForm(el, dbId, pageId, optsx);
+		Model.openPage(el, dbId, pageId, optsx);
 		return this;
 	},
 	
@@ -6174,7 +6203,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var opts = {mode:"browser",dbId:o.odbId||o.dbId}, id = o.targetId;
+				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -6193,10 +6222,10 @@ $.widget( "an.box", $.an.widget, {
 	},
 	
 	linkedWidget:function(){
-		var data = this.content.children(".an-gridview,.an-formview,.an-page,.an-editor").data(), 
+		var data = this.content.children(".an-gridview,.an-formview,.an-customview,.an-page,.an-editor").data(), 
 		    widget = null;
 		$.each(data,function(){
-			if($.inArray(this.widgetName,["editor","gridview","formview","page"]) != -1){
+			if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
 				widget = this;
 				return false;
 			}
@@ -6221,7 +6250,7 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var id = o.targetId, ob = {mode:"browser",dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId};
+				var id = o.targetId, ob = {dbId:o.odbId||o.dbId}, oe = {mode:"edit",dbId:o.odbId||o.dbId}; 
 				if(link == "documentType"){
 					this.newDocument(id, oe);
 				}else if(link == "document"){
@@ -6289,48 +6318,71 @@ $.widget( "an.inputfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		this.element.addClass("an-inputfield").find("input").remove();
-		this.input = this._createInput().appendTo(this.element);
+		this.element.addClass("an-inputfield");
 	},
 	
-	_createInput:function(){
+	_createControl:function(){
 		var self = this, o = this.options;
-		var input = $("<input type='"+o.type+"'/>").attr({name:o.id})
+		this.input = $("<input type='"+o.type+"'/>").attr({name:o.id})
 		    .addClass("ui-widget-content ui-corner-all").bind("change.inputfield keyup.inputfield",function(e){
 			var value = self.input.val(), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 			}
-		}).bind("dblclick.inputfield",function(e){e.stopImmediatePropagation();}).hide();
+		}).bind("dblclick.inputfield",function(e){e.stopImmediatePropagation();});
 		
 		if(!$.isEmptyObject(o.validate)){
-			input.addClass($.toJSON({validate:o.validate}));
+			this.input.addClass($.toJSON({validate:o.validate}));
 		}
-		return input;
+		this.input.css({width:o.width, height:o.height});
 	},
 	
+	_makeResizable:function(){},
+	
 	_browser:function(){
-		this.input.hide();
-		this.content.html(this.options.value+"").css("display","inline-block");
+		this.input.detach();
+		var c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(this.options.value+"").css("display","");
 	},
 	
 	_edit:function(){
-		this.input.val(this.options.value).removeAttr("style");
-		this.content.hide();
+		this.input.detach().val(this.options.value).appendTo(this.content.empty());
 	},
 	
 	_design:function(){
-		this.input.hide();
-		this.content.html(this.options.value+"").show();
+		this.input.detach();
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(o.value+"").css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
 	},
 	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.input && this.input.remove();
+			this.element.children("label").remove();
+			this._createControl();
+			this._createLabel();
+		}else {
+			$.an.field.prototype._handleChange.apply(this, arguments);
+		}
+	},
+
 	highlight: function(highlight){
 		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover",highlight);
 	},
 	
 	destroy: function() {
-		this.input.unbind(".inputfield").remove();
+		this.input&&this.input.unbind(".inputfield").remove();
 		this.element.removeClass("an-inputfield");
 		return $.an.field.prototype.destroy.apply(this, arguments);
 	}
@@ -6479,7 +6531,6 @@ $.widget( "an.fileinput", {
 (function( $, undefined ) {
 
 $.widget( "an.textfield", $.an.inputfield, {
-
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-textfield");
@@ -6505,46 +6556,78 @@ $.widget( "an.textfield", $.an.inputfield, {
 (function( $, undefined ) {
 
 $.widget( "an.radiofield", $.an.inputfield, {
+	options:{
+		orientation:"horizontal"
+	},
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, value = this.element.attr("value");
 		this.element.addClass("an-radiofield");
-		this.content.hide();
-		this.input.attr("value",value).css({width:"",height:""}).prop("checked", value == o.value).show();
-		this.input.unbind("change keypress").bind("change.checkboxfield",function(e){
-//			e.preventDefault();
-//			e.stopImmediatePropagation();
-			self._trigger("optionchanged",null,{key:"value", value:value, oldValue:null, isTransient:self.element.is(".isTransient")});
-		});
+		this.content.remove();
 	},
+
+	_createControl:function(){
+		var self = this, o = this.options, el = this.element;
+		$.each(o.selectItems||[], function(k,v){
+			$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+			    .addClass("ui-widget-content ui-corner-all").appendTo(el);
+			$("<div class='content'/>").hide().appendTo(el);
+			$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
+			if(o.orientation == "vertical") el.append("<br>");
+		});
+		
+		this.inputs = el.children("input");
+		this.contents = el.children(".content");
+		if(!$.isEmptyObject(o.validate)){
+			this.inputs.addClass($.toJSON({validate:o.validate}));
+		}
+		this.inputs.filter("[value="+o.value+"]").prop("checked",true);
+		
+		this.inputs.bind("change.radiofield",function(e){
+			var value = $(e.target).attr("value"), oldValue = o.value;
+			if(value != oldValue){
+				o.value = value;
+				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			}
+		}).bind("dblclick.radiofield",function(e){e.stopImmediatePropagation();});
+	},
+	
+	_createLabel:function(){},
 
 	_makeResizable:function(){},
 
-	option: function(key, value) {
+	_handleChange:function(key, value, oldValue){
+		var o = this.options;
 		if(key == "value"){
-			var v = this.element.attr("value");
-			if(value === undefined){
-				return this.input.prop("checked")? v : null;
-			}else{
-				this.input.prop("checked",value == v);
-				this.refresh();
-				return;
-			}
+			this.inputs.filter("[value="+o.value+"]").prop("checked",true);
+		}else if(key == "selectItems"){
+			this.inputs.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else if(key == "orientation"){
+			this.inputs.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else{
+			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
-		return $.an.inputfield.prototype.option.apply(this, arguments );
 	},
 	
 	_browser:function(){
-        this.input.attr("disabled","disabled");
+		this.contents.css("display","none");
+        this.inputs.attr("disabled","disabled");
 	},
 	
 	_edit:function(){
-        this.input.removeAttr("disabled");
+		this.contents.css("display","none");
+        this.inputs.removeAttr("disabled");
 	},
 
 	_design:function(){
-		this.input.hide();
+		this.inputs.hide();
+		this.contents.css("display","");
 	},
 
 	highlight: function(highlight){
@@ -6552,7 +6635,9 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
-		this.element.removeClass( "an-radiofield" );
+		this.inputs.unbind(".radiofield").remove();
+		this.contents.remove();
+		this.element.removeClass("an-radiofield" ).children("br").remove();
 		$.an.inputfield.prototype.destroy.apply( this, arguments );
 	}
 });
@@ -6574,16 +6659,34 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-checkboxfield");
-		var self = this;
 		this.content.hide();
-		this.input.unbind("change keypress").bind("change.checkboxfield",function(e){
-//			e.preventDefault();
-//			e.stopImmediatePropagation();
-			self.option("value",self.input.prop("checked"));
-		}).css({width:"",height:""}).show();
 	},
 
+	_createControl:function(){
+		var self = this, o = this.options;
+		this.input = $("<input type='checkbox'/>").attr({name:o.id})
+		    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
+			var value = self.input.prop("checked"), oldValue = o.value;
+			if(value != oldValue){
+				o.value = value;
+				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			}
+		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+		
+		if(!$.isEmptyObject(o.validate)){
+			this.input.addClass($.toJSON({validate:o.validate}));
+		}
+		this.input.appendTo(this.element);
+	},
+	
 	_makeResizable:function(){},
+	
+	_createLabel:function(){
+		var o = this.options, el = this.element;
+		if(o.label){
+		    $("<label/>").attr("for",o.id).html(o.label).appendTo(el);
+		}
+	},
 	
 	_browser:function(){
         this.input.prop('checked', this.options.value).attr("disabled","disabled");
@@ -6595,7 +6698,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	
 	_design:function(){
 		this.input.hide();
-		this.content.show();
+		this.content.css("display","");
 	},
 	
 	highlight: function(highlight){
@@ -6623,25 +6726,29 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 (function( $, undefined ) {
 
 $.widget( "an.passwordfield", $.an.inputfield, {
-
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-passwordfield");
 	},
 
 	_browser:function(){
-		this.input.hide();
-		this.content.html("********").show();
-	},
-	
-	_edit:function(){
-		this.content.hide();
-		this.input.val(this.options.value).show();
+		$.an.inputfield.prototype._browser.apply(this, arguments);
+		this.content.html("********");
 	},
 	
 	_design:function(){
 		this.input.hide();
-		this.content.html("********").show();
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html("********").css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
 	},
 
 	destroy: function() {
@@ -6664,33 +6771,34 @@ $.widget( "an.passwordfield", $.an.inputfield, {
 (function( $, undefined ) {
 
 $.widget( "an.datetimefield", $.an.inputfield, {
-
+	
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-datetimefield");
 	},
 	
 	_edit:function(){
-		var date=new Date();
-		var opts={
+		var date=new Date(), lng=window.database.local,
+		opts={
 			hour: date.getHours(),
             minute: date.getMinutes(),
 			dateFormat: this.options.dateFormat?this.options.dateFormat:'mm/dd/yy',
 			minDate: this.options.minDate && eval("("+ this.options.minDate +")") || null,
 			maxDate: this.options.maxDate && eval("("+ this.options.maxDate +")") || null,
-			yearRange: this.options.yearRange?this.options.yearRange:'c-10:c+10',
 			changeMonth:true,
 			changeYear:true,
 			onClose: function() {
 				var $this = $(this);
 				$this.valid&&$this.valid();
 			}
-		}
-		var lng=window.database.local;
+		};
+		
 		if(lng&&lng!='en'){
 			$.extend(opts,$.i18n.datepicker);
 		}
+		
 		$.an.inputfield.prototype._edit.apply( this, arguments );
+		
 		this.input.removeClass("hasDatepicker");
 		if(this.options.time=='y'){
 			this.input.datetimepicker(opts);
@@ -6701,7 +6809,7 @@ $.widget( "an.datetimefield", $.an.inputfield, {
 	
 	destroy: function() {
 		this.input.datepicker("destroy");
-		this.element.removeClass( "an-datetimefield" );
+		this.element.removeClass("an-datetimefield" );
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
 	}
 });
@@ -6723,20 +6831,24 @@ $.widget( "an.textareafield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, el = this.element;
-		el.addClass("an-textareafield");
-		var ta = this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
-		      .addClass("ui-widget-content ui-corner-all")
-		      .appendTo($("<div class='textarea-wrapper'/>").appendTo(el));
+		this.element.addClass("an-textareafield");
+	},
+	
+	_createControl:function(){
+		var self = this, o = this.options;
+		this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
+		    .addClass("ui-widget-content ui-corner-all");
 
+		if(o.resizable) this.content.resizable();
+		
 		if(!$.isEmptyObject(o.validate)){
-			ta.addClass($.toJSON({validate:o.validate}));
+			this.textarea.addClass($.toJSON({validate:o.validate}));
 		}
 
-		ta.bind("change.textareafield keyup.textareafield",function(e){
+		this.textarea.bind("change.textareafield keyup.textareafield",function(e){
 			e.preventDefault();
 //			e.stopImmediatePropagation();
-			var value = ta.val(), oldValue = o.value;
+			var value = self.textarea.val(), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
@@ -6744,22 +6856,46 @@ $.widget( "an.textareafield", $.an.field, {
 		}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
 	},
 	
+	_makeResizable:function(){},
+	
 	_browser:function(){
-		var o = this.options;
-		this.textarea.hide();
-		this.content.html(o.pre? "<pre>"+o.value+"</pre>": o.value).show();
+		this.textarea.detach();
+
+		var o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(o.pre? "<pre>"+o.value+"</pre>": o.value).css("display","");
 	},
 	
 	_edit:function(){
-		var o = this.options;
-		this.content.hide();
-		this.textarea.val(o.value).show();
+		this.textarea.detach().val(this.options.value).appendTo(this.content.empty());
 	},
 
 	_design:function(){
-		var o = this.options;
-		this.textarea.hide();
-		this.content.html(o.pre? "<pre>"+o.value+"</pre>":o.value).show();
+		this.textarea.detach();
+
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(o.pre? "<pre>"+o.value+"</pre>":o.value)
+		 .css({width:o.width, height:o.height, display:""}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.textarea.remove();
+			this.element.children("label").remove();
+			this._createControl();
+			this._createLabel();
+		}else {
+			$.an.field.prototype._handleChange.apply(this, arguments);
+		}
 	},
 	
 	destroy: function() {
@@ -6858,9 +6994,12 @@ $.widget( "an.selectfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, el = this.element;
-		el.addClass("an-selectfield");
-		var sel = this.select = $("<select />").attr("name",o.id).appendTo(el);
+		this.element.addClass("an-selectfield");
+	},
+	
+	_createControl:function(){
+		var self = this, o = this.options;
+		var sel = this.select = $("<select />").attr("name",o.id);
 		$("<option/>").attr("value","").html("").appendTo(sel);
 		$.each(o.selectItems||[], function(){
 			$("<option/>").attr("value",this.value).html(this.label).appendTo(sel);
@@ -6881,9 +7020,11 @@ $.widget( "an.selectfield", $.an.field, {
 		});
 	},
 	
+	_makeResizable:function(){},
+	
 	_browser:function(){
 		var self = this, o = this.options;
-		this.select.hide();
+		this.select.detach();
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
 				self.content.html(this.label).show();
@@ -6893,19 +7034,42 @@ $.widget( "an.selectfield", $.an.field, {
 	},
 	
 	_edit:function(){
-		this.content.hide();
-		this.select.val(this.options.value).show();
+		this.select.detach().val(this.options.value).appendTo(this.content.empty());
+
 	},
 	
 	_design:function(){
-		var self = this, o = this.options;
-		this.select.hide();
+		this.select.detach();
+
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
-				self.content.html(this.label).show();
+				c.html(this.label);
 				return false;
 			}
 		});
+		c.css({width:o.width, height:o.height}).resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.element.children("label").remove();
+			this._createLabel();
+		}else if(key == "selectItems"){
+			this.select.remove();
+			this._createControl();
+		}else{
+			$.an.field.prototype._handleChange.apply(this, arguments);
+		}
 	},
 	
 	destroy: function() {
@@ -6941,10 +7105,12 @@ $.widget( "an.filefield", $.an.inputfield, {
 
 	_create: function() {
 		$.an.inputfield.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, c = this.content;
 		this.element.addClass("an-filefield wrapper");
+	},
+
+	_createControl:function(){
+		var self = this, o = this.options, c = this.content;
 		this.files = $("<ul class='grid'/>").appendTo(c);
-		this.loadIcons();
 		c.delegate("li[data-id][data-id!=uploadButton]", "hover.filefield", function(e){
 			if(o.mode != "edit") return;
 			if(e.type == "mouseenter"){
@@ -6981,10 +7147,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			e.stopImmediatePropagation();
 			self.input.click();
 		});
-	},
-
-	_createInput:function(){
-		return $("<input type='file'/>").hide().appendTo(this.element).bind("change",$.proxy(this, "_uploadFile"));
+		this.input = $("<input type='file'/>").hide().appendTo(this.element).bind("change",$.proxy(this, "_uploadFile"));
+		this.loadIcons();
 	},
 	
 	_uploadFile:function(e){
@@ -7120,14 +7284,33 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 	
 	_handleChange:function(key, value, oldValue){
-		$.an.inputfield.prototype._setOption.apply(this, arguments );
 		if(key === "sortBy"){
 			var o = this.options;
 			this.sort(o.tags, o.sortBy);
+		}else if(key == "label"){
+			this.element.children("label").remove();
+			this._createLabel();
+		}else{
+			$.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
 	},
 	
 	refresh:function(){
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.css({width:o.width, height:o.height, display:""});
+		if(o.mode == "design" || o.resizable){
+			c.resizable({
+				stop:function(e,ui){
+					o.width = c.width();
+					o.height = c.height();
+					$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+					self._updateMetadata();
+					self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+				}
+			});
+		}
+
 		this.loadIcons();
 	},
 	
@@ -7154,7 +7337,6 @@ $.widget( "an.filefield", $.an.inputfield, {
 $.widget( "an.gridfield", $.an.field, {
 	options: {
 		mode: "browser",
-		title: "",
 		addItemLabel: "Add",
 		editItemLabel: "Edit",
 		deleteItemLabel: "Delete",
@@ -7163,24 +7345,27 @@ $.widget( "an.gridfield", $.an.field, {
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
-		var self = this, o = this.options, c = this.content;
 		this.element.addClass("an-gridfield");
+	},
+	
+	_createControl:function(){
+		var self = this, o = this.options, c = this.content;
 		this.titlebar = $("<div class='titlebar ui-widget-header'/>").appendTo(c);
-		this.title = $("<span class='title'/>").html(o.title).appendTo(this.titlebar);
+		this.title = $("<span class='title'/>").html(o.label).appendTo(this.titlebar);
 		this.toolbar = $("<span class='toolbar'/>").appendTo(this.titlebar);
 		if(o.converter){
 			o.converter=eval("("+o.converter+")");
 			if(!$.isFunction(o.converter)){
 				o.converter=function(row,col,v){
 					return v;
-				}
+				};
 			}
 		}
 		var lng=window.database.local;
 		if(lng&&lng!='en'){
 			$.extend(o,$.i18n.gridfield);
 		}
-		this.grid = $("<div/>").css({top: this.titlebar.outerHeight()}).appendTo(c)
+		this.grid = $("<div/>").appendTo(c)
 		      .agilegrid($.extend({
 					dbId:o.dbId,
 					cellRender: function(row, col){
@@ -7203,6 +7388,10 @@ $.widget( "an.gridfield", $.an.field, {
 		});
 	},
 
+	_createLabel:function(){},
+
+	_makeResizable:function(){},
+	
 	_updateMetadata:function(){
 		var opts = {
 				colModel: this.grid.agilegrid("option","colModel"),
@@ -7284,7 +7473,7 @@ $.widget( "an.gridfield", $.an.field, {
 	
 	_handleChange:function(key, value, oldValue){
 		$.an.field.prototype._handleChange.apply(this, arguments);
-		if(key === "title") this.title.html(value);
+		if(key === "label") this.title.html(value);
 	},
 	
 	_browser:function(){
@@ -7303,8 +7492,20 @@ $.widget( "an.gridfield", $.an.field, {
 		this.toolbar.show();
 	},
 	
+	// TODO: Editing column is not correct in design mode.
 	_design:function(){
-		var o = this.options;
+		var self = this, o = this.options, c = this.content;
+		if(c.is(".ui-resizable")) c.resizable("destroy");
+		c.resizable({
+			stop:function(e,ui){
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
+				self._updateMetadata();
+				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
+			}
+		});
+		
 		this.grid.agilegrid($.extend(true,{},{
 			rowCount: (o.value&&o.value.length)||0,
 			isColumnResizable: true,
@@ -7354,13 +7555,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			
 		}
 		
-		if (o.templates) {
-			var obj = {};
-			for (var i = 0; i < o.templates.length; i++) {
-				obj[o.templates[i].name] = o.templates[i].content;
-			}
-			
-			$.templates(obj);
+		if (o.template) {
+			o.template=$.templates(o.template);
 		}
 		
 		if(o.converters){
@@ -7417,7 +7613,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 	
 	replaceValue:function(index, value) {
 		var o = this.options, oldValue = [].concat(o.value);
-		o.value[index] = value;this.refresh();
+		o.value[index] = value;
+		this.refresh();
 		this._notify(oldValue, o.value);
 	},
 	
@@ -7427,8 +7624,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.browserTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7440,8 +7637,8 @@ $.widget( "an.jsrenderfield", $.an.field, {
 			var html = $.render[o.editorTemplate](o.value);
 			$(o.selector, this.element).html(html);
 		} else {
-			if (o.templates) {
-				var html = $.render[o.templates[0].name](o.value);
+			if (o.template) {
+				var html = o.template.render(o.value);
 				$(o.selector, this.element).html(html);
 			}
 		}
@@ -7470,18 +7667,28 @@ $.widget( "an.jsrenderfield", $.an.field, {
 
 (function( $, undefined ) {
 
-$.widget( "an.buttonfield",  $.an.field, {
+$.widget( "an.buttonwidget",  $.an.widget, {
 
 	_create: function() {
-		$.an.field.prototype._create.apply(this, arguments);
-		this.element.addClass("an-buttonfield");
+		$.an.widget.prototype._create.apply(this, arguments);
+		this.element.addClass("an-buttonwidget");
 		this.content.button({label:this.options.label});
 	},
 
+	_makeResizable:function(){},
+	
+	_handleChange:function(key, value, oldValue){
+		if(key === "label"){
+			this.content.button("option","label",value);
+		}else {
+			$.an.widget.prototype._handleChange.apply(this, arguments);
+		}
+	},
+	
 	destroy: function() {
-		this.content.button("destroy");
-		this.element.removeClass("an-buttonfield");
-		return $.an.field.prototype.destroy.apply(this, arguments);
+		this.content.button("destroy").remove();
+		this.element.removeClass("an-buttonwidget");
+		return $.an.widget.prototype.destroy.apply(this, arguments);
 	}
 });
 })( jQuery );
@@ -9057,8 +9264,8 @@ $.widget( "an.border", {
 $.widget( "an.rte", {
 	options: {
 		doctype: '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">',
-		cssfiles: [],
-		jsfiles: [],
+		cssFiles: [],
+		jsFiles: [],
 		mode: "design", // "design","sourcecode"
 		lang: 'en',
 		absoluteURLs: true,
@@ -9070,7 +9277,6 @@ $.widget( "an.rte", {
 			standard:"5080143085ac60df09000001",
 			link: "508251eb0b27990c0a000001",
 			image:"5082d29f0b27990c0a000005",
-			label:"50af2f976cec663c0a00000e",
 			table:"5085f383eeeac1e909000001",
 			cell:"5086b873eeeac1e909000002",
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"]
@@ -9120,7 +9326,7 @@ $.widget( "an.rte", {
 				}catch(e){}
 			}
 
-			self.$body = $(body).addClass("rte-structure");
+			self.$body = $(body);
 			if(o.cssClass) self.$body.addClass(o.cssClass);
 			//o.history.push(self.$body.html());
 			//self.htStep=o.history.length-1;
@@ -9131,10 +9337,10 @@ $.widget( "an.rte", {
 		
 		/* put content into iframe */
 		var html = '<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
-		$.each(o.cssfiles, function() {
+		$.each(o.cssFiles, function() {
 			html += "<link rel='stylesheet' type='text/css' href='"+this+"'/>";
 		});
-		$.each(o.jsfiles,function(){
+		$.each(o.jsFiles,function(){
 			html +="<script type='text/javascript' language='javascript' src='"+this+"'></script>";
 		});
 		html += '<style id="stylesheet" type="text/css">'+(o.stylesheet||"")+'</style>';
@@ -9452,7 +9658,7 @@ $.widget( "an.rte", {
 	},
 	
 	_controlActionSet:function(){
-		return this._createActionSet(["properties","cleanFormat","docStructure"]);
+		return this._createActionSet(["properties","cleanFormat"]);
 	},
 	
 	_formatActionSet:function(){
@@ -9587,11 +9793,6 @@ $.widget( "an.rte", {
 		return this;
 	},
 	
-	toggleDocumentStructure: function(){
-		this.$body.toggleClass('rte-structure');
-		return this;
-	},
-
     bold: function(){
     	this.options.doc.execCommand("bold", false, null);
 		this.element.trigger("contentchange");
@@ -9772,7 +9973,7 @@ $.widget( "an.rte", {
 			modal: true,
 			create: function(event, ui){
 				var $this = $(this);
-				Model.getForms(o.dbId, formIds, function(err, forms){
+				Model.getPages(o.dbId, formIds, function(err, forms){
 					if(forms){
 						$this.editor({document:attrs, forms:forms, dbId:o.dbId, mode:"edit", ignoreEscape:true});
 					}
@@ -10437,46 +10638,16 @@ $.widget( "an.rte", {
 		return this;
     },
 
-    label:function(){
-    	var self = this, o = this.options, sel = o.selection, n = sel.getEnd(), $n = $(n), ids = o.formIds;
-    	if(!$n.is('label')){
-    		$n = $("<label>New Label</label>");
-    		n = $n.get(0);
-    	}
-       	var as = $.extend({},{content:$n.html()},attributes(n));
-       	if(as["for"]) as["for"] = as["for"].replace(/-/g,".");
-		this._showDialog("Label", as, [ids.standard, ids.label], function(attrs){
-			$n.html(attrs.content);
-			delete attrs.content;
-			$.each(attrs, function(k,v){
-				v = $.trim(v);
-				if(v){
-					if(k == "for") v = v.replace(/\./g,"-");
-					$n.attr(k,v);
-				}else{
-					$n.removeAttr(k);
-				}
-			});
-			if(!$n.parent().length) sel.insertNode(n);
-			self.element.trigger("contentchange");
-		});
-		return this;
-    },
-    
-    labelActive:function(){
-    	return $(this.options.selection.getEnd()).is('label');
-    },
-    
 	rteWidget: function(type, formIds, opts){
     	var o = this.options, sel = o.selection, n = sel.getStart(), $n = $(n);
     	if(!$n.is('.widget[type='+type+']')){
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
     		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime",
-    		                                          "textarea", "file","grid","jsrender","password","rte","button"])!=-1);
+    		                                          "textarea", "file","grid","jsrender","password","rte"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
     		n = $n.get(0);
     	}
-    	var oldmd = $n.getMetadata(), oldattrs = attributes(n),
+    	var oldmd = $.extend(true,opts,$n.getMetadata()), oldattrs = attributes(n),
        	      title = type.substring(0,1).toUpperCase()+type.substring(1) + " Properties";
     	if(oldattrs.id) oldattrs.id = oldattrs.id.replace(/-/g,".");
  		this._showDialog(title, $.extend({},oldmd,oldattrs), formIds, function(attrs){
@@ -10494,6 +10665,9 @@ $.widget( "an.rte", {
 			}else if($n.is("[type=tabsx]")){
 				md.tabsxwidget = attrs.tabsxwidget;
 				delete attrs.tabsxwidget;
+			}else if($n.is("[type=button]")){
+				md.buttonwidget = attrs.buttonwidget;
+				delete attrs.buttonwidget;
 			}else if($n.is(".box") && attrs[type+"box"]){
 				md[type+"box"] = attrs[type+"box"];
 				delete attrs[type+"box"];
@@ -11079,13 +11253,6 @@ $.widget( "an.rte", {
 		    	handler: function(){self.properties();},
 		    	enabled:function(){return self._propertiesEnable();}
 		    },
-		    docStructure:{
-	    		type: "checkbox",
-	   			label: "Toggle display document structure",
-	   			icons: {primary: "ui-icon-doc-struct"	},
-	   			handler: function(){self.toggleDocumentStructure();},
-	   			checked: function(){return self.$body&&self.$body.is('.rte-structure');}
-    		},
 	    	cleanFormat:{
 	    		type: "checkbox",
 	    		label: "Clean Format",
@@ -11735,15 +11902,13 @@ $.widget("an.tabsx", $.ui.tabs, {
 
 (function( $, undefined ) {
 
-$.widget( "an.form", {
+$.widget( "an.form", $.an.page, {
 	options: {
-		mode: "browser", // "browser","edit","design"
 		document: {},
 		printable: true,
-		actionSets: [],
 		formIds:{
 			text:["5080143085ac60df09000001","5092733215ca72150a000001"],
-			password:["5080143085ac60df09000001"],
+			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
 			checkbox:["5080143085ac60df09000001","50af2d266cec663c0a000009"],
 			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
@@ -11752,8 +11917,8 @@ $.widget( "an.form", {
 			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
 			grid:["5080143085ac60df09000001","5089e21f2b2255080a000005"],
 			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d0825caa05a669e0002ae","514d5ef3ac8f27413200014e"],
-			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a"],
-			select:["5080143085ac60df09000001","508259700b27990c0a000003"],
+			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a","51850c1ca092003b12000024"],
+			select:["5080143085ac60df09000001","51850b35a09200784a000122","508259700b27990c0a000003"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
 		    rte:["5080143085ac60df09000001"]
 		},
@@ -11761,157 +11926,109 @@ $.widget( "an.form", {
 	},
 
 	_create: function() {
+		$.an.page.prototype._create.apply(this, arguments);
+	},
+	
+	_initPage:function(){
 		var self = this, o = this.options, el = this.element;
 		el.addClass("an-form");
+		
+		o.cssFiles = o.cssFiles || [];
+		o.cssFiles.push("stylesheets/jquery.an.form.css");
+		
 		o.document = $.type(o.document) == "function" ? o.document(): o.document;
+
 		$(o.document).bind("docchanged.form",function(e,doc, oldDoc){
 			self.refresh();
-            el.trigger("documentchanged",e,[doc,oldDoc])
+            el.trigger("documentchanged",e,[doc,oldDoc]);
 		}).bind("propchanged.form",function(e,id,value,oldValue,trans){
 			self.field(id, value);
 		});
 		
-		$.extend(this, eval("try{("+(o.form.methods||"{}")+")}catch(e){}"));
-
-		this.refresh();
-		
-		el.bind("dblclick.form",function(e){
-			if(o.mode == "design" && self.labelActive()){
-				self.label();
-			}
-		});
+		$.an.page.prototype._initPage.apply(this, arguments);
 	},
 
-	_createOutline:function(){
-		var form = this.options.form, root = this._getForm();
-
-		function getWidget(el){
-			var widget = null, type = el.attr("type");
-			if(el.is(".field")){
-				widget = el.data(type+"field");
-			}else if(el.is(".box")){
-				widget = el.data(type);
-			}else if(el.is(".widget")){
-				widget = el.data(type+"widget");
-			}
-			return widget;
-		}
-		
-		return {
-			getRoots: function(mountNodes){
-				var nodes = new Array();
-				nodes.push({id:"root", text:form.title||form.name||form._id, "class":"folder"});
-				mountNodes(nodes);
-			},
-			getChildren: function(parentNode, mountNodes){
-				var nodes = new Array();
-				if(parentNode.id == "root"){
-					root.find(".widget").each(function(){
-						var $this = $(this), id = $this.attr("id");
-						if($this.parent().closest(".widget").length == 0){
-							nodes.push({id:id, text:id, "class":$this.is(".field")?"file":"folder", data:getWidget($this)});
-						}
-					});
-				}else{
-					root.find("#"+parentNode.id).find(".widget").each(function(){
-						var $this = $(this), id = $this.attr("id");
-						if($this.parent().closest(".widget").attr("id") == parentNode.id){
-							nodes.push({id:id, text:id, "class":$this.is(".field")?"file":"folder", data:getWidget($this)});
-						}
-					});
-				}
-				mountNodes(nodes);
-			},
-			hasChildren: function(node){ return node["class"]=="folder"; },
-			getId: function(node){ return node.id ? node.id : null; }
-		};
-	},
-	
 	option: function(key, value) {
 		var o = this.options;
 		if(key === "mode" && o.readonly){
 			return;
-		}else	if(key === "isValid" && value === undefined && o.mode == "edit"){
+		}else if(key === "isValid" && value === undefined && o.mode == "edit"){
 			return this.validator.form();
-		}else if(key === "actionSets" && value === undefined){
-			return this._createActionSets();
-		}else if(key === "outline" && value === undefined){
-			return this._createOutline();
-		}else if(key == "content" && value == undefined){
-			if(o.isDirty) this._syncFormContent();
-			return o.form.content;
 		}
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
-		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
+		return $.an.page.prototype.option.apply(this, arguments);
 	},
-
-	_setOption: function(key, value) {
-		var o = this.options, oldValue = o[key];
-		if(!equals(value,oldValue)){
-			$.Widget.prototype._setOption.apply(this, arguments );
-			this._handleChange(key,value,oldValue);
-			this._trigger("optionchanged",null,{key:key, value:value, oldValue:oldValue});
-		}
-		return this; 
+	
+	_getWidgetObj:function(el){
+		if(el.is(".field")) return el.data(el.attr("type")+"field");
+		return $.an.page.prototype._getWidgetObj.apply(this, arguments);
 	},
 	
 	_handleChange:function(key, value, oldValue){
 		var o = this.options;
-		if(key === "mode" || key === "document" || key ==="form"){
-			if(key === "mode"&&o.isDirty){
-				this._syncFormContent();
-			}else if(key === "form"){
-				this.element.children("style").text(o.form.stylesheet);
-				this.$form && !o.isDirty && this.$form.empty().html(o.form.content);
-				if(this.rte){
-					!o.isDirty && this.rte.rte("option","content",o.form.content);
-					this.rte.rte("option","stylesheet", o.form.stylesheet);
-				}
-			}
+		if(key === "document"){
 			this.refresh();
 		}else if(key === "url"){
-			this.$form.find(".field.file").filefield("option","url",o.url);
-			this.$form.find(".field.grid").gridfield("option","url",o.url);
+			this.$page.find(".field.file").filefield("option","url",o.url);
+			this.$page.find(".field.grid").gridfield("option","url",o.url);
 		}
+		return $.an.page.prototype._handleChange.apply(this, arguments);
+	},
+
+	_createPage:function(){
+		$.an.page.prototype._createPage.apply(this, arguments);
+		this.validator = this.$page.validate($.extend({
+			meta:"validate",
+			errorPlacement: function(error, el) {
+				error.insertAfter(el.closest("div.field"));
+			}
+		},eval("("+(this.options[this.widgetName].validator||"{}")+")")));
 	},
 	
-	refresh:function(){
-		var o = this.options;
-		this["_"+o.mode] && this["_"+o.mode]();
-	},
-	
-	_browser:function(){
-		this.rte && this.rte.hide();
-		if(!this.$form){
-			this._createForm();
+	_refreshWidget: function(el){
+		var self = this, o = this.options, type = el.attr("type");
+		if(el.is(".field")){
+			var id = el.attr("id"); 
+			if(id) id = id.replace(/-/g, ".");
+			var doc = o.document, value = doc && doc.prop && doc.prop(id), field = el.data(type+"field"); 
+			if(field){
+			    field.option('mode',o.mode).option('value',value);
+			    field.refresh();
+			}else{
+				var opts = {
+					dbId:o.dbId,
+					parent:function(){return self;},
+					value:value,
+					url:o.url,
+					mode:o.mode,
+					optionchanged:function(e,data){
+						if(data.key == "value"){
+							var id = $(e.target).attr("id");
+							id = id&&id.replace(/-/g,".");
+							var curValue = doc.prop(id);
+							if(curValue != data.value){
+								doc.prop(id,data.value,data["transient"]);
+							}
+						}else if(data.key == "metadata" || data.key == "attributes"){
+							self.option("isDirty",true);
+							setTimeout(function(){ self._trigger("change",null, self);},20);
+						}
+					},
+					resize:function(e,data){self.option("isDirty",true);}
+				};
+
+				if(type == "button"){
+					el[type+"widget"]({parent:function(){return self;},label:el.attr("label")});
+				}else{
+					el[type+"field"] && el[type+"field"](opts);
+				}
+			}
 		}else {
-			this.$form.show();
-			this._refreshFields();
-		}
-	},
-
-	_edit:function(){
-		this.rte && this.rte.hide();
-		if(!this.$form){
-			this._createForm();
-		}else{
-			this.$form.show();
-			this._refreshFields();
-		}
-	},
-
-	_design:function(){
-		this.$form && this.$form.hide();
-		if(!this.rte){
-			this._createRTE();
-		}else{
-			this.rte.show();
-			this._refreshFields();
+			$.an.page.prototype._refreshWidget.apply(this, arguments);
 		}
 	},
 
 	field: function(id, value){
-		var field = this._getForm().find("#"+id.replace(/\./g,"-")+".field"); 
+		var field = this._getPage().find("#"+id.replace(/\./g,"-")+".field"); 
 		if(field.size() == 0) return;
 		if(value === undefined){
 			var v = null;
@@ -11926,378 +12043,26 @@ $.widget( "an.form", {
 		}
 	},
 
-	showWidget:function(){
-		var self = this;
-		$.each(arguments,function(){
-			var w = self.getWidget(this);
-			w && w.widget().show();
-		});
-	},
-	
-	hideWidget:function(){
-		var self = this;
-		$.each(arguments,function(){
-			var w = self.getWidget(this);
-			w && w.widget().hide();
-		});
-	},
-
-	getWidget:function(id){
-		var self = this, o = this.options, widget = null;
-		this._getForm().find("#"+id).each(function(){
-			var $this = $(this), type = $this.attr("type"), 
-			    filter = (o.mode=="design"? ".an-box:not(.raw),."+o.form.name : ".an-page,.an-form");
-			$this.parent().closest(filter).each(function(){
-				if($(this).is('.'+o.form.name) || this == self.element[0]){
-					if($this.is(".field")){
-						widget = $this.data(type+"field");
-					}else if($this.is(".box")){
-						widget = $this.data(type);
-					}else if($this.is(".widget")){
-						widget = $this.data(type+"widget");
-					}					
-					return false;
-				}
-			});
-			if(widget) return false;
-		});
-		return widget;
-	},
-	
-	_createForm:function(){
-		var o = this.options, form = o.form, el = this.element;
-		$('<style type="text/css">'+(form.stylesheet||"")+'</style>').appendTo(el);
-
-		this.$form = $(o.wrapper).addClass(form.name).html(form.content).appendTo(el);
-		
-		this.validator = this.$form.validate($.extend({
-			meta:"validate",
-			errorPlacement: function(error, element) {
-				error.insertAfter(element.closest("div.field"));
-			}
-		},eval("("+(form.validator||"{}")+")")));
-		
-		var data = {};
-		data[this.widgetName] = this;
-		$.each(eval("("+(o.form.actions||"[]")+")"), function(k,action){
-			el.bind(action.events, data, action.handler);
-		});
-		
-		this._refreshFields();
-	},
-
-	_createRTE:function(){
-		var self = this, o = this.options, form = o.form;
-		var globalCSSFiles = ["stylesheets/rte/rte-design.css",
-		                      "stylesheets/jquery-ui-1.8.24.custom.css",
-		                      "stylesheets/jquery.ui.timepicker.css",
-		                      "stylesheets/jquery.an.menu.css",
-		                      "stylesheets/jquery.an.agilegrid.css",
-		                      "stylesheets/jquery.an.tree.css",
-		                      "stylesheets/jquery.an.border.css",
-		                      "stylesheets/jquery.an.tabsx.css",
-		                      "stylesheets/jquery.an.toolbar.css",
-		                      "stylesheets/jquery.an.page.css",
-		                      "stylesheets/jquery.an.form.css",
-		                      "stylesheets/jquery.an.editor.css",
-		                      "stylesheets/jquery.an.formview.css",
-		                      "stylesheets/jquery.an.widget.css",
-		                      "stylesheets/jquery.an.tabsxwidget.css",
-		                      "stylesheets/jquery.an.box.css",
-		                      "stylesheets/jquery.an.fileinput.css",
-		                      "stylesheets/jquery.an.filefield.css",
-		                      "stylesheets/jquery.an.gridfield.css",
-		                      "stylesheets/jquery.colorpicker.css",
-		                      "stylesheets/jquery.ui.select.css",
-		                      "stylesheets/rte/paddinginput.css",
-		                      "stylesheets/jquery.an.rte.css",
-		                      "stylesheets/base.css"],
-	        globalJSFiles = ["javascripts/jquery-1.8.2.js","javascripts/jquery.scrollto.js"];
-
-//		$.each(o.db.cssfiles||[],function(k,v){
-//			globalCSSFiles.push("/dbs/"+Model.ADMINDBID+"/"+dbId+"/attachments/"+v.metadata.filepath);
-//		});
-//		$.each(o.db.jsfiles||[],function(k,v){
-//			globalJSFiles.push("/dbs/"+Model.ADMINDBID+"/"+dbId+"/attachments/"+v.metadata.filepath);
-//		});
-
-		// Local css and javascript files in form scope(form,view,page).
-		var localCSSFiles = [], localJSFiles = [];
-		$.each(form.cssfiles||[],function(k,v){
-			localCSSFiles.push("/dbs/"+dbId+"/forms/"+form._id+"/attachments/"+v.metadata.filepath);
-		});
-
-		$.each(form.jsfiles||[],function(k,v){
-			localJSFiles.push("/dbs/"+dbId+"/forms/"+form._id+"/attachments/"+v.metadata.filepath);
-		});
-
-	    var cssfiles = [].concat(globalCSSFiles).concat(localCSSFiles), 
-	          jsfiles = [].concat(globalJSFiles).concat(localJSFiles);
-		
-		this.rte = $("<div class = 'rte'/>").appendTo(this.element).rte({
-			content:form.content,
-			dbId:o.dbId,
-			stylesheet:form.stylesheet,
-			cssfiles: cssfiles,
-			jsfiles:  jsfiles,
-			cssClass:form.name,
-			restore:function(form){self._refreshFields(form); },
-			clean:function(form){
-
-				form.find(".widget").each(function(){
-					var $this = $(this),type = $this.attr("type"),wid;
-					if($this.is(".field")){
-						wid=$this.data(type+"field");
-					}else if($this.is(".box")){
-						wid=$this.data("box");
-					}else if($this.is("[type="+type+"]")){
-						wid=$this.data(type+"widget");
-					}
-					wid&&wid.destroy();
-				});	
-			},
-			onload:function(){
-				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc")); 
-				$doc.bind("paste.form",function(e){
-					setTimeout(function(){
-						self._refreshFields();
-						self.rte.rte("updatePath");
-						self._trigger("change",null, self);
-					},20);
-				}).bind("widgetdblclick.form widgetclick.form widgetchange.form click.form",function(e, widget){
-					$doc.find(".widget.selected").removeClass("selected");
-					if(e.type == "widgetclick" || e.type == "widgetdblclick"){
-						if(widget.selectable(e.originalEvent)){
-							var el = widget.widget(); 
-							el.addClass("selected");
-							!$.browser.chrome&&sel.select(el[0]);
-							self._trigger("widgetselect",null, widget);
-						}
-						self.rte.rte("updatePath");
-						if(e.type=="widgetdblclick"){
-							var type = widget.option("type");
-							if(self.rteWidgetActive(type)) self.rteWidget(type);	
-						}
-					}
-					self.rte.trigger(e, widget);
-				});
-				self._refreshFields();
-				self._trigger("formcreated",null,{form:self});
-			}
-		}).bind("change.form contentchange.form",function(e){
-			//$(this).data('rte').history();
-			self.option("isDirty",true);
-			setTimeout(function(){ self._trigger("change",null, self);},20);
-		}).bind("newwidget.form",function(e, widget){
-			e.stopImmediatePropagation();
-			self.refresh();
-			self.option("isDirty",true);
-			setTimeout(function(){ self._trigger("change",null, self);},20);
-		});
-	},
-
-	_getForm:function(){
-		return this.options.mode=="design" ? $(this.rte.rte("option","doc")): this.$form;
-	},
-	
-	_refreshFields: function(form){
-		var self = this, o = this.options, doc = o.document;
-		(form || this._getForm()).find(".widget").each(function(){
-			var $this = $(this), id = $this.attr("id"), type = $this.attr("type");
-			if(id) id = id.replace(/-/g, ".");
-			if($this.is(".field")){
-				var value = doc && doc.prop && doc.prop(id), field = $this.data(type+"field"); 
-				if(field){
-				    field.option('mode',o.mode).option('value',value);
-				    field.refresh();
-				}else{
-					var opts = {
-						dbId:o.dbId,
-						parent:function(){return self;},
-						value:value,
-						url:o.url,
-						mode:o.mode,
-						optionchanged:function(e,data){
-							if(data.key == "value"){
-								var id = $(e.target).attr("id");
-								id = id&&id.replace(/-/g,".");
-								var curValue = doc.prop(id);
-								if(curValue != data.value){
-									doc.prop(id,data.value,data["transient"]);
-								}
-							}else if(data.key == "metadata" || data.key == "attributes"){
-								self.option("isDirty",true);
-								setTimeout(function(){ self._trigger("change",null, self);},20);
-							}
-						},
-						resize:function(e,data){self.option("isDirty",true);}
-					};
-
-					if(type == "button"){
-						$this[type+"field"]({parent:function(){return self;},label:$this.attr("label")});
-					}else{
-						$this[type+"field"] && $this[type+"field"](opts);
-					}
-				}
-			}else if($this.is(".box")){
-				var actions = [], id = $this.attr("id");
-				$.each(o.boxToolbarActions||[],function(){
-					if(this.boxName == id) actions.push(this);
-				});
-				if($this.is(".an-box")){
-					$this.data("box").option("mode", o.mode);
-				}else{
-					$this.box({
-						parent:function(){return self;},
-						mode:o.mode,
-						dbId:o.dbId,
-						toolbarActions:actions,
-						optionchanged:function(e,data){
-							if(data.key == "metadata" || data.key == "attributes"){
-								self.option("isDirty",true);
-								setTimeout(function(){ self._trigger("change",null, self);},20);
-							}
-						}
-					});
-				}
-			}else if($this.is("[type="+type+"]")){
-				if($this.is(".an-"+type+"widget")){
-					$this.data(type+"widget").option("mode",o.mode);
-				}else{
-					$this[type+"widget"]({
-						parent:function(){return self;},
-						mode:o.mode, 
-						dbId:o.dbId,
-						optionchanged:function(e,data){
-							if(data.key == "metadata" || data.key == "attributes"){
-								self.option("isDirty",true);
-								setTimeout(function(){ self._trigger("change",null, self);},20);
-							}
-						}
-					});
-				}
-			}
-		});
-
-		return this;
-	},
-	
-	_createActionSets:function(){
-		if(this.options.mode == "design"){
-			return [this._controlActionSet(),this._formatActionSet(), this._tableActionSet()];
-		}
-	},
-
-	_controlActionSet:function(){
-		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["properties","cleanFormat","docStructure"],actions);
-	},
-	
-	_formatActionSet:function(){
-		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["bold","italic","underline","strikethrough","subscript",
-		        "superscript","alignLeft","alignCenter","alignRight","alignFull","font","fontSize",
-		        "format","leftToRight","rightToLeft","fontColor","backgroundColor","outdent",
-		        "indent","orderedList","unorderedList","link","deleteLink","horizontalRule",
-		        "blockQuote","blockElement","stopFloat","image"],actions);
-	},
-	
-	_tableActionSet:function(){
-		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow", 
-		"columnBefore","columnAfter","deleteColumn", "cellProps","mergeCells",
-		"splitCells"],actions);
-	},
-
-	_createActionSet:function(actionNames, actions){
-		var actionSet = {};
-		$.each(actionNames, function(){
-			actionSet[this] = actions[this];
-		});
-		return actionSet;
-	},
-
-	_syncFormContent:function(){
-		var form = this.options.form;
-		form.content = this.rte.rte("option","content");
-		this.$form && this.$form.empty().html(form.content);
-	},
-
-	validate:function(){
-		return this.validator?this.validator.form():true;
-	},
-
-	rteWidget: function(type,opts){
-		this.rte && this.rte.rte("rteWidget", type, this.options.formIds[type], opts);
-		return this;
-	},
-	
-	rteWidgetActive: function(type){
-		return this.rte && this.rte.rte("rteWidgetActive", type);
-	},
-
 	label:function(){
 		this.rte && this.rte.rte("label");
 		return this;
 	},
 	
-	labelActive:function(){
-		return this.rte && this.rte.rte("labelActive");
-	},
-
-	sourceCode:function(){
-		if(this.rte){
-			var mode = this.rte.rte("option", "mode");
-			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");	
-		}
-	},
-	
-	sourceCodeActive:function(){
-		return this.rte && this.rte.rte("option", "mode") == "sourcecode"; 
-	},
-	
-	handler: function(){self.option("mode",o.mode =="sourcecode"?"design":"sourcecode");},
-	checked: function(){return o.mode =="sourcecode";},
-
-	save: function(){
-		var self =this, o = this.options;
-		if(o.isDirty){
-			this._syncFormContent();
-			ModelupdateDocument(o.dbId, o.form._id,o.form,null,function(err,result){
-				self.option("isDirty",false);
-			});
-		}
-		return this;
+	validate:function(){
+		return this.validator?this.validator.form():true;
 	},
 
 	// TODO bug fix: 打印错误!
 	print: function(){
 		var o = this.options, docId = o.document.prop("_id"), loc = window.location, 
-		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&docid="+docId+"&formid="+o.form._id;
+		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&docid="+docId+"&formid="+o[this.widgetName]._id;
 		print(url);
 		return this;
 	},
 
-	highlightWidget: function(id, highlight){
-		var w = this.getWidget(id); 
-		w&&w.highlight(highlight);
-		return this;
-	},
-	
-	scrollTo: function(id, opts){
-		var o = this.options;
-		if(o.mode == "design"){
-			var win = this.rte.rte("option","win");
-			win.$("#"+id.replace(/\./g,"-")).ScrollTo(opts);
-		}else{
-			this.$form.find("#"+id).scrollTo(opts);
-		}
-	},
-
 	destroy: function() {
-		$(this.options.document).unbind(".form")
-		this.element.unbind(".form").removeClass("an-form").children("style").remove();
-		return $.Widget.prototype.destroy.apply( this, arguments );
+		this.element.removeClass("an-form");
+		return $.an.page.prototype.destroy.apply(this, arguments);
 	}
 });
 })( jQuery );
@@ -13317,22 +13082,27 @@ $.widget( "an.view", {
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, opts = {skip:o.skip,limit:o.limit};
+		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
 		if(!o.view.showPager||self.widgetName=='gridview'){
 			if($.type(o.view.sort)=="string"){
 				opts.sort=eval("("+o.view.sort+")");
 			}
 			if($.type(sel)=="string"){
 				sel = eval("("+sel+")");
-				$.ans.getDoc(o.dbId,null,{selector:sel, options:opts},function(err,data){
+				if($.type(filter)=="string"){
+					selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
+				}else{
+					selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
+				}
+				$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 					self.docs = data.docs;
+					o.total = data.total;
 					self._docsLoaded && self._docsLoaded();
 				});
 			}
 		}else{
 			self.pager&&self.pager.reload();
 		}
-		
 	},
 	
 	_getRow: function(row){
@@ -13575,40 +13345,449 @@ $.widget( "an.formview", $.an.view, {
 
 (function( $, undefined ) {
 
-$.widget( "an.page", $.an.form, {
+$.widget( "an.page", {
 	options: {
-		printable: false,
-		mode:'edit',
+		mode:'browser',
+		actionSets: [],
 		wrapper:"<div/>",
-		document:new DocWrapper({})
+		formIds:{
+		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
+		}
 	},
 
 	_create: function() {
-		$.an.form.prototype._create.apply(this, arguments);
 		this.element.addClass("an-page");
+		var o = this.options, page = o[this.widgetName];
+		$.extend(this, eval("try{("+(page.methods||"{}")+")}catch(e){}"));
+		
+		o.cssFiles = o.cssFiles || [];
+		o.jsFiles = o.jsFiles || [];
+		if(o.mobile){
+			o.cssFiles = [""].concat(o.cssFiles);
+			o.jsFiles = ["javascripts/jquery-1.8.2.js",
+			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
+		}else{
+			o.cssFiles = ["stylesheets/rte/rte-design.css",
+			          "stylesheets/jquery-ui-1.8.24.custom.css",
+			          "stylesheets/jquery.ui.timepicker.css",
+			          "stylesheets/jquery.an.menu.css",
+			          "stylesheets/jquery.an.agilegrid.css",
+			          "stylesheets/jquery.an.tree.css",
+			          "stylesheets/jquery.an.border.css",
+			          "stylesheets/jquery.an.tabsx.css",
+			          "stylesheets/jquery.an.toolbar.css",
+			          "stylesheets/jquery.an.page.css",
+			          "stylesheets/jquery.an.editor.css",
+			          "stylesheets/jquery.an.formview.css",
+			          "stylesheets/jquery.an.widget.css",
+			          "stylesheets/jquery.an.tabsxwidget.css",
+			          "stylesheets/jquery.an.box.css",
+			          "stylesheets/jquery.an.fileinput.css",
+			          "stylesheets/jquery.an.filefield.css",
+			          "stylesheets/jquery.an.gridfield.css",
+			          "stylesheets/jquery.colorpicker.css",
+			          "stylesheets/jquery.ui.select.css",
+			          "stylesheets/rte/paddinginput.css",
+			          "stylesheets/jquery.an.rte.css",
+			          "stylesheets/base.css"].concat(o.cssFiles);
+	        o.jsFiles = ["javascripts/jquery-1.8.2.js",
+	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);	
+		}
+		
+		this._initPage();
+	},
+	
+	_initPage:function(){
+		this.refresh();
+	},
+	
+	_createOutline:function(){
+		var self = this, page = this.options[this.widgetName], root = this._getPage();
+		return {
+			getRoots: function(mountNodes){
+				var nodes = new Array();
+				nodes.push({id:"root", text:page.title||page.name||page._id, "class":"folder"});
+				mountNodes(nodes);
+			},
+			getChildren: function(parentNode, mountNodes){
+				var nodes = new Array();
+				if(parentNode.id == "root"){
+					root.find(".widget").each(function(){
+						var $this = $(this), id = $this.attr("id");
+						if($this.parent().closest(".widget").length == 0){
+							nodes.push({id:id, text:id, "class":self._isContainer($this)?"folder":"file", data:self._getWidgetObj($this)});
+						}
+					});
+				}else{
+					root.find("#"+parentNode.id).find(".widget").each(function(){
+						var $this = $(this), id = $this.attr("id");
+						if($this.parent().closest(".widget").attr("id") == parentNode.id){
+							nodes.push({id:id, text:id, "class":self._isContainer($this)?"folder":"file", data:self._getWidgetObj($this)});
+						}
+					});
+				}
+				mountNodes(nodes);
+			},
+			hasChildren: function(node){ return node["class"]=="folder"; },
+			getId: function(node){ return node.id ? node.id : null; }
+		};
+	},
+	
+	_isContainer:function(el){
+		return el.is("[type=tabsx], [type=box]");
+	},
+	
+	_getWidgetObj:function(el){
+		var widget = null, type = el.attr("type");
+		if(el.is(".box")){
+			widget = el.data(type);
+		}else if(el.is(".widget")){
+			widget = el.data(type+"widget");
+		}
+		return widget;
 	},
 	
 	option: function(key, value) {
 		var o = this.options;
-		if(key === "page" && value === undefined){
-			return o.form;
-		}else if(key === "currentForm" && value === undefined){
-			return this;
+		if(key === "actionSets" && value === undefined){
+			return this._createActionSets();
+		}else if(key === "outline" && value === undefined){
+			return this._createOutline();
+		}else if(key == "content" && value == undefined){
+			if(o.isDirty) this._syncPageContent();
+			return o[this.widgetName].content;
 		}
-		var ret = $.an.form.prototype.option.apply(this, arguments ); 
+		var ret = $.Widget.prototype.option.apply(this, arguments ); 
 		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
 	},
 
+	_setOption: function(key, value) {
+		var o = this.options, oldValue = o[key];
+		if(!equals(value,oldValue)){
+			$.Widget.prototype._setOption.apply(this, arguments );
+			this._handleChange(key,value,oldValue);
+			this._trigger("optionchanged",null,{key:key, value:value, oldValue:oldValue});
+		}
+		return this; 
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		var o = this.options;
+		if(key === "mode"){
+			if(o.isDirty) this._syncPageContent();
+			this.refresh();
+		}else if(key === "page"){
+			var page = o[this.widgetName];
+			this.element.children("style").text(page.stylesheet);
+			this.$page && !o.isDirty && this.$page.empty().html(page.content);
+			if(this.rte){
+				!o.isDirty && this.rte.rte("option","content",page.content);
+				this.rte.rte("option","stylesheet", page.stylesheet);
+			}
+			this.refresh();
+		}
+	},
+
+	refresh:function(){
+		var o = this.options;
+		this["_"+o.mode] && this["_"+o.mode]();
+	},
+	
+	_browser:function(){
+		this.rte && this.rte.hide();
+		if(!this.$page){
+			this._createPage();
+		}else {
+			this.$page.show();
+			this._refreshWidgets();
+		}
+	},
+
+	_edit:function(){
+		this.rte && this.rte.hide();
+		if(!this.$page){
+			this._createPage();
+		}else{
+			this.$page.show();
+			this._refreshWidgets();
+		}
+	},
+
+	_design:function(){
+		this.$page && this.$page.hide();
+		if(!this.rte){
+			this._createRTE();
+		}else{
+			this.rte.show();
+			this._refreshWidgets();
+		}
+	},
+
+	getWidget:function(id){
+		var self = this, o = this.options, page = o[this.widgetName], widget = null;
+		this._getPage().find("#"+id).each(function(){
+			var $this = $(this), filter = (o.mode=="design"? ".an-box:not(.raw),."+page.name : ".an-page");
+			$this.parent().closest(filter).each(function(){
+				if($(this).is('.'+page.name) || this == self.element[0]){
+					widget = self._getWidgetObj($this);
+					return false;
+				}
+			});
+			if(widget) return false;
+		});
+		return widget;
+	},
+
+	showWidget:function(){
+		var self = this;
+		$.each(arguments,function(){
+			var w = self.getWidget(this);
+			w && w.widget().show();
+		});
+	},
+	
+	hideWidget:function(){
+		var self = this;
+		$.each(arguments,function(){
+			var w = self.getWidget(this);
+			w && w.widget().hide();
+		});
+	},
+	
+	_createPage:function(){
+		var o = this.options, page = o[this.widgetName], el = this.element;
+		$('<style type="text/css">'+(page.stylesheet||"")+'</style>').appendTo(el);
+		this.$page = $(o.wrapper).addClass(page.name).html(page.content).appendTo(el);
+
+		var data = {};
+		data[this.widgetName] = this;
+		$.each(eval("("+(o[this.widgetName].actions||"[]")+")"), function(k,action){
+			el.bind(action.events, data, action.handler);
+		});
+		
+		this._refreshWidgets();
+	},
+
+	_createRTE:function(){
+		var self = this, o = this.options, page = o[this.widgetName];
+		this.rte = $("<div class = 'rte'/>").appendTo(this.element).rte({
+			content:page.content,
+			cssFiles:o.cssFiles,
+			jsFiles:o.jsFiles,
+			dbId:o.dbId,
+			stylesheet:page.stylesheet,
+			cssClass:page.name,
+			restore:function(page){self._refreshWidgets(page); },
+			clean:function(page){
+			    page.find(".widget").each(function(){
+					var $this = $(this),wid;
+					wid = self._getWidgetObj($this);
+					wid&&wid.destroy();
+				});	
+			},
+			onload:function(){
+				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc")); 
+				$doc.bind("paste.page",function(e){
+					setTimeout(function(){
+						self._refreshWidgets();
+						self.rte.rte("updatePath");
+						self._trigger("change",null, self);
+					},20);
+				}).bind("widgetdblclick.page widgetclick.page widgetchange.page click.page",function(e, widget){
+					$doc.find(".widget.selected").removeClass("selected");
+					if(e.type == "widgetclick" || e.type == "widgetdblclick"){
+						if(widget.selectable(e.originalEvent)){
+							var el = widget.widget(); 
+							el.addClass("selected");
+							!$.browser.chrome&&sel.select(el[0]);
+							self._trigger("widgetselect",null, widget);
+						}
+						self.rte.rte("updatePath");
+						if(e.type=="widgetdblclick"){
+							var type = widget.option("type");
+							if(self.rteWidgetActive(type)) self.rteWidget(type);	
+						}
+					}
+					self.rte.trigger(e, widget);
+				});
+				self._refreshWidgets();
+				var data = {};
+				data[self.widgetName] = self;
+				self._trigger(self.widgetName+"create",null,data);
+			}
+		}).bind("change.page contentchange.page",function(e){
+			self.option("isDirty",true);
+			setTimeout(function(){ self._trigger("change",null, self);},20);
+		}).bind("newwidget.page",function(e, widget){
+			e.stopImmediatePropagation();
+			self.refresh();
+			self.option("isDirty",true);
+			setTimeout(function(){ self._trigger("change",null, self);},20);
+		});
+	},
+
+	_getPage:function(){
+		return this.options.mode=="design" ? $(this.rte.rte("option","doc")): this.$page;
+	},
+	
+	_refreshWidgets: function(page){
+		var self = this;
+		(page || this._getPage()).find(".widget").each(function(){
+			self._refreshWidget($(this));
+		});
+		return this;
+	},
+	
+	_refreshWidget: function(el){
+		var self = this, o = this.options, type = el.attr("type");
+		if(el.is(".box")){
+			var actions = [], id = el.attr("id");
+			$.each(o.boxToolbarActions||[],function(){
+				if(this.boxName == id) actions.push(this);
+			});
+			if(el.is(".an-box")){
+				el.data("box").option("mode", o.mode);
+			}else{
+				el.box({
+					parent:function(){return self;},
+					mode:o.mode,
+					dbId:o.dbId,
+					toolbarActions:actions,
+					optionchanged:function(e,data){
+						if(data.key == "metadata" || data.key == "attributes"){
+							self.option("isDirty",true);
+							setTimeout(function(){ self._trigger("change",null, self);},20);
+						}
+					}
+				});
+			}
+		}else if(el.is("[type="+type+"]")){
+			if(el.is(".an-"+type+"widget")){
+				el.data(type+"widget").option("mode",o.mode);
+			}else{
+				el[type+"widget"]({
+					parent:function(){return self;},
+					mode:o.mode, 
+					dbId:o.dbId,
+					optionchanged:function(e,data){
+						if(data.key == "metadata" || data.key == "attributes"){
+							self.option("isDirty",true);
+							setTimeout(function(){ self._trigger("change",null, self);},20);
+						}
+					}
+				});
+			}
+		}
+	},
+	
+	_createActionSets:function(){
+		if(this.options.mode == "design"){
+			return [this._controlActionSet(),this._formatActionSet(), this._tableActionSet()];
+		}
+	},
+
+	_controlActionSet:function(){
+		var actions = this.rte.rte("option","actions");
+		return this._createActionSet(["properties","cleanFormat"],actions);
+	},
+	
+	_formatActionSet:function(){
+		var actions = this.rte.rte("option","actions");
+		return this._createActionSet(["bold","italic","underline","strikethrough","subscript",
+		        "superscript","alignLeft","alignCenter","alignRight","alignFull","font","fontSize",
+		        "format","leftToRight","rightToLeft","fontColor","backgroundColor","outdent",
+		        "indent","orderedList","unorderedList","link","deleteLink","horizontalRule",
+		        "blockQuote","blockElement","stopFloat","image"],actions);
+	},
+	
+	_tableActionSet:function(){
+		var actions = this.rte.rte("option","actions");
+		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow", 
+		"columnBefore","columnAfter","deleteColumn", "cellProps","mergeCells",
+		"splitCells"],actions);
+	},
+
+	_createActionSet:function(actionNames, actions){
+		var actionSet = {};
+		$.each(actionNames, function(){
+			actionSet[this] = actions[this];
+		});
+		return actionSet;
+	},
+
+	_syncPageContent:function(){
+		var page = this.options[this.widgetName];
+		page.content = this.rte.rte("option","content");
+		this.$page && this.$page.empty().html(page.content);
+	},
+
+	rteWidget: function(type,opts){
+		this.rte && this.rte.rte("rteWidget", type, this.options.formIds[type], opts);
+		return this;
+	},
+	
+	rteWidgetActive: function(type){
+		return this.rte && this.rte.rte("rteWidgetActive", type);
+	},
+
+	labelActive:function(){
+		return this.rte && this.rte.rte("labelActive");
+	},
+
+	sourceCode:function(){
+		if(this.rte){
+			var mode = this.rte.rte("option", "mode");
+			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");	
+		}
+	},
+	
+	sourceCodeActive:function(){
+		return this.rte && this.rte.rte("option", "mode") == "sourcecode"; 
+	},
+	
+	// TODO: optimize following code.
+	handler: function(){self.option("mode",o.mode =="sourcecode"?"design":"sourcecode");},
+	checked: function(){return o.mode =="sourcecode";},
+	
+	highlightWidget: function(id, highlight){
+		var w = this.getWidget(id); 
+		w&&w.highlight(highlight);
+		return this;
+	},
+	
+	scrollTo: function(id, opts){
+		var o = this.options;
+		if(o.mode == "design"){
+			var win = this.rte.rte("option","win");
+			win.$("#"+id.replace(/\./g,"-")).ScrollTo(opts);
+		}else{
+			this.$page.find("#"+id).scrollTo(opts);
+		}
+	},
+	
+	save: function(){
+		var self =this, o = this.options, page = o[this.widgetName];
+		if(o.isDirty){
+			this._syncPageContent();
+			ModelupdateDocument(o.dbId, page._id,page,null,function(err,result){
+				self.option("isDirty",false);
+			});
+		}
+		return this;
+	},
+	
 	print: function(){ 
 		var o = this.options, loc = window.location, 
-		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&pageid="+o.form._id;
+		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&pageid="+o[this.widgetName]._id;
 		print(url);
 		return this;
 	},
 	
 	destroy: function() {
-		this.element.removeClass("an-page");
-		return $.an.form.prototype.destroy.apply(this, arguments);
+		$(this.options.document).unbind(".page");
+		this.element.unbind(".page").removeClass("an-page").children("style").remove();
+		return $.Widget.prototype.destroy.apply( this, arguments );
 	}
 });
 })( jQuery );/*!
@@ -13669,8 +13848,9 @@ $.widget( "an.editor", {
 							mode:(o.design && /-design$/.test(id)) ? "design" : o.mode,
 							ignoreEscape:o.ignoreEscape,
 							change:function(){ 
-								o.change();
+								o.change&&o.change();
 							},
+							readOnly:o.readOnly,
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){
 								if(data.key == "isDirty"){
@@ -13705,7 +13885,7 @@ $.widget( "an.editor", {
 						}, opt));
 					}else if (type == Model.PAGE){
 						$p.page($.extend(true,{
-							form: d, 
+							page:d, 
 							create:function(){ self._trigger("tabcreated",event, $(this).data("page")); }
 						},opt));
 					}else if (type == Model.VIEW){
@@ -13839,7 +14019,7 @@ $.widget( "an.editor", {
 			var data = $(this).data();;
 			for(var i in data){
 				if($.inArray(i, ["form","page"]) != -1){
-					if((data[i].option("form")._id == o.document._id) && data[i].option("isDirty")){
+					if((data[i].option(i)._id == o.document._id) && data[i].option("isDirty")){
 						o.document.content = data[i].option("content");
 						data[i].option("isDirty", false);
 						o.isDocDirty = true;
@@ -14898,8 +15078,10 @@ $.widget( "an.workbench", {
 		    },opts);
 		if(typeId == Model.FORM){
 			pid = pid+"-form";
+			optsx.isFormEditor = true; 
 		}else if(typeId == Model.PAGE){
 			pid = pid+"-page";
+			optsx.isPageEditor = true; 
 		}else if(typeId == Model.VIEW){
 			pid = pid+"-view";
 		}else{
@@ -14978,6 +15160,7 @@ $.widget( "an.workbench", {
 	
 	openForm:function(formId, opts){
 		opts = opts || {};
+		$.extend(true,opts,{isFormEditor:true});
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = formId+"-form"; 
@@ -15008,7 +15191,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openForm", id:formId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, formId, optsx);
+			Model.openPage(el, dbId, formId, optsx);
 		}
 		
 		var el = null;
@@ -15034,7 +15217,7 @@ $.widget( "an.workbench", {
 	openPage:function(pageId, opts){
 		opts = opts || {};
 		$.extend(true,opts,{isPageEditor:true});
-
+		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs,
 		    pid = pageId+"-page"; 
 		if(!opts.preview && tabs.tabsx("panel",pid).size() > 0){
@@ -15064,7 +15247,7 @@ $.widget( "an.workbench", {
 				self._afterOpenEditor({method:"openPage", id:pageId, options:opts});
 		    	opts.opened && opts.opened(editor);
 			};
-			Model.openForm(el, dbId, pageId, optsx);
+			Model.openPage(el, dbId, pageId, optsx);
 		}
 		
 		var el = null;
