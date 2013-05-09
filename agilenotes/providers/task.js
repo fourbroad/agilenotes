@@ -48,7 +48,7 @@ Task.prototype.exec = function(user, task, options, callback) {
 						});
 					},
 					insert: function(docs, options, callback){
-						ACL.acl(user, provider, "post", null, typeof(docs.type) != 'undefined' ? docs.type : docs[0], function(error, selector){
+						ACL.acl(user, provider, "post", null, typeof(docs.type) != 'undefined'? docs.type : docs[0], function(error, selector){
 							if(error) return callback(error);
 							provider.insert(docs, options, callback);
 						});
