@@ -25,10 +25,9 @@ html, body, td, th, li, label, p, span, a {
 <script type="text/javascript" charset="utf-8">
 $(function(){
 	var dbId = getUrlParam("dbid");
-	$.ans.getDB(dbId,null,function(error,db){
+	Model.getDb(dbId, function(error,db){
 		window.dataBase=db||{};
-		window.database=db||{};
-		if(database.local=="zn"){
+		if(db.local=="zn"){
 			$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
 		}else{
 			$.ajax({url: "javascripts/i18n/en.js",async:false});

@@ -39,7 +39,8 @@ var Model = {
     ACTION_ROOT: "0000000000000000000e000b",
     DATABASE_ROOT: "0000000000000000000e000f",
 
-    // Cache of document type, page(form), view, side view.
+    // Cache of dbs, document type, page(form), view, side view.
+    dbs:{},
     types:{},
     pages:{},
     views:{},
@@ -160,6 +161,18 @@ var Model = {
         	});
     	}else{
     		callback(null, sort(ids, pages));
+    	}
+    },
+    
+    getDb:function(dbId, callback){
+    	if(this.dbs[dbId]){
+    		callback(null,this.dbs[dbId]);
+    	}else{
+    		var self =this;
+        	$.ans.getDB(dbId,null,function(error,db){
+        		if(db) self.dbs[dbId] = db;
+        		callback(error,db);
+        	});
     	}
     },
 
