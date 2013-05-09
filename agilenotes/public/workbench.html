@@ -27,6 +27,7 @@ $(function(){
 	var dbId = getUrlParam("dbid");
 	Model.getDb(dbId, function(error,db){
 		window.dataBase=db||{};
+		window.database=db||{};
 		if(db.local=="zn"){
 			$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
 		}else{
