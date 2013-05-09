@@ -69,14 +69,19 @@ $.widget( "an.view", {
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit};
+		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
 		if(!o.view.showPager||self.widgetName=='gridview'){
 			if($.type(o.view.sort)=="string"){
 				opts.sort=eval("("+o.view.sort+")");
 			}
 			if($.type(sel)=="string"){
 				sel = eval("("+sel+")");
-				$.ans.getDoc(o.dbId,null,{selector:sel,filter:filter,options:opts},function(err,data){
+				if($.type(filter)=="string"){
+					selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
+				}else{
+					selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
+				}
+				$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 					self.docs = data.docs;
 					o.total = data.total;
 					self._docsLoaded && self._docsLoaded();

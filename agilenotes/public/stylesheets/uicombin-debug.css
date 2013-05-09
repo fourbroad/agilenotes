@@ -1023,6 +1023,7 @@ li.ui-draggable{
 .an-box {
 	position: relative;
 	border:1px solid #E8E8E8;
+	min-width:80px;
 }
 
 .an-box>.title-bar {
@@ -1063,49 +1064,22 @@ li.ui-draggable{
 }
 
 .an-box>.content {
-	position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
-
-.an-box.auto-width>.content{
-	position: relative;
-	width:auto;
-}
-.an-box.auto-height>.content {
-	position: relative;
-	top: 0px;
-	height:auto;
-}
-
-.an-box.title-bar>.content{
-	top: 32px;
-}
-
-.an-box.title-bar.auto-height>.content{
-	top: 0px;
-}
-
-.an-box>.content.link>div {
-	border-width: 0;
+    width: 100%;
+    min-height:25px;
 }
 
 .an-box>.content>pre{
 	margin: 0;
 }
 
-.an-box.foot-area>.content{
-    bottom: 50px;	
+.an-box>.foot-area {
+    position:absolute;
+    right:20px;
+    bottom:5px;
 }
 
-.an-box>.foot-area {
-	padding-right: 40px; 
-}
 .an-box>.foot-area>.ui-button {
-	float: right;
-    margin: 5px 8px 30px;
+    margin: 5px;
 }
 @charset "UTF-8";
 /* CSS Document */
@@ -1392,6 +1366,11 @@ li.ui-draggable{
 }
 @charset "UTF-8";
 /* CSS Document */
+
+.an-page .an-rte {
+	height:100%;
+}
+
 .page iframe {
     background: none repeat scroll 0 0 #FFFFFF;
     border: 0 solid;
@@ -1403,10 +1382,6 @@ li.ui-draggable{
     width: 100%;
 }@charset "UTF-8";
 /* CSS Document */
-
-.an-form .an-rte {
-	height:100%;
-}
 
 .an-form label.error {
 	margin-left: 10px;
@@ -1540,44 +1515,40 @@ li.ui-draggable{
 }@charset "UTF-8";
 /* CSS Document */
 .widget{
-	position: relative;
+	position:relative;
 	display:inline-block;
 	*display:inline;
-	vertical-align: middle;
+	vertical-align:middle;
 }
 
-.widget.auto-width{
-	width:auto;
-}
-.widget.auto-height {
-	height:auto;
+.widget>.content {
+    display:inline-block;	
 }
 
-.widget.fill-width{
-    width:100%;
+.widget[type=tabsx]>.content{
+	width:100%;
+	height:100%;
 }
 
-.widget.fill-height {
-	position: absolute;
-	top: 1px;
-	bottom: 1px;
+.widget.design {
+	margin:2px;
 }
 
 .widget.an-state-hover,
 .widget>input.an-state-hover,
-.field[type=textarea]>.textarea-wrapper>textarea.an-state-hover {
+.field[type=textarea]>.content>textarea.an-state-hover {
 	 border: 2px dashed darkgray !important;
 }
 
-.field[type=textarea]>.textarea-wrapper{
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+.field[type=textarea]>label{
+	float:left;
 }
 
-.field[type=textarea]>.textarea-wrapper>textarea{
+.field[type=textarea]>.content{
+    display:inline-block;	
+}
+
+.field[type=textarea]>.content>textarea{
 	width:100%; 
 	height:100%; 
 	zoom:1; 
@@ -1587,21 +1558,8 @@ li.ui-draggable{
 	resize: none;
 }
 
-.field[type=textarea].fill-width.fill-height>.textarea-wrapper>textarea{
-	border: none;
-}
-
-.widget[type=tabsx].design>div,
-.widget[type=tabsx].design>.an-tabsx>div,
-.widget[type=box].design>div,
-.widget[type=box].design>.title-bar>div,
-.widget[type=box].design>.content>div,
-.widget[type=box].design.link>.content div,
-.widget[type=box].design>.content>div.bottom>div,
-.widget.field.design, .widget.field.design div {
-	border-width:0;
-	background-image:none;
-	outline:none;
+.widget.design[type=radio]>label {
+	margin:4px;
 }
 
 .widget[type=box].design,
@@ -1609,7 +1567,12 @@ li.ui-draggable{
 .widget[type=tabsx].design,
 .widget[type=grid].design>.content>.titlebar,
 .widget.field.design, .widget.field.design .widget.field.design{
-	border: 1px solid #AAAAAA;
+	border:1px dotted #AAAAAA;
+	border-width: 1px;
+}
+
+.widget.field.design>.content {
+	border:1px solid #AAAAAA;
 	border-width: 1px;
 }
 
@@ -1618,37 +1581,61 @@ li.ui-draggable{
 .widget[type=grid].design .an-agilegrid>.top-left,
 .widget[type=grid].design th>div,
 .widget[type=grid].design td>div{
-	border-width: 1px;
+	border-width:1px;
 }
 
-
-.field[type=radio].design,
-.field[type=checkbox].design,
-.field[type=button].design{
-	border:none;
+.field[type=text],
+.field[type=password],
+.field[type=datetime] {
+	padding:2px;
 }
 
-.field[type=text]>input,
-.field[type=password]>input,
-.field[type=datetime]>input {
+.field > label {
+	margin:4px;
+}
+
+.field[type=text]>.content,
+.field[type=password]>.content,
+.field[type=datetime]>.content,
+.field[type=select]>.content,
+.field[type=textarea]>.content {
+	min-width:80px;
+	min-height:21px;
+}
+
+.field[type=text]>.content>input,
+.field[type=password]>.content>input,
+.field[type=datetime]>.content>input,
+.field[type=select]>.content>select {
 	width:100%;
 	height:100%;
 }
 
-.field[type=text].design,
-.field[type=password].design,
-.field[type=datetime].design {
-	padding: 3px 3px;
-	margin-left:0;
+
+.field[type=text].design>label,
+.field[type=password].design>label,
+.field[type=datetime].design>label,
+.field[type=file]>label{
+	float:left;
 }
 
-.field[type=checkbox].design,
-.widget[type=box].design.raw .field[type=checkbox].design {
+.field[type=checkbox].design>label{
+	float:right;
+}
+
+.field[type=checkbox].design>.content,
+.widget[type=box].design.raw .field[type=checkbox].design>.content {
+	width:21px;
+	height:21px;
+	border-width:0;
 	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF;
 }
 
-.widget[type=box].design.raw .field[type=radio].design,
-.field[type=radio].design {
+.widget[type=box].design.raw .field[type=radio].design>.content,
+.field[type=radio].design>.content {
+	width:21px;
+	height:21px;
+	border-width:0;
 	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF;
 }
 
@@ -1659,15 +1646,19 @@ li.ui-draggable{
 	padding-right:3px;
 }
 
-.field[type=select]>select{
-	width:100%;
-	height:100%;
-}
-
 .widget[type=box].design.raw .field[type=select].design,
 .field[type=select].design {
+    padding: 2px;
+}
+
+.widget[type=box].design.raw .field[type=select].design>.content,
+.field[type=select].design>.content {
 	background:url("/stylesheets/images/select.png") no-repeat scroll right center #FFFFFF;
-    padding: 3px;
+}
+
+
+.field[type=select].design>label{
+	float:left;
 }
 
 .widget[type=box].design.raw .field[type=select][size].design,
@@ -1682,16 +1673,6 @@ li.ui-draggable{
 	color: #555555;
 }
 
-.field[type=checkbox].design.selected{
-	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF !important;
-	border: 1px dashed darkgray !important;
-}
-
-.field[type=radio].design.selected {
-	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF !important;
-	border: 1px dashed darkgray !important;
-}
-
 /********************************
 .field *{
     -moz-user-select: none;
@@ -1703,6 +1684,11 @@ li.ui-draggable{
 
 .an-field>.content>pre{
 	margin: 0;
+}
+
+.design .ui-resizable-handle{
+	background:none;
+	border:0 none;
 }
 /*
  * This file is part of fileinput.
@@ -1876,12 +1862,17 @@ li.ui-draggable{
 }
 
 .an-gridfield .titlebar {
-	position: relative;
 	height: 32px;
 	border: medium none;
 }
 
+.an-gridfield>.content {
+	height:100%;
+	width:100%;
+}
+
 .an-gridfield .an-agilegrid {
+	top: 32px;
 	border-top:1px solid darkgrey;
 }
 

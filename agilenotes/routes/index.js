@@ -180,10 +180,11 @@ function rend(req,res){
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
 	    selector = q.selector, filter = q.filter, options = q.options, fields = q.fields, provider = providers.getProvider(dbid);
-        if (filter != 'undefined' && filter) {
+        if ( filter && filter != 'undefined') {
 		filter = JSON.parse(filter||"{}");
 		selector = { $and : [ selector, filter]};
 	}
+		console.log("selector =====> %j", selector);
 	res.header('Content-Type', 'application/json');
 	provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
 		if(options.exec){

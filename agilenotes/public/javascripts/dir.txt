@@ -1,12 +1,14 @@
 ..\javascripts\lib\model.js 
 ..\javascripts\lib\utils.js 
 ..\javascripts\lib\objectid.js 
+..\javascripts\jquery-1.8.2.js 
 ..\javascripts\jquery.ans.js 
 ..\javascripts\jquery.an.metadata.js 
 ..\javascripts\jquery.validate.js 
 ..\javascripts\jquery.json-2.2.js 
 ..\javascripts\jquery.mousewheel.js 
 ..\javascripts\jquery.scrollto.js 
+..\javascripts\jquery-ui-1.8.24.custom.js 
 ..\javascripts\jquery.ui.timepicker.js 
 ..\javascripts\jquery.form.js 
 ..\javascripts\widgets\jquery.an.widget.js 
@@ -23,10 +25,11 @@
 ..\javascripts\widgets\jquery.an.rtefield.js 
 ..\javascripts\widgets\jquery.an.selectfield.js 
 ..\javascripts\widgets\jquery.an.filefield.js 
-..\javascripts\widgets\jquery.an.gridfield.js
-..\javascripts\widgets\jquery.an.jsrenderfield.js
+..\javascripts\widgets\jquery.an.gridfield.js 
+..\javascripts\widgets\jquery.an.jsrenderfield.js 
 ..\javascripts\widgets\jquery.an.buttonwidget.js 
 ..\javascripts\widgets\jquery.an.tabsxwidget.js 
+..\javascripts\jquery.an.pager.js 
 ..\javascripts\jquery.an.tree.js 
 ..\javascripts\jquery.cookie.js 
 ..\javascripts\jquery.hotkeys.js 
@@ -34,6 +37,7 @@
 ..\javascripts\jquery.an.border.js 
 ..\javascripts\jquery.an.rte.js 
 ..\javascripts\jquery.an.tabsx.js 
+..\javascripts\jquery.an.page.js 
 ..\javascripts\jquery.an.form.js 
 ..\javascripts\jquery.an.outline.js 
 ..\javascripts\jquery.an.agilegrid.js 
@@ -41,7 +45,7 @@
 ..\javascripts\jquery.an.view.js 
 ..\javascripts\jquery.an.gridview.js 
 ..\javascripts\jquery.an.formview.js 
-..\javascripts\jquery.an.page.js 
+..\javascripts\jquery.an.customview.js 
 ..\javascripts\jquery.an.editor.js 
 ..\javascripts\jquery.an.sideview.js 
 ..\javascripts\jquery.an.workbench.js 
@@ -57,5 +61,5 @@
 ..\javascripts\lib\rte\rteDom.js 
 ..\javascripts\lib\rte\rteSelection.js 
 ..\javascripts\lib\rte\w3cRange.js 
-..\javascripts\json2.js
-..\javascripts\jsrender.js
+..\javascripts\json2.js 
+..\javascripts\jsrender.js 

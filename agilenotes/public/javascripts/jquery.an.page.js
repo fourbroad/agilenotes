@@ -183,7 +183,10 @@ $.widget( "an.page", {
 	_design:function(){
 		this.$page && this.$page.hide();
 		if(!this.rte){
-			this._createRTE();
+			var self = this, o = this.options, page = o[this.widgetName];
+			Model.getDb(o.dbId, function(error,db){
+				self._createRTE(db?db.globalCss+page.stylesheet:page.stylesheet);
+			});
 		}else{
 			this.rte.show();
 			this._refreshWidgets();
@@ -235,14 +238,14 @@ $.widget( "an.page", {
 		this._refreshWidgets();
 	},
 
-	_createRTE:function(){
+	_createRTE:function(stylesheet){
 		var self = this, o = this.options, page = o[this.widgetName];
 		this.rte = $("<div class = 'rte'/>").appendTo(this.element).rte({
 			content:page.content,
 			cssFiles:o.cssFiles,
 			jsFiles:o.jsFiles,
 			dbId:o.dbId,
-			stylesheet:page.stylesheet,
+			stylesheet:stylesheet,
 			cssClass:page.name,
 			restore:function(page){self._refreshWidgets(page); },
 			clean:function(page){
