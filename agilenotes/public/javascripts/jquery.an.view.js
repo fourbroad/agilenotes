@@ -27,6 +27,9 @@ $.widget( "an.view", {
 		if(o.view&&o.view.limit) {
 			o.limit = o.view.limit = parseInt(o.view.limit);
 		}
+		if(o.view&&o.view.filter) {
+			o.filter = o.view.filter;
+		}
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
 		var data = {};
 		data[this.widgetName] = this;
