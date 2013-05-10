@@ -59,9 +59,99 @@ $.widget( "an.view", {
 		}
 	},
 	
+	createPager:function(){
+		var o = this.options,self=this;
+		this.pager = $("<div class='pager'/>").css({
+			left:0,right:0,bottom:0,height:o.pagerHeight
+		}).appendTo(this.element);
+		this.pager.addClass(o.className);
+		$.each(["first","prev","goto","next","last"], function(k,v){
+			if(v == "goto"){
+				self.pager.append("<div class='goto-page'>Page<input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
+				self.pager.delegate("input", "change.pager", function(){
+					var $this = $(this), p = $(this).val();
+					if(p <= 0){
+						p = 1;
+						$this.val(p);
+					}else if(p > o.totalPage){
+						p = o.totalPage;
+						$this.val(p);
+					}
+					self.gotopage(p);
+				});
+			}else{
+				$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
+					label:$.i18n.pager?$.i18n.pager[v]:v,
+					icons: {primary: "ui-icon-"+v+"-page"},
+					text:false,
+					disabled:true
+				}).click(function(e){
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					self[v+"page"]();
+				});
+			}
+		});
+
+		this.pager.append("<div class='info'>");
+	},
+	
+	firstpage:function(e,data){ 
+		this.options.skip = 0; 
+		this._loadDocs();
+	},
+	
+	prevpage:function(){
+		var o = this.options;
+		o.skip = o.skip - o.limit;
+		this._loadDocs(); 
+	},
+	
+	gotopage:function(page){
+		var o = this.options;
+		o.skip = (page-1)*o.limit;
+		this._loadDocs();
+	},
+	
+	nextpage:function(){
+		var o = this.options;
+		o.skip = o.skip + o.limit;
+		this._loadDocs();
+	},
+	
+	lastpage:function(){
+		var o = this.options;
+		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		this._loadDocs();
+	},
+
 	refresh:function(){
 		var o = this.options;
 		this['_'+o.mode]&&this['_'+o.mode]();
+		if(this.pager&&this.widgetName!=='gridview'){
+			if(o.totalPage <= 1){
+				this.pager.hide();
+				return this;
+			}
+			this.pager.show();
+			this.pager.find(".pager-button").button("enable");
+			if(o.currentPage <= 1){
+				this.pager.find("#first").button("disable");
+				this.pager.find("#prev").button("disable");
+			}else if(o.currentPage >= o.totalPage){
+				this.pager.find("#last").button("disable");
+				this.pager.find("#next").button("disable");
+			}
+			this.pager.find("input.current-page").val(o.currentPage);
+			this.pager.find(".total-page").html(o.totalPage);
+			var currentNums=o.currentPage==o.totalPage?(o.limit*(o.currentPage-1)+o.total%o.limit):o.limit*o.currentPage,info="";
+			if($.i18n.pager){
+				info = $.i18n.pager.display.replace(/{total}/,o.total).replace(/{currentPagerFirst}/,(o.limit*(o.currentPage-1)+1)).replace(/{currentPagerLast}/,currentNums);
+			}else{
+				info = "Displaying "+(o.limit*(o.currentPage-1)+1)+" to "+currentNums+" of "+o.total+" items.";
+			}
+			this.pager.find(".info").html(info);
+		}
 	},
 	
 	reload: function(){
@@ -69,26 +159,27 @@ $.widget( "an.view", {
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
-		if(!o.view.showPager||self.widgetName=='gridview'){
-			if($.type(o.view.sort)=="string"){
-				opts.sort=eval("("+o.view.sort+")");
+		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
+
+		if($.type(o.view.sort)=="string"){
+			opts.sort=eval("("+o.view.sort+")");
+		}
+		if($.type(sel)=="string"){
+			sel = eval("("+sel+")");
+			if($.type(filter)=="string"){
+				selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
+			}else{
+				selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
 			}
-			if($.type(sel)=="string"){
-				sel = eval("("+sel+")");
-				if($.type(filter)=="string"){
-					selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
-				}else{
-					selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
+			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
+				self.docs = data.docs;
+				o.total = data.total;
+				if(self.pager&&self.widgetName!=='gridview'){
+					o.currentPage = Math.floor(o.skip/o.limit+1);
+					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
-					self.docs = data.docs;
-					o.total = data.total;
-					self._docsLoaded && self._docsLoaded();
-				});
-			}
-		}else{
-			self.pager&&self.pager.reload();
+				self._docsLoaded && self._docsLoaded();
+			});
 		}
 	},
 	

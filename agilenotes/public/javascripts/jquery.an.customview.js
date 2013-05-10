@@ -38,16 +38,7 @@ $.widget( "an.customview", $.an.view, {
 		}
 
 		if(o.view.showPager){
-			if(el.data('pager')){
-				el.data('pager').destroy();	
-			}
-			el.pager($.extend({
-				dbId:o.dbId
-			},o.view));
-			this.pager=el.data('pager');
-			this._loadDocs=function(){
-				el.data('pager').reload();
-			}
+			this.createPager();
 		}
 	},
 
@@ -59,10 +50,7 @@ $.widget( "an.customview", $.an.view, {
 		}
 	},
 	
-	_docsLoaded:function(data){
-		if($.isArray(data)){
-			this.docs = data;
-		}
+	_docsLoaded:function(){
 		this.refresh();
 	},
 	

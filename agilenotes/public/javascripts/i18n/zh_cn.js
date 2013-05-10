@@ -61,4 +61,12 @@ $.i18n.validate={
 		max: $.validator.format("请输入一个小于或等于{0}的值"),
 		min: $.validator.format("请输入一个大于或等于{0}的值")
 }
+
+$.i18n.pager={
+		first: "第一页",
+		prev: "上一页",
+		next: "下一页",
+		last: "最后页",
+		display: "共{total}条，显示其中{currentPagerFirst}至{currentPagerLast}条"
+}
 })(jQuery);

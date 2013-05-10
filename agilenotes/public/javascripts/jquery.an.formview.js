@@ -29,16 +29,7 @@ $.widget( "an.formview", $.an.view, {
 		this.documents = $("<div class='content'/>").appendTo(el);
 		
 		if(o.view.showPager){
-			if(el.data('pager')){
-				el.data('pager').destroy();	
-			}
-			el.pager($.extend({
-				dbId:o.dbId
-			},o.view));
-			this.pager=el.data('pager');
-			this._loadDocs=function(){
-				el.data('pager').reload();
-			}
+			this.createPager();
 		}
 	},
 
