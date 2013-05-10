@@ -58,7 +58,6 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.jsrenderfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.buttonwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.tabsxwidget.js"><\/script>\
-<script src="javascripts/jquery.an.pager.js"><\/script>\
 <script src="javascripts/jquery.an.tree.js"><\/script>\
 <script src="javascripts/jquery.cookie.js"><\/script>\
 <script src="javascripts/jquery.hotkeys.js"><\/script>\

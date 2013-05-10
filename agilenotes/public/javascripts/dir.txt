@@ -29,7 +29,6 @@
 ..\javascripts\widgets\jquery.an.jsrenderfield.js 
 ..\javascripts\widgets\jquery.an.buttonwidget.js 
 ..\javascripts\widgets\jquery.an.tabsxwidget.js 
-..\javascripts\jquery.an.pager.js 
 ..\javascripts\jquery.an.tree.js 
 ..\javascripts\jquery.cookie.js 
 ..\javascripts\jquery.hotkeys.js 

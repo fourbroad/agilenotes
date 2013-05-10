@@ -29044,173 +29044,6 @@ $.widget( "an.tabsxwidget", $.an.widget, {
 
 (function( $, undefined ) {
 
-$.widget( "an.pager", {
-	options:{
-		skip: 0,
-		limit: 10,
-		totalPage: 0,
-		currentPage:0,
-		selector:'',
-		className:'',
-		showInfo:false,
-		pagerHeight: 28
-	},
-	
-	_create: function(){
-		var o = this.options,self=this;
-
-		this.pager = $("<div class='pager'/>").css({
-			left:0,right:0,bottom:0,height:o.pagerHeight
-		}).appendTo(this.element);
-		this.pager.addClass(o.className);
-		$.each(["first","prev","goto","next","last"], function(k,v){
-			if(v == "goto"){
-				self.pager.append("<div class='goto-page'>Page<input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
-				self.pager.delegate("input", "change.pager", function(){
-					var $this = $(this), p = $(this).val();
-					if(p <= 0){
-						p = 1;
-						$this.val(p);
-					}else if(p > o.totalPage){
-						p = o.totalPage;
-						$this.val(p);
-					}
-					self.gotopage(p);
-				});
-			}else{
-				$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
-					label: v,
-					icons: {primary: "ui-icon-"+v+"-page"},
-					text:false,
-					disabled:true
-				}).click(function(e){
-					e.preventDefault();
-					e.stopImmediatePropagation();
-					self[v+"page"]();
-				});
-			}
-		});
-
-		this.pager.append("<div class='info'>");
-		this._pagerLoadDocs();
-	},
-
-	option: function(key, value) {
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
-		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
-	},
-
-	_setOption: function(key, value){
-		var oldValue = this.options[key];
-		if(!equals(value,oldValue)){
-			$.Widget.prototype._setOption.apply(this, arguments );
-			this._handleChange && this._handleChange(key,value,oldValue);
-			this._trigger("optionchanged",null,{key:key,value:value,oldValue:oldValue});
-		}
-		return this;
-	},
-	
-	_refresh:function(){
-		var o = this.options;
-		if(!o.showPager || o.totalPage <= 1){
-			this.pager.hide();
-			return this;
-		}
-		this.pager.show();
-		this.pager.find(".pager-button").button("enable");
-		if(o.currentPage <= 1){
-			this.pager.find("#first").button("disable");
-			this.pager.find("#prev").button("disable");
-		}else if(o.currentPage >= o.totalPage){
-			this.pager.find("#last").button("disable");
-			this.pager.find("#next").button("disable");
-		}
-		this.pager.find("input.current-page").val(o.currentPage);
-		this.pager.find(".total-page").html(o.totalPage);
-		o.showInfo&&this.pager.find(".info").html("Displaying "+(o.limit*(o.currentPage-1)+1)+" to "+o.limit*o.currentPage+" of "+o.total+" items.");
-	},
-	reload:function(){
-		this._pagerLoadDocs();
-	},
-
-	firstpage:function(e,data){ 
-		this.options.skip = 0; 
-		this._pagerLoadDocs();
-	},
-	
-	prevpage:function(){
-		var o = this.options;
-		o.skip = o.skip - o.limit;
-		this._pagerLoadDocs(); 
-	},
-	
-	gotopage:function(page){
-		var o = this.options;
-		o.skip = (page-1)*o.limit;
-		this._pagerLoadDocs();
-	},
-	
-	nextpage:function(){
-		var o = this.options;
-		o.skip = o.skip + o.limit;
-		this._pagerLoadDocs();
-	},
-	
-	lastpage:function(){
-		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
-		this._pagerLoadDocs();
-	},
-
-	_pagerLoadDocs:function(){
-		var self = this, o = this.options, sel = o.selector, ft = o.filter, opts = {skip:o.skip,limit:o.limit},selectorStr;
-		if($.type(o.sort)=="string"){
-			opts.sort=eval("("+o.sort+")");
-		}
-		if($.type(sel)=="string"){
-			sel = eval("("+sel+")");
-			if($.type(ft)=="string"){
-				selectorStr=ft.replace(/\s/g,"")?{selector:sel,filter:eval("("+ft+")"),options:opts}:{selector:sel,options:opts};
-			}else{
-				selectorStr=ft?{selector:sel,filter:ft,options:opts}:{selector:sel,options:opts};
-			}
-			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
-				var obj=self.element.data();
-				for(var q in obj){
-					if(/view/.test(obj[q]['widgetName'])){
-						obj[q]._docsLoaded(data.docs);
-						break;
-					}
-				}
-				o.total = data.total;
-				o.currentPage = Math.floor(o.skip/o.limit+1);
-				o.totalPage = Math.ceil(o.total/o.limit);
-				self._refresh();
-			});
-		}
-	},
-	
-	destroy: function() {
-		this.element.removeClass("show-pager");
-		this.pager && this.pager.remove();
-		delete this.pager;
-		$.Widget.prototype.destroy.apply(this,arguments);
-	}
-});
-})( jQuery );
-/*!
- * Agile Notes 1.0
- *
- * Copyright 2013, Sihong Zhu and other contributors
-* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
-* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
-* This software is not distributed under version 3 or later of the GPL.
- *
- * http://agilemore.com/agilenotes
- */
-
-(function( $, undefined ) {
-
 $.widget( "an.tree", {
 	options: {
 		draggable: true,
@@ -32038,7 +31871,11 @@ $.widget( "an.rte", {
 	},
 
 	rteWidgetActive: function(type){
-    	return $(this.options.selection.getEnd()).is('.widget[type='+type+']');
+		var n = this.options.selection.getEnd();
+		if(n&&n.nodeName == "DIV"){
+			return $(n).is('.widget[type='+type+']'); 
+		}
+    	return false;
 	},
 	
     _alignEnable: function(){
@@ -33423,7 +33260,7 @@ $.widget( "an.page", {
 		if(!this.rte){
 			var self = this, o = this.options, page = o[this.widgetName];
 			Model.getDb(o.dbId, function(error,db){
-				self._createRTE(db?db.globalCss+page.stylesheet:page.stylesheet);
+				self._createRTE(db&&db.globalCss?db.globalCss+page.stylesheet:page.stylesheet);
 			});
 		}else{
 			this.rte.show();
@@ -34880,9 +34717,99 @@ $.widget( "an.view", {
 		}
 	},
 	
+	createPager:function(){
+		var o = this.options,self=this;
+		this.pager = $("<div class='pager'/>").css({
+			left:0,right:0,bottom:0,height:o.pagerHeight
+		}).appendTo(this.element);
+		this.pager.addClass(o.className);
+		$.each(["first","prev","goto","next","last"], function(k,v){
+			if(v == "goto"){
+				self.pager.append("<div class='goto-page'>Page<input class='current-page' type='text' value='"+o.currentPage+"'>of<div class='total-page'>"+o.totalPage+"</div></div>");
+				self.pager.delegate("input", "change.pager", function(){
+					var $this = $(this), p = $(this).val();
+					if(p <= 0){
+						p = 1;
+						$this.val(p);
+					}else if(p > o.totalPage){
+						p = o.totalPage;
+						$this.val(p);
+					}
+					self.gotopage(p);
+				});
+			}else{
+				$("<button class='pager-button'/>").attr("id",v).appendTo(self.pager).button({
+					label:$.i18n.pager?$.i18n.pager[v]:v,
+					icons: {primary: "ui-icon-"+v+"-page"},
+					text:false,
+					disabled:true
+				}).click(function(e){
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					self[v+"page"]();
+				});
+			}
+		});
+
+		this.pager.append("<div class='info'>");
+	},
+	
+	firstpage:function(e,data){ 
+		this.options.skip = 0; 
+		this._loadDocs();
+	},
+	
+	prevpage:function(){
+		var o = this.options;
+		o.skip = o.skip - o.limit;
+		this._loadDocs(); 
+	},
+	
+	gotopage:function(page){
+		var o = this.options;
+		o.skip = (page-1)*o.limit;
+		this._loadDocs();
+	},
+	
+	nextpage:function(){
+		var o = this.options;
+		o.skip = o.skip + o.limit;
+		this._loadDocs();
+	},
+	
+	lastpage:function(){
+		var o = this.options;
+		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		this._loadDocs();
+	},
+
 	refresh:function(){
 		var o = this.options;
 		this['_'+o.mode]&&this['_'+o.mode]();
+		if(this.pager&&this.widgetName!=='gridview'){
+			if(o.totalPage <= 1){
+				this.pager.hide();
+				return this;
+			}
+			this.pager.show();
+			this.pager.find(".pager-button").button("enable");
+			if(o.currentPage <= 1){
+				this.pager.find("#first").button("disable");
+				this.pager.find("#prev").button("disable");
+			}else if(o.currentPage >= o.totalPage){
+				this.pager.find("#last").button("disable");
+				this.pager.find("#next").button("disable");
+			}
+			this.pager.find("input.current-page").val(o.currentPage);
+			this.pager.find(".total-page").html(o.totalPage);
+			var currentNums=o.currentPage==o.totalPage?(o.limit*(o.currentPage-1)+o.total%o.limit):o.limit*o.currentPage,info="";
+			if($.i18n.pager){
+				info = $.i18n.pager.display.replace(/{total}/,o.total).replace(/{currentPagerFirst}/,(o.limit*(o.currentPage-1)+1)).replace(/{currentPagerLast}/,currentNums);
+			}else{
+				info = "Displaying "+(o.limit*(o.currentPage-1)+1)+" to "+currentNums+" of "+o.total+" items.";
+			}
+			this.pager.find(".info").html(info);
+		}
 	},
 	
 	reload: function(){
@@ -34890,26 +34817,27 @@ $.widget( "an.view", {
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, filter= o.view.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
-		if(!o.view.showPager||self.widgetName=='gridview'){
-			if($.type(o.view.sort)=="string"){
-				opts.sort=eval("("+o.view.sort+")");
+		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
+
+		if($.type(o.view.sort)=="string"){
+			opts.sort=eval("("+o.view.sort+")");
+		}
+		if($.type(sel)=="string"){
+			sel = eval("("+sel+")");
+			if($.type(filter)=="string"){
+				selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
+			}else{
+				selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
 			}
-			if($.type(sel)=="string"){
-				sel = eval("("+sel+")");
-				if($.type(filter)=="string"){
-					selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
-				}else{
-					selectorStr=filter?{selector:sel,filter:filter,options:opts}:{selector:sel,options:opts};
+			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
+				self.docs = data.docs;
+				o.total = data.total;
+				if(self.pager&&self.widgetName!=='gridview'){
+					o.currentPage = Math.floor(o.skip/o.limit+1);
+					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
-					self.docs = data.docs;
-					o.total = data.total;
-					self._docsLoaded && self._docsLoaded();
-				});
-			}
-		}else{
-			self.pager&&self.pager.reload();
+				self._docsLoaded && self._docsLoaded();
+			});
 		}
 	},
 	
@@ -35082,16 +35010,7 @@ $.widget( "an.formview", $.an.view, {
 		this.documents = $("<div class='content'/>").appendTo(el);
 		
 		if(o.view.showPager){
-			if(el.data('pager')){
-				el.data('pager').destroy();	
-			}
-			el.pager($.extend({
-				dbId:o.dbId
-			},o.view));
-			this.pager=el.data('pager');
-			this._loadDocs=function(){
-				el.data('pager').reload();
-			}
+			this.createPager();
 		}
 	},
 
@@ -35180,16 +35099,7 @@ $.widget( "an.customview", $.an.view, {
 		}
 
 		if(o.view.showPager){
-			if(el.data('pager')){
-				el.data('pager').destroy();	
-			}
-			el.pager($.extend({
-				dbId:o.dbId
-			},o.view));
-			this.pager=el.data('pager');
-			this._loadDocs=function(){
-				el.data('pager').reload();
-			}
+			this.createPager();
 		}
 	},
 
@@ -35201,10 +35111,7 @@ $.widget( "an.customview", $.an.view, {
 		}
 	},
 	
-	_docsLoaded:function(data){
-		if($.isArray(data)){
-			this.docs = data;
-		}
+	_docsLoaded:function(){
 		this.refresh();
 	},
 	
@@ -36512,8 +36419,14 @@ $.widget( "an.workbench", {
 			    tabshow:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 			    tabcreated:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 				saved:function(err,doc,bl){
-					var type={"000000000000000000000001":"openDocument","000000000000000000000002":"openForm","000000000000000000000003":"openView","000000000000000000000004":"openPage"};
-					var data={method:type[doc.type], id:doc._id};
+					var data = {id:doc._id, method:"openDocument", options:{mode:"edit"}};
+					if(doc.type == Model.FORM){
+						$.extend(true, data, {method:"openForm",options:{mode:"design"}});
+					}else if(doc.type==Model.PAGE){
+						$.extend(true, data, {method:"openPage",options:{mode:"design"}});
+					}else if(doc.type==Model.VIEW){
+						$.extend(true, data, {method:"openView",options:{mode:"design"}});
+					}
 					if(bl){
 						self.options.openedDocuments.push(data);
 						self._saveOptions();
