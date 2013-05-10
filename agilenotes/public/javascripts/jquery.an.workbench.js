@@ -767,8 +767,14 @@ $.widget( "an.workbench", {
 			    tabshow:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 			    tabcreated:function(e,target){self.reloadToolbar(); self._notifyOutline();},
 				saved:function(err,doc,bl){
-					var type={"000000000000000000000001":"openDocument","000000000000000000000002":"openForm","000000000000000000000003":"openView","000000000000000000000004":"openPage"};
-					var data={method:type[doc.type], id:doc._id};
+					var data = {id:doc._id, method:"openDocument", options:{mode:"edit"}};
+					if(doc.type == Model.FORM){
+						$.extend(true, data, {method:"openForm",options:{mode:"design"}});
+					}else if(doc.type==Model.PAGE){
+						$.extend(true, data, {method:"openPage",options:{mode:"design"}});
+					}else if(doc.type==Model.VIEW){
+						$.extend(true, data, {method:"openView",options:{mode:"design"}});
+					}
 					if(bl){
 						self.options.openedDocuments.push(data);
 						self._saveOptions();
