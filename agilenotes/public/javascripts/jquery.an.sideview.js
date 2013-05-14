@@ -11,13 +11,19 @@
 
 (function( $, undefined ) {
 
-// TODO :  Refactoring sideview as a subclass of tree?
 $.widget( "an.sideview", {
-	options:{
-	},
 	
 	_create: function() {
-		var self = this, o = this.options;
+		var self = this, o = this.options, el = this.element;
+		
+		$('<style type="text/css">'+(o.stylesheet||"")+'</style>').appendTo(el);
+		$.extend(this, eval("try{("+(o.methods||"{}")+")}catch(e){}"));
+		var data = {};
+		data[this.widgetName] = this;
+		$.each(eval("("+(o.actions||"[]")+")"), function(k,action){
+			el.bind(action.events, data, action.handler);
+		});
+		
 		this.element.tree({
 			checkbox:o.checkbox,
 			checkedNodes: o.checkedNodes,

@@ -24,13 +24,16 @@ $.widget( "an.view", {
 		var o = this.options, el = this.element;
 		el.addClass("an-view").addClass(o.view.name).empty();
 		$('<style type="text/css">'+(o.view.stylesheet||"")+'</style>').appendTo(el);
+
 		if(o.view&&o.view.limit) {
 			o.limit = o.view.limit = parseInt(o.view.limit);
 		}
 		if(o.view&&o.view.filter) {
 			o.filter = o.view.filter;
 		}
+		
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		
 		var data = {};
 		data[this.widgetName] = this;
 		$.each(eval("("+(o.view.actions||"[]")+")"), function(k,action){
