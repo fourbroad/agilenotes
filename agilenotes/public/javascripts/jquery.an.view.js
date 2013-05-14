@@ -134,6 +134,7 @@ $.widget( "an.view", {
 	refresh:function(){
 		var o = this.options;
 		this['_'+o.mode]&&this['_'+o.mode]();
+		
 		if(this.pager&&this.widgetName!=='gridview'){
 			if(o.totalPage <= 1){
 				this.pager.hide();
