@@ -77,6 +77,9 @@ $.widget( "an.gridview", $.an.view, {
 		},this.options.view.options));		
 	},
 	
+	_createPager:function(){
+	},
+	
 	save:function(){
 		$.extend(this.options.view.options, this._viewOptions());
 		return $.an.view.prototype.save.apply(this,arguments);

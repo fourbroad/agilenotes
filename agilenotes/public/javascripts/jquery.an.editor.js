@@ -227,12 +227,14 @@ $.widget( "an.editor", {
 			var data = $(this).data();;
 			for(var i in data){
 				if($.inArray(i, ["form","page"]) != -1){
-					if((data[i].option(i)._id == o.document._id) && data[i].option("isDirty")){
-						o.document.content = data[i].option("content");
-						data[i].option("isDirty", false);
-						o.isDocDirty = true;
-					}else{
-						data[i].save();	
+					if(data[i].option("isDirty")){
+						if(data[i].option(i)._id == o.document._id){
+							o.document.content = data[i].option("content");
+							data[i].option("isDirty", false);
+							o.isDocDirty = true;
+						}else{
+							data[i].save();	
+						}
 					}
 					if(opts.validate && valid && form.option("mode")!="design"){
 						valid = form.option("isValid");
@@ -241,12 +243,14 @@ $.widget( "an.editor", {
 						}
 					}
 				}else	if($.inArray(i, ["gridview","formview","customview"]) != -1){
-					if((data[i].option("view")._id == o.document._id)&&data[i].option("isDirty")){
-						o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
-						data[i].option("isDirty", false);
-						o.isDocDirty = true;
-					}else{
-						data[i].save();	
+					if(data[i].option("isDirty")){
+						if(data[i].option("view")._id == o.document._id){
+							o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
+							data[i].option("isDirty", false);
+							o.isDocDirty = true;
+						}else{
+							data[i].save();	
+						}
 					}
 				}
 			}
