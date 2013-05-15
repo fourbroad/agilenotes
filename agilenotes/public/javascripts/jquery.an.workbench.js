@@ -136,7 +136,7 @@ $.widget( "an.workbench", {
 		this._loadActions(function(){
 			self._initMainToolbar();
 			// load opened documents.
-			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
+			$.each(o.openedDocuments||[], function(){if (typeof(this.method) != 'undefined')	self[this.method](this.id, this.options);});
 			// load side views.
 			$.each(o.sideViews, function(){ self.showSideView(this.id, this.anchor, this.options); });
 		});

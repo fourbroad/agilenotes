@@ -19,6 +19,9 @@ $.widget( "an.buttonfield",  $.an.field, {
 		this.content.button({label:this.options.label});
 	},
 
+	_makeResizable : function() {
+	},
+
 	destroy: function() {
 		this.content.button("destroy");
 		this.element.removeClass("an-buttonfield");

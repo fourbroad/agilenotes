@@ -349,6 +349,7 @@ var Model = {
     				console.log("Load page "+ pageId+" error: "+err);
     			}else{
     				self.pages[pageId] = page;
+    				opts.mobile = page.mobile;
     				self._doOpenPage(element, dbId, page, opts);
     			}
     		});

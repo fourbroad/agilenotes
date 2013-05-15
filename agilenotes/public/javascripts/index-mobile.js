@@ -17,7 +17,7 @@ document.write('\
 <link rel="stylesheet" href="stylesheets/jquery.an.form.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.formview.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.editor.css" type="text/css">\
-<link rel="stylesheet" href="stylesheets/jquery.an.widget.css" type="text/css">\
+<link rel="stylesheet" href="stylesheets/jquery.an.mwidget.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.fileinput.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.filefield.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.gridfield.css" type="text/css">\
@@ -58,6 +58,7 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.jsrenderfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.buttonwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.tabsxwidget.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.searchfield.js"><\/script>\
 <script src="javascripts/jquery.an.tree.js"><\/script>\
 <script src="javascripts/jquery.cookie.js"><\/script>\
 <script src="javascripts/jquery.hotkeys.js"><\/script>\
@@ -91,7 +92,6 @@ document.write('\
 <script src="javascripts/lib/rte/w3cRange.js"><\/script>\
 <script src="javascripts/json2.js"><\/script>\
 <script src="javascripts/jsrender.js"><\/script>\
-<script src="javascripts/widgets/jquery.an.searchfield.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');

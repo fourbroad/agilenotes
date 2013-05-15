@@ -19,6 +19,26 @@ $.widget( "an.page", {
 		formIds:{
 		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
+		},
+		mFormIds:{
+			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
+			
+			text:["5080143085ac60df09000001","519095a03bcccb65f400008b"],
+			search:["5080143085ac60df09000001","51932b05ac8f2725e1000048"],
+			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
+			checkbox:["5080143085ac60df09000001","50af2d266cec663c0a000009"],
+			button:["5080143085ac60df09000001","51933105ac8f2712ab000069"],
+			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
+			textarea:["5080143085ac60df09000001","50af2ca66cec663c0a000008"],
+			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
+			grid:["5080143085ac60df09000001","5089e21f2b2255080a000005"],
+			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d0825caa05a669e0002ae","514d5ef3ac8f27413200014e"],
+			radio:["5080143085ac60df09000001","50af2d626cec663c0a00000a","51850c1ca092003b12000024"],
+			select:["5080143085ac60df09000001","51850b35a09200784a000122","508259700b27990c0a000003"],
+			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
+		    rte:["5080143085ac60df09000001"]
 		}
 	},
 
@@ -30,9 +50,13 @@ $.widget( "an.page", {
 		o.cssFiles = o.cssFiles || [];
 		o.jsFiles = o.jsFiles || [];
 		if(o.mobile){
-			o.cssFiles = [""].concat(o.cssFiles);
+			o.cssFiles = ["stylesheets/jquery.mobile-1.3.0.min.css",
+			              "stylesheets/jquery.mobile.structure-1.3.0.min.css",
+			              "stylesheets/jquery.mobile.theme-1.3.0.min.css",
+			              "stylesheets/jquery.an.mwidget.css"].concat(o.cssFiles);
 			o.jsFiles = ["javascripts/jquery-1.8.2.js",
 			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
+			o.formIds = o.mFormIds;
 		}else{
 			o.cssFiles = ["stylesheets/rte/rte-design.css",
 			          "stylesheets/jquery-ui-1.8.24.custom.css",
@@ -322,6 +346,7 @@ $.widget( "an.page", {
 					parent:function(){return self;},
 					mode:o.mode,
 					dbId:o.dbId,
+					mobile:o.mobile,
 					toolbarActions:actions,
 					optionchanged:function(e,data){
 						if(data.key == "metadata" || data.key == "attributes"){
@@ -339,6 +364,7 @@ $.widget( "an.page", {
 					parent:function(){return self;},
 					mode:o.mode, 
 					dbId:o.dbId,
+					mobile:o.mobile,
 					optionchanged:function(e,data){
 						if(data.key == "metadata" || data.key == "attributes"){
 							self.option("isDirty",true);

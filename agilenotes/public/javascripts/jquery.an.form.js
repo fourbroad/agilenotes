@@ -109,6 +109,7 @@ $.widget( "an.form", $.an.page, {
 					value:value,
 					url:o.url,
 					mode:o.mode,
+					mobile:o.mobile,
 					optionchanged:function(e,data){
 						if(data.key == "value"){
 							var id = $(e.target).attr("id");

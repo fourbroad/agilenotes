@@ -58,6 +58,7 @@ $.widget( "an.editor", {
 							change:function(){ 
 								o.change&&o.change();
 							},
+							mobile:typeof(o.mobile) != 'undefined' ? o.mobile : false,
 							readOnly:o.readOnly,
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){

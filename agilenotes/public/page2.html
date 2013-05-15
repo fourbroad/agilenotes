@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Agile Notes</title>
+<script type="text/javascript" charset="utf-8" src="javascripts/index-mobile.js"></script>
+<script src="javascripts/jquery.mobile-1.3.0.min.js"></script>
+<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.0.min.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.mobile.theme-1.3.0.min.css" type="text/css">
+<link rel="stylesheet" href="stylesheets/jquery.mobile.structure-1.3.0.min.css" type="text/css">
+
+<style type="text/css">
+#widget.an-editor{
+    border: medium none;
+}
+</style>
+
+<script type="text/javascript" charset="utf-8">
+function getUrlParam(name) {
+	var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"), r = window.location.search.substr(1).match(reg);
+	return r != null? unescape(r[2]):null;
+} 
+
+// load validate methods. 
+function loadValidateMethods(dbId, callback){
+	$.ans.getDoc(dbId, null, {selector:{type:"50ae3f8e6cec663c0a000002"}},function(err,data){
+		$.each(data.docs,function(){
+			$.validator.addMethod(this.name, eval("("+this.handler+")"), this.message);
+		});
+		callback();
+	});
+}
+
+$(function(){
+	var dbId = getUrlParam("dbid"), pageId = getUrlParam("pageid"),
+	    viewId = getUrlParam("viewid"), docId = getUrlParam("docid"),
+	    formId = getUrlParam("formid"), mode = getUrlParam("edit");
+	$.ans.getDB(dbId,null,function(error,db){
+		window.database=db||{};
+		document.title=db.title;
+		if(database.globalCss){
+			$('<style type="text/css">'+database.globalCss+'</style>').appendTo($(document).find('head'));
+		}
+		if(database.globalMethod){
+			$('<script type="text/javascript" charset="utf-8">'+database.globalMethod+'<\/script>').appendTo($(document).find('head'));
+		}
+		if(database.local=="zn"){
+			$.ajax({url: "javascripts/i18n/zh_cn.js",async:false});
+		}else{
+			$.ajax({url: "javascripts/i18n/en.js",async:false});
+		}
+		if(dbId){
+			loadValidateMethods(dbId, function(){
+				if(pageId){
+					$.ans.getDoc(dbId, pageId, null, function(err,page){
+						$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
+					});
+				}else if(viewId){
+					$.ans.getDoc(dbId, viewId, null, function(err,view){
+						$("#widget").gridview({
+							title:view.title||view.name||viewId, 
+							dbId:dbId, 
+							view:view,
+							docdblclick:function(e,data){
+								window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
+							}
+						});
+					});
+				}else if(docId){
+					$.ans.getDoc(dbId,docId,null,function(err,doc){
+						if(formId){
+							$.ans.getDoc(dbId,formId,null, function(error,form){
+								$("#widget").editor({
+									title:doc.title||doc.name||doc._id, 
+									dbId:dbId,
+									document:doc, 
+									forms:[form] ,
+									mobile:doc.mobile
+								});
+							});
+						}else{
+							$.ans.getDoc(dbId,doc.type,null, function(error,type){
+								Model.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+									$("#widget").editor({
+										title:doc.title||doc.name||doc._id, 
+										dbId:dbId,
+										document:doc, 
+										forms:forms,
+										mobile:doc.mobile
+									});
+								})
+							});
+						}
+					});
+				}else if(formId){
+					$.ans.getDoc(dbId,formId,null, function(error,form){
+						$("#widget").editor({
+							title: "New document",
+							document: {type:form._id},
+							forms: [form],
+							dbId: dbId,
+							mode: "edit",
+							mobile:form.mobile
+						});
+					});
+				}else{
+					$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
+						if(dbDoc.homePage){
+							$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
+								$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
+							});
+						}
+					});
+				}			
+			});
+		}
+	});
+});
+</script>
+</head>
+<body><div id="widget"/></body>
+</html>
