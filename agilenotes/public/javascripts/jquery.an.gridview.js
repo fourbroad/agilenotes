@@ -20,7 +20,6 @@ $.widget( "an.gridview", $.an.view, {
 		$.an.view.prototype._create.apply(this, arguments);
 		this.element.addClass("an-gridview");
 		var self = this, o = this.options;
-		o.showPager = o.view.showPager;
 		if(o.view.cellRender) o.cellRender = eval("("+o.view.cellRender+")");
 		this.element.agilegrid($.extend({
 			rowOffset: o.skip,
