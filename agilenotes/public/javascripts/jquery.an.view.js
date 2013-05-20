@@ -65,7 +65,7 @@ $.widget( "an.view", {
 	
 	_createPager:function(){
 		var o = this.options,self=this;
-		this.pager = $("<div class='pager'/>").css({
+		this.pager = $("<div style='display:none;' class='pager'/>").css({
 			left:0,right:0,bottom:0,height:o.pagerHeight
 		}).appendTo(this.element);
 		this.pager.addClass(o.className);
