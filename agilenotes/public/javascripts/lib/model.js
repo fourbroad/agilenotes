@@ -24,6 +24,7 @@ var Model = {
     SIDE_VIEW: "00000000000000000000000a",
     ACTION: "00000000000000000000000b",
     VALIDATE_METHOD:"00000000000000000000000c",
+    EXTENSION_POINT: "00000000000000000000000d",
     CATEGORY: "00000000000000000000000e",
     DATABASE: "00000000000000000000000f",
 
@@ -36,7 +37,7 @@ var Model = {
     GROUP_ROOT: "0000000000000000000e0008",
     ROLE_ROOT: "0000000000000000000e0009",
     SIDE_VIEW_ROOT: "0000000000000000000e000a",
-    ACTION_ROOT: "0000000000000000000e000b",
+    EXTENSION_ROOT: "0000000000000000000e000b",
     DATABASE_ROOT: "0000000000000000000e000f",
 
     // Cache of dbs, document type, page(form), view, side view.
@@ -46,62 +47,6 @@ var Model = {
     views:{},
     sideViews:{},
     
-    typeId:function(rootId){
-    	if(rootId == this.META_ROOT){
-    		return this.META;
-    	}else	if(rootId == this.FORM_ROOT){
-    		return this.FORM;
-    	}else	if(rootId == this.VIEW_ROOT){
-    		return this.VIEW;
-    	}else	if(rootId == this.PAGE_ROOT){
-    		return this.PAGE;
-    	}else	if(rootId == this.TASK_ROOT){
-    		return this.TASK;
-    	}else if(rootId == this.OU_ROOT){
-    		return this.OU;
-    	}else if(rootId == this.GROUP_ROOT){
-    		return this.GROUP;
-    	}else if(rootId == this.ROLE_ROOT){
-    		return this.ROLE;
-    	}else if(rootId == this.SIDE_VIEW_ROOT){
-    		return this.SIDE_VIEW;
-    	}else if(rootId == this.ACTION_ROOT){
-    		return this.ACTION;
-    	}else if(rootId == this.DATABASE_ROOT){
-    		return this.DATABASE;
-    	}
-    },
-
-    typeName:function(typeId){
-    	if(typeId == this.META){
-    		return "Meta";
-    	}else	if(typeId == this.FORM){
-    		return "Form";
-    	}else	if(typeId == this.VIEW){
-    		return "View";
-    	}else	if(typeId == this.PAGE){
-    		return "Page";
-    	}else	if(typeId == this.TASK){
-    		return "Task";
-    	}else if(typeId == this.USER){
-    		return "User";
-    	}else if(typeId == this.OU){
-    		return "Organization Unit";
-    	}else if(typeId == this.GROUP){
-    		return "Group";
-    	}else if(typeId == this.ROLE){
-    		return "Role";
-    	}else if(typeId == this.SIDE_VIEW){
-    		return "Side View";
-    	}else if(typeId == this.CATEGORY){
-    		return "Category";
-    	}else if(typeId == this.ACTION){
-    		return "Action";
-    	}else if(typeId == this.DATABASE){
-    		return "Database";
-    	}
-    },
-
     rootId:function(typeId){
     	if(typeId == this.META){
     		return this.META_ROOT;
@@ -121,13 +66,25 @@ var Model = {
     		return this.ROLE_ROOT;
     	}else if(typeId == this.SIDE_VIEW){
     		return this.SIDE_VIEW_ROOT;
-    	}else if(typeId == this.ACTION){
-    		return this.ACTION_ROOT;
+    	}else if(typeId == this.EXTENSION_POINT){
+    		return this.EXTENSION_ROOT;
     	}else if(typeId == this.DATABASE){
     		return this.DATABASE_ROOT;
     	}
     },
 
+    getDb:function(dbId, callback){
+    	if(this.dbs[dbId]){
+    		callback(null,this.dbs[dbId]);
+    	}else{
+    		var self =this;
+        	$.ans.getDB(dbId,null,function(error,db){
+        		if(db) self.dbs[dbId] = db;
+        		callback(error,db);
+        	});
+    	}
+    },
+    
     getPages: function(dbId, ids, callback){
     	var self = this, sel = {$or:[]}, pages = [], page;
     	for(var f in ids){
@@ -145,8 +102,11 @@ var Model = {
     			for(var i in ids){
     				for(var j in pages){
     					if(pages[j]._id == ids[i]){
-    						sortedPages.push(pages[j]);
-    						self.pages[pages[j]._id] = pages[j];
+    						var type = pages[j].type; 
+    						if(type == Model.PAGE||type == Model.FORM){
+        						sortedPages.push(pages[j]);
+        						self.pages[pages[j]._id] = pages[j];
+    						}
     						break;
     					}
     				}
@@ -164,16 +124,18 @@ var Model = {
     	}
     },
     
-    getDb:function(dbId, callback){
-    	if(this.dbs[dbId]){
-    		callback(null,this.dbs[dbId]);
-    	}else{
-    		var self =this;
-        	$.ans.getDB(dbId,null,function(error,db){
-        		if(db) self.dbs[dbId] = db;
-        		callback(error,db);
-        	});
-    	}
+    loadExtensions: function(dbId, extensionPoints, callback){
+    	var sel = {$or:[]}, exts = {};
+    	$.each(extensionPoints, function(){sel.$or.push({extendPoint:this});});
+    	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+    		if(data){
+    			$.each(data.docs,function(){
+    				exts[this.extendPoint]=exts[this.extendPoint]||[]; 
+    				exts[this.extendPoint].push(this);
+    			});
+    		}
+    		callback(err, exts);
+    	});
     },
 
     loadToolbarActions: function(dbId, callback){
@@ -429,15 +391,12 @@ var Model = {
     },
 
     _doOpenSideView:function(element, dbId, sideView, opts){
-		if(sideView && sideView.category == "treeView"){
+		if(sideView){
 			element.sideview($.extend(true, {dbId:dbId}, sideView, opts));
 			opts.opened && opts.opened(element.data("sideview"));
-		}else if(sideView && sideView.category == "outline"){
-			element.outline($.extend(true,sideView,opts));
-			opts.opened && opts.opened(element.data("outline"));
 		}
     },
-    
+
     openSideView: function(element, dbId, sideViewId, opts){
     	opts = opts || {};
     	var self = this, sideView = this.sideViews[sideViewId];
@@ -473,7 +432,6 @@ var Model = {
     	delete this.types[docId];
         delete this.pages[docId];
         delete this.views[docId];
-        delete this.pages[docId];
         delete this.sideViews[docId];
     }
 };
@@ -492,7 +450,7 @@ function DocWrapper(doc, parseDot){
 	this.prop = function(id, value, isTransient){
 		if(!id) return null;
 		if(value === undefined){
-			try{return eval("this._doc."+id)}catch(e){};
+			try{return eval("this._doc."+id);}catch(e){};
 		}else {
 			var oldValue = this.prop(id);
 			if(value == oldValue) return this;

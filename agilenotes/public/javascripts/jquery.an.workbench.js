@@ -285,16 +285,16 @@ $.widget( "an.workbench", {
 					modal: true,
 					create: function(event, ui){
 						var $this = $(this);
-						$this.sideview({
+						$this.explorer({
 							dbId:o.dbId, 
 							roots:Model.META_ROOT,
 							docdblclick:function(e,doc){ self.newDocument(doc._id);$this.dialog("close"); }
 						});
-						setTimeout(function(){ $this.sideview("expand", Model.META_ROOT); },200);
+						setTimeout(function(){ $this.explorer("expand", Model.META_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
-							var $this= $(this), docIds = $this.sideview("option","selectedNodes");
+							var $this= $(this), docIds = $this.explorer("option","selectedNodes");
 							$.each(docIds,function(){self.newDocument(this); });
 							$this.dialog( "close" );
 						},
@@ -331,17 +331,17 @@ $.widget( "an.workbench", {
 					modal: true,
 					create: function(event, ui){
 						var $this = $(this);
-						$this.sideview({
+						$this.explorer({
 							dbId:o.dbId, 
 							roots: Model.SIDE_VIEW_ROOT,
 							docdblclick:function(e,doc){ self.showSideView(doc._id);$this.dialog("close"); }
 						});
-						setTimeout(function(){ $this.sideview("expand", Model.SIDE_VIEW_ROOT); },200);
+						setTimeout(function(){ $this.explorer("expand", Model.SIDE_VIEW_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
 							var $this= $(this);
-							$.each($this.sideview("option","selectedNodes"),function(){ self.showSideView(this); });
+							$.each($this.explorer("option","selectedNodes"),function(){ self.showSideView(this); });
 							$this.dialog( "close" );
 						},
 						Cancel: function() { $( this ).dialog( "close" );}
@@ -472,7 +472,7 @@ $.widget( "an.workbench", {
 				}
 				$this.dialog( "close" );
 			});
-		}
+		};
 		$("<div class='workbench'/>").dialog({
 			title:"Login",
 			height: 260,
@@ -506,46 +506,42 @@ $.widget( "an.workbench", {
 	_logout:function(){
 		$.ans.logout(function(err,result){window.location.reload();});
 	},
-	
+
 	showSideView:function(viewId, anchor, opts){
-		var self = this, o = this.options, dbId = (opts&&opts.dbId) || o.dbId;
+		var self = this, o = this.options, dbId = (opts&&opts.dbId)||o.dbId;
 		$.ans.getDoc(dbId, viewId, null, function(err, sideView){
 			if(err){
 				console.log("Load view "+viewId+"error: "+err);
-			}else{
-				if(sideView && sideView.category == "treeView"){
-					if(dbId != o.dbId){
-						var sel = {$or:[]}, actions = {};
-						actions.documentClickActions = [];
-						actions.documentDoubleClickActions = [];
-						actions.categoryContextMenuNewActions = []; // New of context menu.
-						actions.documentContextMenuCenterActions = []; // Center of context menu.
-						actions.documentContextMenuTopActions = []; // Top of context menu.
-						actions.documentContextMenuBottomActions = []; // Bottom of context menu.
-						$.each(["documentClick", "documentDoubleClick", "categoryContextMenuNew", 
-						        "documentContextMenuCenter", "documentContextMenuTop",
-						        "documentContextMenuBottom"], function(){
-							sel.$or.push({type:Model.ACTION, extendPoint:this});
-						});
-						$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-							if(err){
-								console.log("Load actions error:"+err);
-							}else{
-								$.each(data.docs,function(){
-									actions[this.extendPoint+"Actions"].push(this);
-								});
-								self._doShowSideView(sideView, anchor||"west", actions, opts);
-							}
-						});
-					}else{
-						self._doShowSideView(sideView, anchor||"west", null, opts);
-					}
-				}else if(sideView && sideView.category == "outline"){
-					self._doShowOutline(sideView, anchor||"east", opts);
+			}else if(sideView){
+				if(dbId != o.dbId){
+					var sel = {$or:[]}, actions = {};
+					actions.documentClickActions = [];
+					actions.documentDoubleClickActions = [];
+					actions.categoryContextMenuNewActions = []; // New of context menu.
+					actions.documentContextMenuCenterActions = []; // Center of context menu.
+					actions.documentContextMenuTopActions = []; // Top of context menu.
+					actions.documentContextMenuBottomActions = []; // Bottom of context menu.
+					$.each(["documentClick", "documentDoubleClick", "categoryContextMenuNew", 
+					        "documentContextMenuCenter", "documentContextMenuTop",
+					        "documentContextMenuBottom"], function(){
+						sel.$or.push({type:Model.ACTION, extendPoint:this});
+					});
+
+					$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+						if(err){
+							console.log("Load actions error:"+err);
+						}else{
+							$.each(data.docs,function(){
+								actions[this.extendPoint+"Actions"].push(this);
+							});
+							self._doShowSideView(sideView, anchor||"west", actions, opts);
+						}
+					});
+				}else{
+					self._doShowSideView(sideView, anchor||"west", null, opts);
 				}
 			}
 		});
-		
 	},
 	
 	_docClick:function(context, actions){
@@ -577,7 +573,7 @@ $.widget( "an.workbench", {
 		});
 		if(!hit) this.openDocument(context.document._id, {dbId:context.dbId});
 	},
-	
+
 	_docContextMenuActions:function(inActions, context, outActions){
 		function addAction(v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
@@ -593,103 +589,83 @@ $.widget( "an.workbench", {
 		if(outActions.length>=1&&outActions[outActions.length-1].type == "seperator") outActions.pop();
 		return outActions;
 	},
-	
+
 	_doShowSideView: function(sideView, anchor, actions, opts){
 		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
 		    dbId = (opts&&opts.dbId) || o.dbId, tabs = this[anchor+"Tabs"], id = sideView._id, 
 		    el = this.element, panel = tabs.find("#"+id);
 		if(panel.size() > 0) return;
-		
+
 		var a = el.border("option",anchor);
 		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
 
 		tabs.tabsx("add","#"+id, title);
-		var sv = $("#"+id, tabs).sideview($.extend({
-			dbId:dbId,
-			drop:function(e,data){
-				var $this = $(this), s = data.source.data, t = data.target.data;
-				if(s._path == (t._path + s._id+",")) return;
-				$.ans.getDoc(dbId, "50d820e0a09200787e000000",{options:{exec:true, docId:s._id, parentId:t._id}},function(err, result){
-					if(!err){
-						$this.sideview("delete", s._id).sideview("add", t._id, data.source);
-					}
-					self.statusBar.html("Move " + s.name+" "+(err||result));
-				});
-			},
-			nodeclick: function(e, node){
-				var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-				      as = (actions&&actions.documentClickActions)||self.documentClickActions;
-				self._docClick(context, as);
-			},
-			nodedblclick:function(e,node){
-				var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-				    as = (actions&&actions.documentDoubleClickActions) || self.documentDoubleClickActions;
-				self._docDblClick(context, as);
-			},
-			contextmenu: function(e,node){
-				e.preventDefault();
-				e.stopImmediatePropagation();
-				var doc = node.data, oe = e.originalEvent, outActions = [], 
-				    rootId = $(e.currentTarget).closest("li.root").attr("id"), filter, 
-				    context = { dbId: dbId, document: doc, rootId : rootId, parent: (node.parent && node.parent.data)||null, sideview: sv.data("sideview")};
-				if(doc.type == Model.CATEGORY || doc.type == Model.OU || doc.type == Model.GROUP || doc.type == Model.ROLE){
-					var children = [];
-					$.each((actions&&actions.categoryContextMenuNewActions)||self.categoryContextMenuNewActions, function(k,v){
-						filter = eval("(0,"+(v.filter||"function(){return true}")+")");
-						if(filter(context)){
-							children.push({type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")")});
+		if(sideView._id == "50b19b6449987bc16db5a1b8"){
+			var sv = $("#"+id, tabs).explorer($.extend({
+				dbId:dbId,
+				drop:function(e,data){
+					var $this = $(this), s = data.source.data, t = data.target.data;
+					if(s._path == (t._path + s._id+",")) return;
+					$.ans.getDoc(dbId, "50d820e0a09200787e000000",{options:{exec:true, docId:s._id, parentId:t._id}},function(err, result){
+						if(!err){
+							$this.sideview("delete", s._id).sideview("add", t._id, data.source);
 						}
+						self.statusBar.html("Move " + s.name+" "+(err||result));
 					});
-					if(!$.isEmptyObject(children)){
-						outActions.push({ type: "submenu", text: "New", children:children});
+				},
+				nodeclick: function(e, node){
+					var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
+					      as = (actions&&actions.documentClickActions)||self.documentClickActions;
+					self._docClick(context, as);
+				},
+				nodedblclick:function(e,node){
+					var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
+					    as = (actions&&actions.documentDoubleClickActions) || self.documentDoubleClickActions;
+					self._docDblClick(context, as);
+				},
+				contextmenu: function(e,node){
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					var doc = node.data, oe = e.originalEvent, outActions = [], 
+					    rootId = $(e.currentTarget).closest("li.root").attr("id"), filter, 
+					    context = { dbId: dbId, document: doc, rootId : rootId, parent: (node.parent && node.parent.data)||null, sideview: sv.data("sideview")};
+					if(doc.type == Model.CATEGORY || doc.type == Model.OU || doc.type == Model.GROUP || doc.type == Model.ROLE){
+						var children = [];
+						$.each((actions&&actions.categoryContextMenuNewActions)||self.categoryContextMenuNewActions, function(k,v){
+							filter = eval("(0,"+(v.filter||"function(){return true}")+")");
+							if(filter(context)){
+								children.push({type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")")});
+							}
+						});
+						if(!$.isEmptyObject(children)){
+							outActions.push({ type: "submenu", text: "New", children:children});
+						}
 					}
+					outActions = self._docContextMenuActions(actions,context, outActions);
+					if(outActions.length > 0){
+						$(oe.target).menu({
+							autoShow: true,
+							menuPosition:{of: oe},
+							actions: outActions,
+							select: function(e,ui){ $(this).menu("destroy"); },
+							collapseAll: function(e){ $(this).menu("destroy"); }
+						});
+					}
+				},
+				create:function(e,data){
+					self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
 				}
-				outActions = self._docContextMenuActions(actions,context, outActions);
-				if(outActions.length > 0){
-					$(oe.target).menu({
-						autoShow: true,
-						menuPosition:{of: oe},
-						actions: outActions,
-						select: function(e,ui){ $(this).menu("destroy"); },
-						collapseAll: function(e){ $(this).menu("destroy"); }
-					});
+			}, sideView, opts));
+		}else{
+			$("#"+id, tabs).sideview($.extend({
+				dbId:dbId,
+				create:function(e,data){
+					self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
 				}
-			},
-			create:function(e,data){
-				self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-			}
-		}, sideView, opts));
+			}, sideView, opts));
+		}
 	},
 
-	_doShowOutline: function(sideView, anchor, opts){
-		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
-		    tabs = this[anchor+"Tabs"], id = sideView._id, el = this.element, panel = tabs.find("#"+id);
-		if(panel.size() > 0) return;
-
-		var a = el.border("option",anchor), editor = this.currentEditor();
-		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
-
-		tabs.tabsx("add","#" + id, title).children("#"+id).outline({
-			contentProvider: editor ? editor.option('outline'): null,
-			create:function(e,data){
-				self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-			},
-			nodehover: function(e, node){
-				var widget = node.data;
-				widget && widget.highlight();
-				e.preventDefault();
-			},
-			nodeclick: function(e, node){
-				var widget = node.data;
-				widget&&widget.scrollTo({ onlyIfOutside: true, offsetTop: 100, offsetLeft: 100 });
-			},
-			nodedblclick:function(e, node){
-				var widget = node.data;
-				widget&&widget.widget().dblclick();
-			}
-		});		
-	},
-	
 	authorization:function(docId, opts){
 		var o = this.options, dbId = (opts&&opts.dbId) || o.dbId;
 		$.ans.getDoc(dbId, docId, null,function(err,doc){
@@ -747,6 +723,10 @@ $.widget( "an.workbench", {
 	
 	_notifyWidgetSelect:function(widget){
 		$(window).trigger($.Event("widgetselect",{workbench:this}),widget);
+	},
+	
+	status:function(status){
+		this.statusBar.html(status);
 	},
 	
 	newDocument:function(typeId, opts){

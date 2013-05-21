@@ -34,7 +34,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		$.ui.dialog.prototype._init.apply(this, arguments);
 		var self = this, o = this.options;
 		this.element.border({west:{selector:".west", width:o.westWidth, resizable:true }, center:{selector:".center" }});
-		this.organization.sideview({
+		this.organization.explorer({
 			dbId:o.dbId, 
 			roots: Model.OU_ROOT+","+ Model.GROUP_ROOT+","+Model.ROLE_ROOT,
 			nodeclick:function(e,node){
@@ -69,7 +69,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		}
 
 		if(doc.type == Model.META){
-			aclAuthz.typeName = Model.typeName(doc._id) || "Document";
+			aclAuthz.typeName = doc.title||doc.name||doc._id || "Document";
 			if(authz){
 				paths = authz.post && authz.post[pathsName];
 				post = paths && ($.inArray(path, paths)!=-1)? true : false;
@@ -85,7 +85,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		
 		return aclAuthz;
 	},
-
+	
 	_updateDocument:function(actor, data){
 		var doc = this.options.document, ids = data.id.split("."), list = doc[ids[0]] = doc[ids[0]] || {},  
 		    method = list[ids[1]] = list[ids[1]] || {}, pathsName = this._getPathsName(actor), 
