@@ -101,6 +101,13 @@
 	float:right;
 }
 
+.field[type=text].design>.content,
+.field[type=search].design>.content,
+.field[type=select].design>.content
+{
+	padding:0.4em;
+}
+
 .field[type=checkbox].design>.content,
 .widget[type=box].design.raw .field[type=checkbox].design>.content {
 	width:21px;
