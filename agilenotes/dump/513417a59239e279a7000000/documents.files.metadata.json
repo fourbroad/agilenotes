@@ -1,1 +1,0 @@
-{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "ns" : "513417a59239e279a7000000.documents.files", "name" : "_id_" }, { "v" : 1, "key" : { "filename" : 1 }, "ns" : "513417a59239e279a7000000.documents.files", "name" : "filename_1" } ] }
