@@ -267,12 +267,14 @@ $.widget( "an.box", $.an.widget, {
 	linkedWidget:function(){
 		var data = this.content.children(".an-gridview,.an-formview,.an-customview,.an-page,.an-editor").data(), 
 		    widget = null;
-		$.each(data,function(){
-			if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
-				widget = this;
-				return false;
-			}
-		});
+		if(data){
+			$.each(data,function(){
+				if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
+					widget = this;
+					return false;
+				}
+			});
+		}
 		return widget;
 	},
 
