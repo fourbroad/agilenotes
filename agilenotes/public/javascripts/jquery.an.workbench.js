@@ -17,7 +17,7 @@ $.widget( "an.workbench", {
 		eastWidth: 260,
 		westViews: "",
 		eastViews: "",
-		sideViews: [{id:"50faab53a092004045000001", anchor:"west"}],
+		sideViews: [{id:"50b19b6449987bc16db5a1b8", anchor:"west"}],
 		openedDocuments:[]
 	},
 
@@ -603,6 +603,9 @@ $.widget( "an.workbench", {
 		if(sideView._id == "50b19b6449987bc16db5a1b8"){
 			var sv = $("#"+id, tabs).explorer($.extend({
 				dbId:dbId,
+				roots:[Model.META_ROOT,Model.FORM_ROOT,Model.VIEW_ROOT, Model.PAGE_ROOT,Model.TASK_ROOT,
+				       Model.OU_ROOT, Model.GROUP_ROOT,Model.ROLE_ROOT,Model.SIDE_VIEW_ROOT, Model.EXTENSION_ROOT,
+				       Model.DATABASE_ROOT],
 				drop:function(e,data){
 					var $this = $(this), s = data.source.data, t = data.target.data;
 					if(s._path == (t._path + s._id+",")) return;
