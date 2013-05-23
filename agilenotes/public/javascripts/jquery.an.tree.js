@@ -24,13 +24,7 @@ $.widget( "an.tree", {
 	_create: function() {
 		var self = this, el = this.element, o = this.options;
 		el.addClass("an-tree").empty();
-		this.nullProvider = {
-			getRoots: function(){ return []; },
-			getChildren: function(parentNode){ return []; },
-			hasChildren: function(node){ return false; },
-			getId: function(node){ return node.id ? node.id: null;}
-		};
-		o.contentProvider = o.contentProvider || this.nullProvider;
+		o.contentProvider = o.contentProvider || this._defaultContentProvider();
 		this._loadChildren(el);
 		el.delegate(".hitarea","click.tree",function(){
 			var li = $(this).parent();
@@ -51,6 +45,15 @@ $.widget( "an.tree", {
 		});
 	},
 
+	_defaultContentProvider: function(){
+		return {
+			getRoots: function(){ return []; },
+			getChildren: function(parentNode){ return []; },
+			hasChildren: function(node){ return false; },
+			getId: function(node){ return node.id ? node.id: null;}
+		};;
+	},
+	
 	refresh: function(nodeId){
 		var self = this;
 		if(nodeId){
@@ -147,7 +150,7 @@ $.widget( "an.tree", {
 	},
 	
 	_loadChildren: function(parent){
-		var self = this, o = this.options, ul = parent.children("ul"), cp = o.contentProvider||this.nullProvider;
+		var self = this, o = this.options, ul = parent.children("ul"), cp = o.contentProvider||this._defaultContentProvider();
 		if(ul.length == 0) ul = $("<ul/>").appendTo(parent);
 		
 		var ids = [];

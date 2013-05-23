@@ -28,12 +28,11 @@ $.widget( "an.sideview", $.an.extendable, {
 
 		$.an.extendable.prototype._create.apply(this, arguments);
 		
-		console.log("*****************************8");
 		this.createContent && this.createContent();
 	},
 	
 	destroy: function() {
-		var el = this.element;
+		var o = this.options, el = this.element;
 		$.each(o.actions, function(k,action){
 			el.unbind(action.events);
 		});
