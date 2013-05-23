@@ -11,7 +11,7 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.sideview", $.an.extendable, {
+$.widget( "an.sideview", {
 	
 	_create: function() {
 		var o = this.options, el = this.element;
@@ -26,14 +26,11 @@ $.widget( "an.sideview", $.an.extendable, {
 			el.bind(action.events, data, action.handler);
 		});
 
-		$.an.extendable.prototype._create.apply(this, arguments);
-		
-		console.log("*****************************8");
 		this.createContent && this.createContent();
 	},
 	
 	destroy: function() {
-		var el = this.element;
+		var o = this.options, el = this.element;
 		$.each(o.actions, function(k,action){
 			el.unbind(action.events);
 		});

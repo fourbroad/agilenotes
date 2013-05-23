@@ -17,7 +17,19 @@ $.widget( "an.workbench", {
 		eastWidth: 260,
 		westViews: "",
 		eastViews: "",
-		sideViews: [{id:"50faab53a092004045000001", anchor:"west"}],
+		sideViews: [{id:"50b19b6449987bc16db5a1b8", anchor:"west"}],
+		extensionPoints:{startNew:"51959a88a092003a0f000011",
+		     toolbarGlobal:"519598d2a092003a0f000005",
+		     toolbarHeader:"5195994da092003a0f000008",
+		     toolbarCenter:"5195989ea092003a0f000001",
+		     toolbarTail:"51959981a092003a0f00000b",
+		     showSideView:"51959a53a092003a0f00000e",
+		     documentClick:"519ad731a092001a75000001",
+		     documentDoubleClick:"51998379a092001104000078", 
+		     documentContextMenuNew:"51949426a092000480000001",
+		     documentContextMenuMiddle:"519ad76ba092001a75000004", 
+		     documentContextMenuTop:"519ad8f8a092001a7500000f",
+		     documentContextMenuBottom:"519ad916a092001a75000012"},
 		openedDocuments:[]
 	},
 
@@ -225,45 +237,23 @@ $.widget( "an.workbench", {
 	},
 	
 	_loadActions:function(afterLoad){
-		var self = this, o = this.options, sel = {$or:[]};
-		this.startNewActions = [];
-		this.toolbarGlobalActions = [];
-		this.toolbarHeaderActions = [];
-		this.toolbarMiddleActions = [];
-		this.toolbarTailActions = [];
-		this.showSideViewActions = [];
-		this.documentClickActions = [];
-		this.documentDoubleClickActions = [];
-		this.categoryContextMenuNewActions = []; // New of context menu.
-		this.documentContextMenuCenterActions = []; // Center of context menu.
-		this.documentContextMenuTopActions = []; // Top of context menu.
-		this.documentContextMenuBottomActions = []; // Bottom of context menu.
-		$.each(["startNew","toolbarGlobal","toolbarHeader","toolbarMiddle","toolbarTail",
-		        "showSideView","documentClick", "documentDoubleClick", 
-		        "categoryContextMenuNew","documentContextMenuCenter", 
-		        "documentContextMenuTop", "documentContextMenuBottom"], function(){
-			sel.$or.push({type:Model.ACTION, extendPoint:this});
-		});
-		$.ans.getDoc(o.dbId, null, {selector:sel},function(err,data){
-			if(err){
-				console.log("Load Actions Error","Load actions error: "+err);
-			}else{
-				$.each(data.docs,function(){
-					self[this.extendPoint+"Actions"].push(this);
-				});
-				afterLoad();
-			}
-		});
+		var self = this, o = this.options, eps=[];
+		$.each(o.extensionPoints,function(k,v){ eps.push(v);});
+		Model.loadExtensions(o.dbId, eps, function(err, exts){
+			self.extensions = exts;
+			afterLoad();
+	    });
 	},
 	
 	_initMainToolbar:function(){
-		var self = this, o = this.options;
+		var self = this, o = this.options, eps = o.extensionPoints;
 		
 		// Set up start menu actions
 		var startActions = [], children = [];
 
 		// Add new Actions.
-		$.each(this.startNewActions, function(k,v){
+		var sna = this.extensions[eps.startNew]||[];
+		$.each(sna, function(k,v){
     		children.push({
     				id: k,
     				type:"menuItem",
@@ -272,7 +262,7 @@ $.widget( "an.workbench", {
     				enabled:eval("(0,"+(v.enabled||"function(){return false;}")+")")
     		});
 		});
-		if(this.startNewActions.length > 0) children.push({type:"seperator"});
+		if(sna.length > 0) children.push({type:"seperator"});
 		children.push({
 			id: "others",
 			type: "menuItem",
@@ -287,7 +277,7 @@ $.widget( "an.workbench", {
 						var $this = $(this);
 						$this.explorer({
 							dbId:o.dbId, 
-							roots:Model.META_ROOT,
+							roots:[Model.META_ROOT],
 							docdblclick:function(e,doc){ self.newDocument(doc._id);$this.dialog("close"); }
 						});
 						setTimeout(function(){ $this.explorer("expand", Model.META_ROOT); },200);
@@ -309,7 +299,8 @@ $.widget( "an.workbench", {
 
 		// Add show side view actions.
 		children = [];
-		$.each(this.showSideViewActions, function(k,v){
+		var ssv = this.extensions[eps.showSideView]||[];
+		$.each(ssv, function(k,v){
     		children.push({
     				id: k,
     				type:"menuItem",
@@ -318,7 +309,7 @@ $.widget( "an.workbench", {
     				enabled:eval("(0,"+(v.enabled||"function(){return false;}")+")")
     		});
 		});
-		if(this.showSideViewActions.length > 0) children.push({type:"seperator"});
+		if(ssv.length > 0) children.push({type:"seperator"});
 		children.push({
 			id: "others",
 			type:"menuItem",
@@ -333,7 +324,7 @@ $.widget( "an.workbench", {
 						var $this = $(this);
 						$this.explorer({
 							dbId:o.dbId, 
-							roots: Model.SIDE_VIEW_ROOT,
+							roots: [Model.SIDE_VIEW_ROOT],
 							docdblclick:function(e,doc){ self.showSideView(doc._id);$this.dialog("close"); }
 						});
 						setTimeout(function(){ $this.explorer("expand", Model.SIDE_VIEW_ROOT); },200);
@@ -357,8 +348,8 @@ $.widget( "an.workbench", {
 		startActions.push({id:"logout", type:"menuItem", text:"Logout",handler:function(){self._logout();},enabled:function(){return true;}});
 
     	// Set up global actions.
-    	var globalActions = {};
-    	$.each(this.toolbarGlobalActions, function(k,v){ // 'cut','copy','paste','undo','redo'
+    	var globalActions = {}, tga = this.extensions[eps.toolbarGlobal]||[];
+    	$.each(tga, function(k,v){ // 'cut','copy','paste','undo','redo'
     		globalActions[v._id] = {
     			_id: v._id,
     			type: "button",
@@ -390,12 +381,12 @@ $.widget( "an.workbench", {
 	},
 
 	reloadToolbar: function(){	
-		var _this=this;
-		clearTimeout(_this.time);
-		_this.time=setTimeout(function(){
+		var self=this, eps = this.options.extensionPoints;
+		clearTimeout(this.time);
+		this.time=setTimeout(function(){
 			console.log("reloadToolbar............................!");
 
-			var editor = _this.currentEditor(), actionSets = [];
+			var editor = self.currentEditor(), actionSets = [];
 			if(editor){
 				function createActionSet(actions, context){
 					var actionSet = {};
@@ -421,22 +412,22 @@ $.widget( "an.workbench", {
 					return actionSet;
 				}
 				
-				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||_this.options.dbId, 
+				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||self.options.dbId, 
 					context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarHeaderActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarHeader])||self.extensions[eps.toolbarHeader], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 				if($.isArray(ass)) actionSets = actionSets.concat(ass);
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarMiddleActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarCenter])||self.extensions[eps.toolbarCenter], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarTailActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarTail])||self.extensions[eps.toolbarTail], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 			}
-			_this.toolbar.toolbar("option","actionSets", actionSets);
-			if(_this.toolbar.toolbar("option","isEmpty")){
-				_this.element.border("option",'north',{height:"0"});
+			self.toolbar.toolbar("option","actionSets", actionSets);
+			if(self.toolbar.toolbar("option","isEmpty")){
+				self.element.border("option",'north',{height:"0"});
 			}else{
-				var height = _this.toolbar.outerHeight(true);
-				_this.element.border("option",'north',{height:height ? height :"0"});
+				var height = self.toolbar.outerHeight(true);
+				self.element.border("option",'north',{height:height ? height :"0"});
 			}
 		},900);
 	},
@@ -510,43 +501,17 @@ $.widget( "an.workbench", {
 	showSideView:function(viewId, anchor, opts){
 		var self = this, o = this.options, dbId = (opts&&opts.dbId)||o.dbId;
 		$.ans.getDoc(dbId, viewId, null, function(err, sideView){
-			if(err){
+			if(sideView){
+				self._doShowSideView(sideView, anchor||"west", null, opts);
+			}else{
 				console.log("Load view "+viewId+"error: "+err);
-			}else if(sideView){
-				if(dbId != o.dbId){
-					var sel = {$or:[]}, actions = {};
-					actions.documentClickActions = [];
-					actions.documentDoubleClickActions = [];
-					actions.categoryContextMenuNewActions = []; // New of context menu.
-					actions.documentContextMenuCenterActions = []; // Center of context menu.
-					actions.documentContextMenuTopActions = []; // Top of context menu.
-					actions.documentContextMenuBottomActions = []; // Bottom of context menu.
-					$.each(["documentClick", "documentDoubleClick", "categoryContextMenuNew", 
-					        "documentContextMenuCenter", "documentContextMenuTop",
-					        "documentContextMenuBottom"], function(){
-						sel.$or.push({type:Model.ACTION, extendPoint:this});
-					});
-
-					$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-						if(err){
-							console.log("Load actions error:"+err);
-						}else{
-							$.each(data.docs,function(){
-								actions[this.extendPoint+"Actions"].push(this);
-							});
-							self._doShowSideView(sideView, anchor||"west", actions, opts);
-						}
-					});
-				}else{
-					self._doShowSideView(sideView, anchor||"west", null, opts);
-				}
 			}
 		});
 	},
 	
 	_docClick:function(context, actions){
 		var filter, action = {};
-		$.each(actions, function(k,v){
+		$.each(actions||[], function(k,v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				$.extend(true,action,v);
@@ -560,7 +525,7 @@ $.widget( "an.workbench", {
 
 	_docDblClick:function(context, actions){
 		var filter, action = {}, hit = false;
-		$.each(actions, function(k,v){
+		$.each(actions||[], function(k,v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				$.extend(true, action, v);
@@ -575,22 +540,25 @@ $.widget( "an.workbench", {
 	},
 
 	_docContextMenuActions:function(inActions, context, outActions){
+		if(!inActions) return outActions;
+		
+		var eps = this.options.extensionPoints;
 		function addAction(v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				outActions.push({ type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")") });
 			}
 		}
-		$.each((inActions&&inActions.documentContextMenuTopActions) || this.documentContextMenuTopActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuTop]||[], function(k,v){addAction(v);});
 		if(outActions.length > 0) outActions.push({type:"seperator"});
-		$.each((inActions&&inActions.documentContextMenuCenterActions) || this.documentContextMenuCenterActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuMiddle]||[], function(k,v){addAction(v);});
 		if(outActions.length >= 1&&outActions[outActions.length-1].type != "seperator") outActions.push({type:"seperator"});
-		$.each((inActions&&inActions.documentContextMenuBottomActions) || this.documentContextMenuBottomActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuBottom]||[], function(k,v){addAction(v);});
 		if(outActions.length>=1&&outActions[outActions.length-1].type == "seperator") outActions.pop();
 		return outActions;
 	},
 
-	_doShowSideView: function(sideView, anchor, actions, opts){
+	_doShowSideView: function(sideView, anchor, opts){
 		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
 		    dbId = (opts&&opts.dbId) || o.dbId, tabs = this[anchor+"Tabs"], id = sideView._id, 
 		    el = this.element, panel = tabs.find("#"+id);
@@ -600,70 +568,10 @@ $.widget( "an.workbench", {
 		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
 
 		tabs.tabsx("add","#"+id, title);
-		if(sideView._id == "50b19b6449987bc16db5a1b8"){
-			var sv = $("#"+id, tabs).explorer($.extend({
-				dbId:dbId,
-				drop:function(e,data){
-					var $this = $(this), s = data.source.data, t = data.target.data;
-					if(s._path == (t._path + s._id+",")) return;
-					$.ans.getDoc(dbId, "50d820e0a09200787e000000",{options:{exec:true, docId:s._id, parentId:t._id}},function(err, result){
-						if(!err){
-							$this.sideview("delete", s._id).sideview("add", t._id, data.source);
-						}
-						self.statusBar.html("Move " + s.name+" "+(err||result));
-					});
-				},
-				nodeclick: function(e, node){
-					var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-					      as = (actions&&actions.documentClickActions)||self.documentClickActions;
-					self._docClick(context, as);
-				},
-				nodedblclick:function(e,node){
-					var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-					    as = (actions&&actions.documentDoubleClickActions) || self.documentDoubleClickActions;
-					self._docDblClick(context, as);
-				},
-				contextmenu: function(e,node){
-					e.preventDefault();
-					e.stopImmediatePropagation();
-					var doc = node.data, oe = e.originalEvent, outActions = [], 
-					    rootId = $(e.currentTarget).closest("li.root").attr("id"), filter, 
-					    context = { dbId: dbId, document: doc, rootId : rootId, parent: (node.parent && node.parent.data)||null, sideview: sv.data("sideview")};
-					if(doc.type == Model.CATEGORY || doc.type == Model.OU || doc.type == Model.GROUP || doc.type == Model.ROLE){
-						var children = [];
-						$.each((actions&&actions.categoryContextMenuNewActions)||self.categoryContextMenuNewActions, function(k,v){
-							filter = eval("(0,"+(v.filter||"function(){return true}")+")");
-							if(filter(context)){
-								children.push({type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")")});
-							}
-						});
-						if(!$.isEmptyObject(children)){
-							outActions.push({ type: "submenu", text: "New", children:children});
-						}
-					}
-					outActions = self._docContextMenuActions(actions,context, outActions);
-					if(outActions.length > 0){
-						$(oe.target).menu({
-							autoShow: true,
-							menuPosition:{of: oe},
-							actions: outActions,
-							select: function(e,ui){ $(this).menu("destroy"); },
-							collapseAll: function(e){ $(this).menu("destroy"); }
-						});
-					}
-				},
-				create:function(e,data){
-					self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-				}
-			}, sideView, opts));
-		}else{
-			$("#"+id, tabs).sideview($.extend({
-				dbId:dbId,
-				create:function(e,data){
-					self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-				}
-			}, sideView, opts));
-		}
+		$("#"+id, tabs).sideview($.extend({
+			dbId:dbId,
+			create:function(e,data){self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});}
+		}, sideView, opts));
 	},
 
 	authorization:function(docId, opts){
@@ -830,7 +738,8 @@ $.widget( "an.workbench", {
 
 		var el = tabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -884,7 +793,8 @@ $.widget( "an.workbench", {
 			el= this.centerTabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -940,7 +850,8 @@ $.widget( "an.workbench", {
 			el= this.centerTabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -959,7 +870,7 @@ $.widget( "an.workbench", {
 		opts = opts || {};
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs, 
-		    pid = viewId+"-view", el = tabs.tabsx("panel", pid); 
+		    pid = viewId+"-view", el = tabs.tabsx("panel", pid), eps = o.extensionPoints; 
 		if(el.size() > 0){
 			tabs.tabsx("select", pid);
 			if(el.is(".an-editor") && opts.mode != "design"){
@@ -973,7 +884,7 @@ $.widget( "an.workbench", {
 				return;
 			}
 		}else{
-	        el = tabs.tabsx("add","#"+pid, "...").children("#"+pid), sel = {$or:[]}, actions = {};
+	        el = tabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 
 		function doOpenView(el, dbId, viewId, actions, opts){
@@ -991,19 +902,12 @@ $.widget( "an.workbench", {
 		    },opts);
 			
 			var tas = {};
-			$.each(["Header","Middle", "Tail"],function(){
-				var name = "toolbar"+this+"Actions"; 
-				if(actions[name]) tas[name] = actions[name];
+			$.each(["Header","Center", "Tail"],function(){
+				var name = "toolbar"+this; 
+				if(actions[eps[name]]) tas[eps[name]] = actions[eps[name]];
 			});
 			tas = $.isEmptyObject(tas) ? undefined : tas;
 			el.data("toolbarActions",tas).data("dbId", dbId);
-			$.each(actions.editorEventActions||[], function(k,action){
-				var handler = eval("(0,"+(action.handler||"function(){}")+")");
-				el.bind(action.events, function(e){
-					handler.apply(self, arguments);
-				});
-			});
-			
 			optsx.opened = function(editor){
 				var view = editor;
 				if(editor.widgetName == "editor") view = editor.getForm(viewId);
@@ -1012,18 +916,15 @@ $.widget( "an.workbench", {
 				document.title = o.title +" - "+ title;
 				viewType = viewType.toLowerCase();
 				view.option("docclick",function(e, doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc },
-		        	as = actions.documentClickActions || self.documentClickActions;
-		        	self._docClick(context, as);
+		        	self._docClick({dbId:dbId,view:el.data(viewType),document:doc}, 
+		        			actions[eps.documentClick]||self.extensions[eps.documentClick]);
 				});
 				view.option("docdblclick",function(e, doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc },
-		        	as = actions.documentDoubleClickActions || self.documentDoubleClickActions;
-		        	self._docDblClick(context, as);
+		        	self._docDblClick({dbId:dbId,view:el.data(viewType),document:doc}, 
+		        			actions[eps.documentDoubleClick]||self.extensions[eps.documentDoubleClick]);
 				});
 				view.option("contentActions",function(doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc };
-		        	return self._docContextMenuActions(actions, context, []);
+		        	return self._docContextMenuActions(actions, {dbId:dbId, view:el.data(viewType), document:doc },[]);
 				});
 				self.reloadToolbar();
 				self._afterOpenEditor({method:"openView", id:viewId, options:opts});
@@ -1033,34 +934,21 @@ $.widget( "an.workbench", {
 		}
 
 		if(dbId != o.dbId){
-			$.each(["toolbarHeader", "toolbarMiddle","toolbarTail","documentClick", 
-			        "documentDoubleClick", "documentContextMenuCenter", 
-			        "documentContextMenuTop", "documentContextMenuBottom", "editorEvent"], function(){
-				var s = {type:Model.ACTION, extendPoint:this};
-				if(this == "editorEvent") s.targetId = viewId;
-				sel.$or.push(s);
-				actions[this+"Actions"] = [];
+			var epids = [];
+			$.each(["toolbarHeader", "toolbarCenter","toolbarTail","documentClick", 
+			        "documentDoubleClick", "documentContextMenuMiddle", 
+			        "documentContextMenuTop", "documentContextMenuBottom"], function(){
+				epids.push(eps[this]);
 			});
-			$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+			Model.loadExtensions(dbId, epids, function(err, exts){
 				if(err){
 					console.log("Load actions error: "+err);
 				}else{
-					$.each(data.docs,function(){
-						actions[this.extendPoint+"Actions"].push(this);
-					});
-					doOpenView(el, dbId, viewId, actions, opts);
+					doOpenView(el, dbId, viewId, exts, opts);
 				}
 			});
 		}else{
-			sel = {type:Model.ACTION, viewId: viewId, extendPoint:"editorEvent"};
-			$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-				if(err){
-					console.log("Load actions error: "+err);
-				}else{
-					actions.editorEventActions = data.docs;
-					doOpenView(el, dbId, viewId, actions, opts);
-				}
-			});
+			doOpenView(el, dbId, viewId, this.extensions, opts);
 		}
 		
 		return this;

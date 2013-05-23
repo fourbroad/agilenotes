@@ -76,7 +76,7 @@ $(function(){
 							});
 						}else{
 							$.ans.getDoc(dbId,doc.type,null, function(error,type){
-								Model.getForms(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
+								Model.getPages(dbId, (type.forms&&type.forms.split(","))||[], function(err, forms){
 									$("#widget").editor({
 										title:doc.title||doc.name||doc._id, 
 										dbId:dbId,
