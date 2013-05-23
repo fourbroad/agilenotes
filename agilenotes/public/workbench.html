@@ -40,19 +40,6 @@ $(function(){
 		}
 	});
 });
-
-setInterval(function(){
-	$.ajax({
-		method : 'GET',
-		url : "/login",
-		success : function(obj) {
-			if(!obj.success){
-				alert("会话超时,请重新登录！");
-				window.location = "../";
-			}
-		}
-	});
-},300000);
 </script>
 </head>
 <body>
