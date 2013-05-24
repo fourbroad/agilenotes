@@ -2,7 +2,6 @@ var designMode='develop';
 
 if(designMode=='develop'){
 document.write('\
-<link rel="stylesheet" href="stylesheets/jquery-ui-1.8.24.custom.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.ui.timepicker.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.menu.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.agilegrid.css" type="text/css">\

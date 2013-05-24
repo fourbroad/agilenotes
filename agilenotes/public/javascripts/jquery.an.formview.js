@@ -26,11 +26,7 @@ $.widget( "an.formview", $.an.view, {
 		o.itemWidth = o.view.itemWidth;
 		o.itemHeight = o.view.itemHeight;
 		el.addClass("an-formview");
-		this.documents = $("<div class='content'/>").appendTo(el);
-		
-		if(o.view.showPager){
-			this.createPager();
-		}
+		this.documents = $("<div class='content'/>").prependTo(el);
 	},
 
 	_showDocuments:function(){

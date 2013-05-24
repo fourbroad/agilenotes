@@ -56,7 +56,12 @@ function checkAuthz(user, authz){
 		return true;
 	}
 	
-	var ou = user._path.match(/((.+),)[^,]+,$/)[1];
+	var ou = null;
+	try{
+		out = user._path.match(/((.+),)[^,]+,$/)[1];
+	} catch (e) {
+		console.log(e);
+	}
 	if(authz.ouPaths && check([ou], authz.ouPaths, ouAuthz)){
 		return true;
 	}

@@ -23,16 +23,52 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 
 	_createControl:function(){
-		var self = this, o = this.options, el = this.element;
-		$.each(o.selectItems||[], function(k,v){
-			$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
-			    .addClass("ui-widget-content ui-corner-all").appendTo(el);
-			$("<div class='content'/>").hide().appendTo(el);
-			$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
-			if(o.orientation == "vertical") el.append("<br>");
-		});
+		var self = this, o = this.options, el = this.element;	
+		if (o.mobile) {
+			var radio_group = $("<div class='ui-controlgroup-controls' />");
+			$.each(o.selectItems||[], function(k,v){
+				var radio_elem = $("<div class='ui-radio' />");
+				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content").appendTo(radio_elem);
+				$("<div class='content'/>").hide().appendTo(el);
+				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
+					<span class="ui-icon ui-icon-radio-on ui-icon-shadow"> </span>\
+					</span>';
+				// ui-btn-up-a
+				var label_elem = $("<label class='ui-first-child ui-radio-off ui-btn ui-btn-up-c ui-fullsize ui-btn-icon-left' style='margin:0'  />").attr("for",o.id+k);
+				if (!o.data_theme) {
+					o.data_theme = 'c';
+				}
+				
+				label_elem.addClass("ui-btn-up-" + o.data_theme);
+				label_elem.html(label).appendTo(radio_elem);
+				radio_elem.appendTo(radio_group);
+			});
+			
+			radio_group.appendTo($("<div class='ui-controlgroup ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+			
+			$(".ui-radio").bind('click.radiofield',function(e){
+				var name=o.id;
+				$(this).find('input[type="radio"][name="'+name+'"]').attr('checked','checked');
+				if (o.orientation == "vertical") {
+					$(this).removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
+				} else {
+					$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
+				}
+			});
+			
+			this.inputs = el.children(".ui-radio");
+		} else {
+			$.each(o.selectItems||[], function(k,v){
+				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content ui-corner-all").appendTo(el);
+				$("<div class='content'/>").hide().appendTo(el);
+				$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
+				if(o.orientation == "vertical") el.append("<br>");
+			});
+			this.inputs = el.children("input");
+		}
 		
-		this.inputs = el.children("input");
 		this.contents = el.children(".content");
 		if(!$.isEmptyObject(o.validate)){
 			this.inputs.addClass($.toJSON({validate:o.validate}));
@@ -82,8 +118,10 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 
 	_design:function(){
-		this.inputs.hide();
-		this.contents.css("display","");
+		if (!this.options.mobile) {
+			this.inputs.hide();
+			this.contents.css("display","");
+		}
 	},
 
 	highlight: function(highlight){

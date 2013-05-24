@@ -13,9 +13,6 @@
 
 $.widget( "an.view", {
 	options:{
-		skip: 0,
-		limit: 10,
-		total: 0,
 		mode: "browser",
 		actionSets:[]
 	},
@@ -24,19 +21,23 @@ $.widget( "an.view", {
 		var o = this.options, el = this.element;
 		el.addClass("an-view").addClass(o.view.name).empty();
 		$('<style type="text/css">'+(o.view.stylesheet||"")+'</style>').appendTo(el);
-		if(o.view&&o.view.limit) {
-			o.limit = o.view.limit = parseInt(o.view.limit);
-		}
-		if(o.view&&o.view.filter) {
-			o.filter = o.view.filter;
-		}
+
+		o.limit = o.limit||parseInt(o.view.limit)||10;
+		o.skip = o.skip||parseInt(o.view.skip)||0;
+		o.total = o.total||parseInt(o.view.total)||0;
+		o.filter = o.filter||o.view.filter;
+		o.showPager = o.showPager||o.view.showPager;
+		
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		
 		var data = {};
 		data[this.widgetName] = this;
 		$.each(eval("("+(o.view.actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
 		
+		o.showPager&&this._createPager();
+
 		this.docs = [];
 		this._loadDocs();
 	},
@@ -62,9 +63,9 @@ $.widget( "an.view", {
 		}
 	},
 	
-	createPager:function(){
+	_createPager:function(){
 		var o = this.options,self=this;
-		this.pager = $("<div class='pager'/>").css({
+		this.pager = $("<div style='display:none;' class='pager'/>").css({
 			left:0,right:0,bottom:0,height:o.pagerHeight
 		}).appendTo(this.element);
 		this.pager.addClass(o.className);
@@ -131,7 +132,12 @@ $.widget( "an.view", {
 	refresh:function(){
 		var o = this.options;
 		this['_'+o.mode]&&this['_'+o.mode]();
-		if(this.pager&&this.widgetName!=='gridview'){
+		this._refreshPager();
+	},
+
+	_refreshPager:function(){
+		var o = this.options;
+		if(this.pager){
 			if(o.totalPage <= 1){
 				this.pager.hide();
 				return this;
@@ -177,11 +183,12 @@ $.widget( "an.view", {
 			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 				self.docs = data.docs;
 				o.total = data.total;
-				if(self.pager&&self.widgetName!=='gridview'){
+				if(self.pager){
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
 				self._docsLoaded && self._docsLoaded();
+				self._trigger("documentloaded",null,data);
 			});
 		}
 	},

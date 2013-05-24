@@ -361,6 +361,7 @@ function putDoc(req,res){
 					});
 				}
 
+				doc._update_time = new Date();
 				if(fileFields.length > 0){
 					cleanFileFields(provider, docid, doc, fileFields, function(error, doc){
 						update(selector, doc);

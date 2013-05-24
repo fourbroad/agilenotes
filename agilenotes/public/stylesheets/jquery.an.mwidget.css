@@ -36,7 +36,11 @@
 }
 
 .widget.design[type=radio]>label {
-	margin:4px;
+	margin:0;
+}
+
+.widget[type=radio] >label{
+	margin:0;
 }
 
 .widget[type=box].design,
@@ -114,14 +118,6 @@
 	height:21px;
 	border-width:0;
 	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF;
-}
-
-.widget[type=box].design.raw .field[type=radio].design>.content,
-.field[type=radio].design>.content {
-	width:21px;
-	height:21px;
-	border-width:0;
-	background:url("/stylesheets/images/radio.png") no-repeat scroll center center #FFFFFF;
 }
 
 .widget[type=box].design.raw .field[type=textarea].design,

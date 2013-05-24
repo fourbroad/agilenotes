@@ -17,6 +17,7 @@ $.widget( "an.page", {
 		actionSets: [],
 		wrapper:"<div/>",
 		formIds:{
+			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
 		},

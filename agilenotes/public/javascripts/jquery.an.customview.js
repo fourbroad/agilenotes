@@ -20,13 +20,12 @@ $.widget( "an.customview", $.an.view, {
 	_create: function(){
 		$.an.view.prototype._create.apply(this, arguments);
 		var o = this.options, el = this.element;
-		o.showPager = o.view.showPager;
 		o.templateTemp = o.view.templateTemp;
 		o.templateSelector = o.view.templateSelector;
 		o.templateConverts = o.view.templateConverts;
 		o.templateContent = o.view.templateContent;
 		el.addClass("an-customview");
-		this.documents = $(o.templateContent).appendTo(el);
+		this.documents = $(o.templateContent).prependTo(el);
 				
 		if (o.templateTemp) {
 			o.templateTemp=$.templates(o.templateTemp);
@@ -35,10 +34,6 @@ $.widget( "an.customview", $.an.view, {
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
 			$.views.converters(o.templateConverts);
-		}
-
-		if(o.view.showPager){
-			this.createPager();
 		}
 	},
 
