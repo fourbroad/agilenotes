@@ -91,7 +91,7 @@ function cleanFileFields(provider, docid, doc, fileFields, callback){
 function validate(dbid, doc, callback){
 	var provider = providers.getProvider(dbid);
 	provider.findOne({_id: new BSON.ObjectID(doc.type)},null,null,function(error,meta){
-		var formIds = meta.forms&&meta.forms.split(","), sel = {$or:[]};
+		var formIds = doc.formIds ? doc.formIds : meta.forms&&meta.forms.split(","), sel = {$or:[]};
 		for(var f in formIds){ sel.$or.push({_id: new BSON.ObjectID(formIds[f])}); }
 		provider.find(sel, null, null,function(error, data){
 		    var forms = data.docs, $ = require('jquery'), errors = [], fileFields = [];
