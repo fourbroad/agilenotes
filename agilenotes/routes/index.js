@@ -386,6 +386,24 @@ function postDoc(req,res){
 function putDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	res.header('Content-Type', 'application/json');
+	var  process = function(data, response, options, callback) {
+		var doc = data.shift();
+		if (doc) {
+			if (doc.type == Model.TASK) {
+				providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
+					if (error) doc.error = error;
+					if (result) doc.result = result;
+					response.push(doc);
+					process(data, response, options, callback);
+				});
+			} else {
+				response.push(doc);
+				process(data, response, options, callback);
+			}
+		} else {
+			callback(null, response);
+		}
+	};
 	if(docid){
 		var q = req.query, options = q.options, selector = q.selector,doc = req.body, 
 		    provider = providers.getProvider(dbid, doc.type);
@@ -405,7 +423,35 @@ function putDoc(req,res){
 							res.send(403);
 						} else {
 							doc._id = docid;
-							res.send(doc, result ? 200 : 403);
+							if (options.task) {
+								var respArr = [];
+								for (var i = 0; i < options.task.length; i++) {
+									var response = [];
+									var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+									if (typeof(req.headers.cookie) != 'undefined') {
+										opts.headers.cookie =_parseCookie(opts.headers.cookie);
+									}
+									provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
+										process([ data ] , response, opts, function(error, response) {
+											data.success = data.error ? false : true;
+											respArr.push(data
+												|| error
+												|| { success : false, result : "document not found or not authorized!",
+													msg : "document not found or not authorized!" });
+										});
+									});
+								}	
+								
+								var t = setInterval(function() {
+									if (respArr.length >= options.task.length) {
+										doc.result = respArr;
+										clearInterval(t);
+										res.send(doc, result ? 200 : 403);
+									};
+								}, 50);
+							} else {
+								res.send(doc, result ? 200 : 403);
+							}
 						}
 					});
 				}
