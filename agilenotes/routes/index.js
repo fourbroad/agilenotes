@@ -176,6 +176,21 @@ function rend(req,res){
 		});
 }
 
+function _parseCookie(cookieStr) {
+	 var cookieValue = {};
+	 var $ = require("jquery");
+     if (cookieStr && cookieStr != '') {
+         var cookies = cookieStr.split(';');
+         var tmp = null;
+         for (var i = 0; i < cookies.length; i++) {
+             var cookie = $.trim(cookies[i]);
+             tmp = cookie.split("=");
+             cookieValue[tmp[0]] = typeof(tmp[1]) != 'undefined' ? decodeURIComponent(tmp[1]) : '';
+         }
+     }
+     return cookieValue;
+}
+
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
@@ -194,6 +209,9 @@ function getDoc(req,res){
 			options.ip = Functions.getClientIP(req);
 			options.method = req.method;
 			options.headers = req.headers;
+			if (typeof(req.headers.cookie) != 'undefined') {
+				options.headers.cookie =_parseCookie(options.headers.cookie);
+			}
 			function process(data, response, callback){
 				var doc = data.shift();
 				if(doc){
@@ -266,6 +284,9 @@ function postDoc(req,res){
 		options.method = req.method;
 		options.body = req.body;
 		options.headers = req.headers;
+		if (typeof(req.headers.cookie) != 'undefined') {
+			options.headers.cookie =_parseCookie(options.headers.cookie);
+		}
 
 		var provider = providers.getProvider(dbid);
 		provider.findOne({ _id : new BSON.ObjectID(docid) }, null, null, function(err, data) {
@@ -326,6 +347,9 @@ function postDoc(req,res){
 									for (var i = 0; i < options.task.length; i++) {
 										var response = [];
 										var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+										if (typeof(req.headers.cookie) != 'undefined') {
+											opts.headers.cookie =_parseCookie(opts.headers.cookie);
+										}
 										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
 											process([ data ] , response, opts, function(error, response) {
 												data.success = data.error ? false : true;
