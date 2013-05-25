@@ -238,36 +238,34 @@ function getDoc(req,res){
 function postDoc(req,res){
 	var params = req.params, dbid = params.dbid, doc = req.body,  docid = params.docid, q = req.query, options = q.options;
 	res.header('Content-Type', 'application/json');
-	if (typeof(docid) != 'undefined') {
-		if (!options) {
-			options = {};
+	
+	var  process = function(data, response, options, callback) {
+		var doc = data.shift();
+		if (doc) {
+			if (doc.type == Model.TASK) {
+				providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
+					if (error) doc.error = error;
+					if (result) doc.result = result;
+					response.push(doc);
+					process(data, response, options, callback);
+				});
+			} else {
+				response.push(doc);
+				process(data, response, options, callback);
+			}
+		} else {
+			callback(null, response);
 		}
-		
+	};
+	
+	if (typeof(docid) != 'undefined') {
+		options = options || {};
 		options.query = q;
 		if (typeof(options.query.options) != 'undefined') delete(options.query.options);
 		options.ip = Functions.getClientIP(req);
 		options.method = req.method;
 		options.body = req.body;
 		options.headers = req.headers;
-		
-		function process(data, response, callback) {
-			var doc = data.shift();
-			if (doc) {
-				if (doc.type == Model.TASK) {
-					providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
-						if (error) doc.error = error;
-						if (result) doc.result = result;
-						response.push(doc);
-						process(data, response, callback);
-					});
-				} else {
-					response.push(doc);
-					process(data, response, callback);
-				}
-			} else {
-				callback(null, response);
-			}
-		}
 
 		var provider = providers.getProvider(dbid);
 		provider.findOne({ _id : new BSON.ObjectID(docid) }, null, null, function(err, data) {
@@ -275,9 +273,8 @@ function postDoc(req,res){
 				res.send({ success : false, result : err }, 200);
 			} else {
 				var response = [];
-				process(docid ? [ data ] : data.docs, response, function(error, response) {
+				process(docid ? [ data ] : data.docs, response, options, function(error, response) {
 					if (!docid) data.docs = response;
-					console.log(data);
 					var resp = data ? { error : data.error, result : data.result, success : (data.error ? false : true), msg:data.result}
 					: null;
 					if (options.body.redirect || options.redirect) {
@@ -305,6 +302,7 @@ function postDoc(req,res){
 						doc.userId = req.user._id;
 					}
 					doc._ownerID = req.user._id;
+					
 					provider.insert(doc, options, function(error,docs){
 						if(error) {
 							res.send(403);
@@ -322,7 +320,33 @@ function postDoc(req,res){
 									});
 								});
 							}else{
-								res.send(docs[0], 201);
+								// execute one or more task
+								if (options.task) {
+									var respArr = [];
+									for (var i = 0; i < options.task.length; i++) {
+										var response = [];
+										var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
+											process([ data ] , response, opts, function(error, response) {
+												data.success = data.error ? false : true;
+												respArr.push(data
+													|| error
+													|| { success : false, result : "document not found or not authorized!",
+														msg : "document not found or not authorized!" });
+											});
+										});
+									}	
+									
+									var t = setInterval(function() {
+										if (respArr.length >= options.task.length) {
+											docs[0].result = respArr;
+											clearInterval(t);
+											res.send(docs[0], 201);
+										};
+									}, 50);
+								} else {
+									res.send(docs[0], 201);
+								}
 							}
 						}
 					});
@@ -349,6 +373,7 @@ function putDoc(req,res){
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
 					doc.userId = req.user._id;
 				}
+				doc._update_at = new Date();
 				function update(selector, fields){
 					options.multi = true;
 					provider.update(selector, {$set:fields}, options, function(error,result){
