@@ -118,6 +118,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			href = o.url+"/"+file.metadata.filepath;
 			if(/^image\/.*/.test(file["contentType"])){
 				imgsrc = href;
+			} else {
+				imgsrc += "#" + href;
 			}
 		}
 		
