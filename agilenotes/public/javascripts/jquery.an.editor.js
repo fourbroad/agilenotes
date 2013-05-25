@@ -265,6 +265,10 @@ $.widget( "an.editor", {
 				opts.beforesave(doc); // here you can change the doc values
 			}
 
+			if (o.formIds) {
+				doc.formIds=o.formIds;
+			}
+
 			if(o.isNew){
 				var def = o["default"]&&o["default"]._id;
 				Model.postDocument(dbId, doc, def?{options:{'default':def}}:null, function(err,result){
