@@ -373,6 +373,7 @@ function putDoc(req,res){
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
 					doc.userId = req.user._id;
 				}
+				doc._update_at = new Date();
 				function update(selector, fields){
 					options.multi = true;
 					provider.update(selector, {$set:fields}, options, function(error,result){
