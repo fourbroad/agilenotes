@@ -269,8 +269,16 @@ $.widget( "an.editor", {
 			}
 
 			if(o.isNew){
-				var def = o["default"]&&o["default"]._id;
-				Model.postDocument(dbId, doc, def?{options:{'default':def}}:null, function(err,result){
+				var def = o["default"]&&o["default"]._id,opNew={options:{}},tags=false;
+				if(o.task){
+					opNew["options"]["task"]=o.task;
+					tags=true;
+				}
+				if(def){
+					opNew["options"]["default"]=def;
+					tags=true;
+				}
+				Model.postDocument(dbId, doc, tags?opNew:null, function(err,result){
 					if(!err){
 						delete o.isNew;
 						$.extend(o.document, result);
