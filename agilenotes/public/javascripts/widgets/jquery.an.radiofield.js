@@ -57,7 +57,7 @@ $.widget( "an.radiofield", $.an.inputfield, {
 				}
 			});
 			
-			this.inputs = el.children(".ui-radio");
+			this.inputs = el.children(".ui-controlgroup");
 		} else {
 			$.each(o.selectItems||[], function(k,v){
 				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})

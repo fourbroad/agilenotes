@@ -259,15 +259,29 @@ $.widget( "an.editor", {
 		this.option("isFormDirty",false);
 		
 		if(valid && o.isDocDirty) {
-			var doc = this._getDocument();
+			var doc = this._getDocument(),opNew={options:{}},tags=false;
 			
 			if ($.type(opts.beforesave) == "function") {
 				opts.beforesave(doc); // here you can change the doc values
 			}
 
+			if (o.formIds) {
+				doc.formIds=o.formIds;
+			}
+			
+			if(o.task||opts.task){
+				opNew["options"]["task"]=o.task||opts.task;
+				tags=true;
+			}
+
 			if(o.isNew){
 				var def = o["default"]&&o["default"]._id;
-				Model.postDocument(dbId, doc, def?{options:{'default':def}}:null, function(err,result){
+				
+				if(def){
+					opNew["options"]["default"]=def;
+					tags=true;
+				}
+				Model.postDocument(dbId, doc, tags?opNew:null, function(err,result){
 					if(!err){
 						delete o.isNew;
 						$.extend(o.document, result);
@@ -281,7 +295,7 @@ $.widget( "an.editor", {
 					}
 				});
 			}else{
-				Model.updateDocument(dbId,doc._id,doc,null, function(err,result){
+				Model.updateDocument(dbId,doc._id,doc,tags?opNew:null, function(err,result){
 					if(!err){
 						$.extend(o.document, result);
 						self.option("isDocDirty",false);

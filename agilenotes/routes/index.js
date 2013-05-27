@@ -91,7 +91,7 @@ function cleanFileFields(provider, docid, doc, fileFields, callback){
 function validate(dbid, doc, callback){
 	var provider = providers.getProvider(dbid);
 	provider.findOne({_id: new BSON.ObjectID(doc.type)},null,null,function(error,meta){
-		var formIds = meta.forms&&meta.forms.split(","), sel = {$or:[]};
+		var formIds = doc.formIds ? doc.formIds : meta.forms&&meta.forms.split(","), sel = {$or:[]};
 		for(var f in formIds){ sel.$or.push({_id: new BSON.ObjectID(formIds[f])}); }
 		provider.find(sel, null, null,function(error, data){
 		    var forms = data.docs, $ = require('jquery'), errors = [], fileFields = [];
@@ -176,6 +176,21 @@ function rend(req,res){
 		});
 }
 
+function _parseCookie(cookieStr) {
+	 var cookieValue = {};
+	 var $ = require("jquery");
+     if (cookieStr && cookieStr != '') {
+         var cookies = cookieStr.split(';');
+         var tmp = null;
+         for (var i = 0; i < cookies.length; i++) {
+             var cookie = $.trim(cookies[i]);
+             tmp = cookie.split("=");
+             cookieValue[tmp[0]] = typeof(tmp[1]) != 'undefined' ? decodeURIComponent(tmp[1]) : '';
+         }
+     }
+     return cookieValue;
+}
+
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
@@ -194,6 +209,9 @@ function getDoc(req,res){
 			options.ip = Functions.getClientIP(req);
 			options.method = req.method;
 			options.headers = req.headers;
+			if (typeof(req.headers.cookie) != 'undefined') {
+				options.headers.cookie =_parseCookie(options.headers.cookie);
+			}
 			function process(data, response, callback){
 				var doc = data.shift();
 				if(doc){
@@ -238,35 +256,36 @@ function getDoc(req,res){
 function postDoc(req,res){
 	var params = req.params, dbid = params.dbid, doc = req.body,  docid = params.docid, q = req.query, options = q.options;
 	res.header('Content-Type', 'application/json');
-	if (typeof(docid) != 'undefined') {
-		if (!options) {
-			options = {};
+	
+	var  process = function(data, response, options, callback) {
+		var doc = data.shift();
+		if (doc) {
+			if (doc.type == Model.TASK) {
+				providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
+					if (error) doc.error = error;
+					if (result) doc.result = result;
+					response.push(doc);
+					process(data, response, options, callback);
+				});
+			} else {
+				response.push(doc);
+				process(data, response, options, callback);
+			}
+		} else {
+			callback(null, response);
 		}
-		
+	};
+	
+	if (typeof(docid) != 'undefined') {
+		options = options || {};
 		options.query = q;
 		if (typeof(options.query.options) != 'undefined') delete(options.query.options);
 		options.ip = Functions.getClientIP(req);
 		options.method = req.method;
 		options.body = req.body;
 		options.headers = req.headers;
-		
-		function process(data, response, callback) {
-			var doc = data.shift();
-			if (doc) {
-				if (doc.type == Model.TASK) {
-					providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
-						if (error) doc.error = error;
-						if (result) doc.result = result;
-						response.push(doc);
-						process(data, response, callback);
-					});
-				} else {
-					response.push(doc);
-					process(data, response, callback);
-				}
-			} else {
-				callback(null, response);
-			}
+		if (typeof(req.headers.cookie) != 'undefined') {
+			options.headers.cookie =_parseCookie(options.headers.cookie);
 		}
 
 		var provider = providers.getProvider(dbid);
@@ -275,9 +294,8 @@ function postDoc(req,res){
 				res.send({ success : false, result : err }, 200);
 			} else {
 				var response = [];
-				process(docid ? [ data ] : data.docs, response, function(error, response) {
+				process(docid ? [ data ] : data.docs, response, options, function(error, response) {
 					if (!docid) data.docs = response;
-					console.log(data);
 					var resp = data ? { error : data.error, result : data.result, success : (data.error ? false : true), msg:data.result}
 					: null;
 					if (options.body.redirect || options.redirect) {
@@ -305,6 +323,7 @@ function postDoc(req,res){
 						doc.userId = req.user._id;
 					}
 					doc._ownerID = req.user._id;
+					
 					provider.insert(doc, options, function(error,docs){
 						if(error) {
 							res.send(403);
@@ -322,7 +341,36 @@ function postDoc(req,res){
 									});
 								});
 							}else{
-								res.send(docs[0], 201);
+								// execute one or more task
+								if (options.task) {
+									var respArr = [];
+									for (var i = 0; i < options.task.length; i++) {
+										var response = [];
+										var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+										if (typeof(req.headers.cookie) != 'undefined') {
+											opts.headers.cookie =_parseCookie(opts.headers.cookie);
+										}
+										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
+											process([ data ] , response, opts, function(error, response) {
+												data.success = data.error ? false : true;
+												respArr.push(data
+													|| error
+													|| { success : false, result : "document not found or not authorized!",
+														msg : "document not found or not authorized!" });
+											});
+										});
+									}	
+									
+									var t = setInterval(function() {
+										if (respArr.length >= options.task.length) {
+											docs[0].result = respArr;
+											clearInterval(t);
+											res.send(docs[0], 201);
+										};
+									}, 50);
+								} else {
+									res.send(docs[0], 201);
+								}
 							}
 						}
 					});
@@ -338,6 +386,24 @@ function postDoc(req,res){
 function putDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	res.header('Content-Type', 'application/json');
+	var  process = function(data, response, options, callback) {
+		var doc = data.shift();
+		if (doc) {
+			if (doc.type == Model.TASK) {
+				providers.getProvider(dbid, doc.type).exec(req.user, doc, options, function(error, result) {
+					if (error) doc.error = error;
+					if (result) doc.result = result;
+					response.push(doc);
+					process(data, response, options, callback);
+				});
+			} else {
+				response.push(doc);
+				process(data, response, options, callback);
+			}
+		} else {
+			callback(null, response);
+		}
+	};
 	if(docid){
 		var q = req.query, options = q.options, selector = q.selector,doc = req.body, 
 		    provider = providers.getProvider(dbid, doc.type);
@@ -349,6 +415,7 @@ function putDoc(req,res){
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
 					doc.userId = req.user._id;
 				}
+				doc._update_at = new Date();
 				function update(selector, fields){
 					options.multi = true;
 					provider.update(selector, {$set:fields}, options, function(error,result){
@@ -356,7 +423,35 @@ function putDoc(req,res){
 							res.send(403);
 						} else {
 							doc._id = docid;
-							res.send(doc, result ? 200 : 403);
+							if (options.task) {
+								var respArr = [];
+								for (var i = 0; i < options.task.length; i++) {
+									var response = [];
+									var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+									if (typeof(req.headers.cookie) != 'undefined') {
+										opts.headers.cookie =_parseCookie(opts.headers.cookie);
+									}
+									provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
+										process([ data ] , response, opts, function(error, response) {
+											data.success = data.error ? false : true;
+											respArr.push(data
+												|| error
+												|| { success : false, result : "document not found or not authorized!",
+													msg : "document not found or not authorized!" });
+										});
+									});
+								}	
+								
+								var t = setInterval(function() {
+									if (respArr.length >= options.task.length) {
+										doc.result = respArr;
+										clearInterval(t);
+										res.send(doc, result ? 200 : 403);
+									};
+								}, 50);
+							} else {
+								res.send(doc, result ? 200 : 403);
+							}
 						}
 					});
 				}
