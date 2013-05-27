@@ -132,8 +132,14 @@ function openDocument(dbId,docId, opts){
 	openDialog(dbId,docId,opts,'openDocument');
 }
 var openPage,openView,openPage,openSideView;
-openForm=openView=openPage=openSideView=function(dbId,sid, opts){
+openForm=openPage=function(dbId,sid, opts){
 	openDialog(dbId,sid,opts,'openPage');
+};
+openView=function(dbId,sid, opts){
+	openDialog(dbId,sid,opts,'openView');
+};
+openSideView=function(dbId,sid, opts){
+	openDialog(dbId,sid,opts,'openSideView');
 };
 
 /*

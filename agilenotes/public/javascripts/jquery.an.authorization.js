@@ -36,7 +36,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		this.element.border({west:{selector:".west", width:o.westWidth, resizable:true }, center:{selector:".center" }});
 		this.organization.explorer({
 			dbId:o.dbId, 
-			roots: Model.OU_ROOT+","+ Model.GROUP_ROOT+","+Model.ROLE_ROOT,
+			roots:[Model.OU_ROOT,Model.GROUP_ROOT,Model.ROLE_ROOT],
 			nodeclick:function(e,node){
 				var doc = node.data;
 				self.center.find(".title").html(doc.title||doc.name||doc._id);

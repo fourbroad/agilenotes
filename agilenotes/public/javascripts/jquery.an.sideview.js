@@ -11,7 +11,7 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.sideview", $.an.extendable, {
+$.widget( "an.sideview", {
 	
 	_create: function() {
 		var o = this.options, el = this.element;
@@ -26,8 +26,6 @@ $.widget( "an.sideview", $.an.extendable, {
 			el.bind(action.events, data, action.handler);
 		});
 
-		$.an.extendable.prototype._create.apply(this, arguments);
-		
 		this.createContent && this.createContent();
 	},
 	
