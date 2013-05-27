@@ -46,6 +46,7 @@ var Model = {
     pages:{},
     views:{},
     sideViews:{},
+    extension:{},
     
     rootId:function(typeId){
     	if(typeId == this.META){
@@ -125,34 +126,27 @@ var Model = {
     },
     
     loadExtensions: function(dbId, extensionPoints, callback){
-    	var sel = {$or:[]}, exts = {};
-    	$.each(extensionPoints, function(){sel.$or.push({extendPoint:this});});
-    	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-    		if(data){
-    			$.each(data.docs,function(){
-    				exts[this.extendPoint]=exts[this.extendPoint]||[]; 
-    				exts[this.extendPoint].push(this);
-    			});
+    	var self = this, sel = {$or:[]}, exts = {};
+    	$.each(extensionPoints, function(){
+    		if(self.extension[this]){
+    			exts[this] = self.extension[this];
+    		}else{
+        		sel.$or.push({extensionPoint:this});
     		}
-    		callback(err, exts);
     	});
-    },
-
-    loadToolbarActions: function(dbId, callback){
-    	var sel = {type:Model.ACTION, $or:[]};
-    	$.each(["toolbarHeader","toolbarMiddle","toolbarTail"], function(){
-    		sel.$or.push({extendPoint:this});
-    	});
-    	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-    		var tas = null;
-    		if(data){
-    			tas = {toolbarHeaderActions:[],toolbarMiddleActions:[],toolbarTailActions:[]};
-    			$.each(data.docs,function(){
-    				tas[this.extendPoint+"Actions"].push(this);
-    			});
-    		}
-    		callback(err, tas);
-    	});
+    	if(sel.$or.length > 0){
+        	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+        		if(data){
+        			$.each(data.docs,function(){
+        				self.extension[this.extensionPoint] = exts[this.extensionPoint]=exts[this.extensionPoint]||[]; 
+        				exts[this.extensionPoint].push(this);
+        			});
+        		}
+        		callback(err, exts);
+        	});
+    	}else{
+    		callback(null, exts);
+    	}
     },
 
     newDocument: function(element, dbId, typeId, opts){

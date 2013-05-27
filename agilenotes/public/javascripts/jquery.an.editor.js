@@ -204,9 +204,9 @@ $.widget( "an.editor", {
 			}
 		});
 	},
+	
 	_validate:function(){
 		var self = this,valid=true;
-		
 		this.element.tabsx("option","panels").each(function(){
 			var data = $(this).data();;
 			for(var i in data){
@@ -219,10 +219,10 @@ $.widget( "an.editor", {
 		});
 		return valid;
 	},
+	
 	save: function(opts){
 		opts = opts || {};
 		var self = this, o = this.options, dbId = o.dbId, valid = true;
-		
 		this.element.tabsx("option","panels").each(function(){
 			var data = $(this).data();;
 			for(var i in data){
@@ -318,7 +318,8 @@ $.widget( "an.editor", {
 			var cf = this._currentForm(); 
 			return cf&&cf.option("actionSets");
 		}else if(key === "outline" && value === undefined){
-			return this._currentForm().option("outline");
+			var form = this._currentForm();
+			if(form) return form.option("outline");
 		}else if(key === "document" && value === undefined){
 			return this._getDocument();
 		}else	if(key === "namedValues" && value === undefined){
