@@ -65,9 +65,9 @@ document.write('\
 <script src="javascripts/jquery.an.border.js"><\/script>\
 <script src="javascripts/jquery.an.rte.js"><\/script>\
 <script src="javascripts/jquery.an.tabsx.js"><\/script>\
+<script src="javascripts/jquery.an.explorer.js"><\/script>\
 <script src="javascripts/jquery.an.page.js"><\/script>\
 <script src="javascripts/jquery.an.form.js"><\/script>\
-<script src="javascripts/jquery.an.outline.js"><\/script>\
 <script src="javascripts/jquery.an.agilegrid.js"><\/script>\
 <script src="javascripts/jquery.an.toolbar.js"><\/script>\
 <script src="javascripts/jquery.an.view.js"><\/script>\
