@@ -21,7 +21,6 @@ $.widget( "an.textareafield", $.an.field, {
 	_createControl:function(){
 		var self = this, o = this.options, el = this.element;
 		if (o.mobile) {
-			console.log(el);
 			el.addClass("codiqa-control");
 			el.find(".content").removeClass();
 			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
