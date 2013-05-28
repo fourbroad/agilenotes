@@ -101,23 +101,12 @@
 	float:left;
 }
 
-.field[type=checkbox].design>label{
-	float:right;
-}
 
 .field[type=text].design>.content,
 .field[type=search].design>.content,
 .field[type=select].design>.content
 {
 	padding:0.4em;
-}
-
-.field[type=checkbox].design>.content,
-.widget[type=box].design.raw .field[type=checkbox].design>.content {
-	width:21px;
-	height:21px;
-	border-width:0;
-	background:url("/stylesheets/images/checkbox.png") no-repeat scroll center center #FFFFFF;
 }
 
 .widget[type=box].design.raw .field[type=textarea].design,
@@ -170,4 +159,12 @@
 .design .ui-resizable-handle{
 	background:none;
 	border:0 none;
+}
+
+.ui-checkbox-on .ui-icon{
+ background-color: #4596CE;
+}
+
+.widget.field.design.ui-checkbox > .content{
+	border:0;
 }

@@ -16,37 +16,113 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-checkboxfield");
 		this.content.hide();
+
+		
 	},
 
 	_createControl:function(){
 		var self = this, o = this.options, el = this.element;
 		if(o.mobile){
-			el.addClass('codiqa-control ui-field-contain ui-body ui-br')
-			  .bind("mousedown.checkboxfield",function(e){
-				  el.find('label').addClass("ui-btn-down-c");				  
-			  }).bind("mouseup.checkboxfield",function(e){
-				  el.find('label').removeClass("ui-btn-down-c");
-				  if( el.find('input').attr("checked")){
-					  el.find('input').attr("checked",false);
-					  el.find("span .ui-icon").removeClass("ui-icon-checkbox-on").addClass("ui-icon-checkbox-off");
-				  }else{
-					  el.find('input').attr("checked",true);
-					  el.find("span .ui-icon").removeClass("ui-icon-checkbox-off").addClass("ui-icon-checkbox-on");
-				  }
-			  }).bind("mousemove.checkboxfield",function(e){
-				  el.find('label').removeClass("ui-btn-up-c").addClass("ui-btn-hover-c");
-			  }).bind("mouseout.checkboxfield",function(e){
-				  el.find('label').removeClass("ui-btn-hover-c").addClass("ui-btn-up-c");
-			  });	
+			var checkbox_group = $("<div class='ui-controlgroup-controls' />");
+			$.each(o.selectItems||[], function(k,v){
+				var checkbox_elem = $("<div class='ui-checkbox incheck' />");
+				$("<input type='checkbox'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content").appendTo(checkbox_elem);
+				$("<div class='content'/>").hide().appendTo(el);
+				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
+					<span class="ui-icon ui-icon-checkbox-off ui-icon-shadow"> </span>\
+					</span>';
+				// ui-btn-up-a
+				if(k==0){
+					var label_elem = $("<label class='ui-first-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
+				}else if(k==o.selectItems.length-1){
+					var label_elem = $("<label class='ui-last-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
+				}else if(k==0 && o.selectItems.lenght==1){
+					var label_elem = $("<label class='ui-first-child ui-last-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
+				}else{
+					var label_elem = $("<label class=' ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left' />").attr("for",o.id+k);
+				}
+				
+				if (!o.data_theme) {
+					o.data_theme = 'c';
+				}
+				if (o.isMini) {
+					label_elem.addClass("ui-mini");
+				}
+				label_elem.addClass("ui-btn-up-" + o.data_theme);
+				label_elem.html(label).appendTo(checkbox_elem);
+				checkbox_elem.appendTo(checkbox_group);
+				
+			});
 			
-			this.input = $("<input type='checkbox'/>").attr({name:o.id})
+			checkbox_group.appendTo($("<div class='ui-controlgroup ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+			
+			el.find(".incheck").bind("mousedown.checkboxfield",function(e){
+				$(this).find("label").addClass("ui-btn-down-" + o.data_theme);				  
+			  }).bind("mouseup.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-down-" + o.data_theme);
+			  }).bind("mousemove.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-up-" + o.data_theme).addClass("ui-btn-hover-" + o.data_theme);
+			  }).bind("mouseout.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-hover-" + o.data_theme).addClass("ui-btn-up-" + o.data_theme);
+			  }).bind("click",function(e){
+				  e.stopPropagation();
+				  var $input=$(this).find('input');
+				  if( $input.attr("checked")){
+					  $input.removeAttr("checked");
+					  if (o.orientation == "vertical") {
+						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-on").addClass("ui-icon-checkbox-off");
+						} else {
+							$(this).find(">label").removeClass('ui-btn-active');
+						}
+					  
+				  }else{
+					  $input.attr("checked","checked");
+					  if (o.orientation == "vertical") {
+						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-off").addClass("ui-icon-checkbox-on");
+						} else {
+							$(this).find(">label").addClass('ui-btn-active');
+						}
+					  
+				  }
+				  return ;
+			  });;
+			
+			/*$(".ui-checkbox").bind('click.checkboxfield',function(e){
+				var name=o.id;
+				$(this).find('input[type="checkbox"][name="'+name+'"]').attr('checked','checked');
+				if (o.orientation == "vertical") {
+					$(this).removeClass("ui-icon-checkbox-off").addClass('ui-checkbox-on').siblings().removeClass('ui-checkbox-on');
+				} else {
+					$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
+				}
+			});*/
+			
+			this.input = el.children(".ui-controlgroup");
+					
+				
+			
+			/*this.input = $("<input type='checkbox'/>").attr({name:o.id})
 		    .addClass("codiqa-control").bind("change.checkboxfield",function(e){
 			var value = self.input.prop("checked"), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 			}
-		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});*/
+			this.contents = el.children(".content");
+			if(!$.isEmptyObject(o.validate)){
+				this.input.addClass($.toJSON({validate:o.validate}));
+			}
+			this.input.filter("[value="+o.value+"]").prop("checked",true);
+			
+			this.input.bind("change.checkboxfield",function(e){
+				var value = $(e.target).attr("value"), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
 		}else{
 			this.input = $("<input type='checkbox'/>").attr({name:o.id})
 			    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
@@ -56,25 +132,38 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 				}
 			}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
-		}
-		
-		
-		if(!$.isEmptyObject(o.validate)){
-			this.input.addClass($.toJSON({validate:o.validate}));
-		}
-		this.input.appendTo(this.element);
+			if(!$.isEmptyObject(o.validate)){
+				this.input.addClass($.toJSON({validate:o.validate}));
+			}
+			this.input.appendTo(this.element);
+		}				
 	},
+	
+	/*_handleChange:function(key, value, oldValue){
+		var o = this.options;
+		if(key == "value"){
+			this.input.filter("[value="+o.value+"]").prop("checked",true);
+		}else if(key == "selectItems"){
+			this.input.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else if(key == "orientation"){
+			this.input.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else{
+			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
+		}
+	},*/
 	
 	_makeResizable:function(){},
 	
 	_createLabel:function(){
 		var o = this.options, el = this.element;
 		if(o.label){
-			if(o.mobile){
-				var labelspan = '<span class="ui-btn-inner"><span class="ui-btn-text">' + o.label+ '</span><span class="ui-icon ui-icon-checkbox-off ui-icon-shadow"> </span></span>'; 
-				$("<label/>").attr({"for":o.id,"class":"ui-checkbox-off ui-btn ui-btn-corner-all ui-fullsize ui-btn-icon-left ui-first-child ui-last-child ui-btn-up-c"})
-							 .html(labelspan).appendTo(el);
-			}else{
+			if(!o.mobile){
 				$("<label/>").attr("for",o.id).html(o.label).appendTo(el);
 			}
 		    
@@ -90,8 +179,10 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	_design:function(){
-		this.input.hide();
-		this.content.css("display","");
+		if (!this.options.mobile) {
+			this.input.hide();
+			this.content.css("display","");
+		}
 	},
 	
 	highlight: function(highlight){
@@ -99,6 +190,10 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		if(this.options.mobile){
+			this.input.unbind(".checkboxfield").remove();
+			this.contents.remove();
+		}
 		this.input.unbind(".checkboxfield");
 		this.element.removeClass( "an-checkboxfield" );
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
