@@ -110,11 +110,11 @@ $.widget( "an.form", $.an.page, {
 					mode:o.mode,
 					mobile:o.mobile,
 					optionchanged:function(e,data){
-						if(data.key == "value"){
+						if(data.key == "value" && doc.prop){
 							var id = $(e.target).attr("id");
 							id = id&&id.replace(/-/g,".");
 							var curValue = doc.prop(id);
-							if(curValue != data.value){
+							if(curValue != data.value ){
 								doc.prop(id,data.value,data["transient"]);
 							}
 						}else if(data.key == "metadata" || data.key == "attributes"){

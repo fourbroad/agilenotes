@@ -19,25 +19,45 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 	
 	_createControl:function(){
-		var self = this, o = this.options;
-		this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
-		    .addClass("ui-widget-content ui-corner-all");
-
-		if(o.resizable) this.content.resizable();
+		var self = this, o = this.options, el = this.element;
+		if (o.mobile) {
+			el.find(".content").addClass("codiqa-control");
+			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
+			    .addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset");
+			this.textarea.bind("change.textareafield keyup.textareafield",function(e){
+				e.preventDefault();
+	//			e.stopImmediatePropagation();
+				var value = self.textarea.val(), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();
+			}).bind("focus.textareafield", function(e) {
+				$(this).addClass("ui-focus");
+			}).bind("blur.textareafield", function(e) {
+				$(this).removeClass("ui-focus");
+			});
+		} else {
+			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
+			    .addClass("ui-widget-content ui-corner-all");
+			this.textarea.bind("change.textareafield keyup.textareafield",function(e){
+				e.preventDefault();
+	//			e.stopImmediatePropagation();
+				var value = self.textarea.val(), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
+		}
 		
+		
+		
+		if(o.resizable) this.content.resizable();		
 		if(!$.isEmptyObject(o.validate)){
 			this.textarea.addClass($.toJSON({validate:o.validate}));
 		}
-
-		this.textarea.bind("change.textareafield keyup.textareafield",function(e){
-			e.preventDefault();
-//			e.stopImmediatePropagation();
-			var value = self.textarea.val(), oldValue = o.value;
-			if(value != oldValue){
-				o.value = value;
-				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
-			}
-		}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
 	},
 	
 	_makeResizable:function(){},
@@ -55,6 +75,7 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 
 	_design:function(){
+		
 		this.textarea.detach();
 
 		var self = this, o = this.options, c = this.content;
