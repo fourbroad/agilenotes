@@ -502,7 +502,7 @@ $.widget( "an.workbench", {
 		var self = this, o = this.options, dbId = (opts&&opts.dbId)||o.dbId;
 		$.ans.getDoc(dbId, viewId, null, function(err, sideView){
 			if(sideView){
-				self._doShowSideView(sideView, anchor||"west", null, opts);
+				self._doShowSideView(sideView, anchor||"west", opts);
 			}else{
 				console.log("Load view "+viewId+"error: "+err);
 			}
@@ -561,9 +561,8 @@ $.widget( "an.workbench", {
 	_doShowSideView: function(sideView, anchor, opts){
 		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
 		    dbId = (opts&&opts.dbId) || o.dbId, tabs = this[anchor+"Tabs"], id = sideView._id, 
-		    el = this.element, panel = tabs.find("#"+id);
+		    el = this.element, panel = tabs.children("#"+id);
 		if(panel.size() > 0) return;
-
 		var a = el.border("option",anchor);
 		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
 
