@@ -90,7 +90,8 @@
 .field[type=search]>.content>input,
 .field[type=password]>.content>input,
 .field[type=datetime]>.content>input,
-.field[type=select]>.content>select {
+.field[type=select]>.content>select,
+.field[type=textarea]>.content {
 	width:100%;
 	height:100%;
 }

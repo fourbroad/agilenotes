@@ -21,8 +21,7 @@ $.widget( "an.textareafield", $.an.field, {
 	_createControl:function(){
 		var self = this, o = this.options, el = this.element;
 		if (o.mobile) {
-			el.addClass("codiqa-control");
-			el.find(".content").removeClass();
+			el.find(".content").addClass("codiqa-control");
 			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
 			    .addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset");
 			this.textarea.bind("change.textareafield keyup.textareafield",function(e){
@@ -76,6 +75,7 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 
 	_design:function(){
+		
 		this.textarea.detach();
 
 		var self = this, o = this.options, c = this.content;

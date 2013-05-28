@@ -179,7 +179,9 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	_design:function(){
-		if (!this.options.mobile) {
+		if (this.options.mobile) {
+			this.input.find(".incheck").unbind();
+		} else {
 			this.input.hide();
 			this.content.css("display","");
 		}
