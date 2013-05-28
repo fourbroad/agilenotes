@@ -128,8 +128,8 @@ var Model = {
     loadExtensions: function(dbId, extensionPoints, callback){
     	var self = this, sel = {$or:[]}, exts = {};
     	$.each(extensionPoints, function(){
-    		if(self.extension[this]){
-    			exts[this] = self.extension[this];
+    		if(self.extension[dbId]&&self.extension[dbId][this]){
+    			exts[this] = self.extension[dbId][this];
     		}else{
         		sel.$or.push({extensionPoint:this});
     		}
@@ -138,7 +138,8 @@ var Model = {
         	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
         		if(data){
         			$.each(data.docs,function(){
-        				self.extension[this.extensionPoint] = exts[this.extensionPoint]=exts[this.extensionPoint]||[]; 
+        				self.extension[dbId] = self.extension[dbId]||{};
+        				self.extension[dbId][this.extensionPoint] = exts[this.extensionPoint]=exts[this.extensionPoint]||[]; 
         				exts[this.extensionPoint].push(this);
         			});
         		}
