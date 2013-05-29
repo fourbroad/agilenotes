@@ -45,9 +45,12 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 			if (o.isMini) {
 				opts.mini = true;
 			}
+			
+			var t = this.content.button(opts);
+			$($($($(t).parent()).find(">span")).find(">span").eq(0)).html(this.options.label);
+		} else {
+			this.content.button(opts);
 		}
-		
-		this.content.button(opts);
 	},
 
 	_makeResizable:function(){},
