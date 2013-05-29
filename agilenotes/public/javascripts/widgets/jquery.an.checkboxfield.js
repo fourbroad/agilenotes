@@ -32,15 +32,13 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
 					<span class="ui-icon ui-icon-checkbox-off ui-icon-shadow"> </span>\
 					</span>';
+				var label_elem = $("<label class=' ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left' />").attr("for",o.id+k);
 				// ui-btn-up-a
 				if(k==0){
-					var label_elem = $("<label class='ui-first-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
-				}else if(k==o.selectItems.length-1){
-					var label_elem = $("<label class='ui-last-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
-				}else if(k==0 && o.selectItems.lenght==1){
-					var label_elem = $("<label class='ui-first-child ui-last-child ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left'   />").attr("for",o.id+k);
-				}else{
-					var label_elem = $("<label class=' ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left' />").attr("for",o.id+k);
+					label_elem.addClass("ui-first-child");
+				}
+				if(k==o.selectItems.length-1){
+					label_elem.addClass("ui-last-child");
 				}
 				
 				if (!o.data_theme) {
@@ -55,7 +53,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 				
 			});
 			
-			checkbox_group.appendTo($("<div class='ui-controlgroup ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+			checkbox_group.appendTo($("<div class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
 			
 			el.find(".incheck").bind("mousedown.checkboxfield",function(e){
 				$(this).find("label").addClass("ui-btn-down-" + o.data_theme);				  

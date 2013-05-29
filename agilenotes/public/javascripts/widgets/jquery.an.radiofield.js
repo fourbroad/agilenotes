@@ -35,27 +35,33 @@ $.widget( "an.radiofield", $.an.inputfield, {
 					<span class="ui-icon ui-icon-radio-on ui-icon-shadow"> </span>\
 					</span>';
 				// ui-btn-up-a
-				var label_elem = $("<label class='ui-first-child ui-radio-off ui-btn ui-btn-up-c ui-fullsize ui-btn-icon-left' style='margin:0'  />").attr("for",o.id+k);
+				var label_elem = $("<label class='ui-radio-off ui-btn ui-btn-up-c ui-fullsize ui-btn-icon-left' style='margin:0'  />").attr("for",o.id+k);
 				if (!o.data_theme) {
 					o.data_theme = 'c';
 				}
 				
+				if (k == 0) {
+					label_elem.addClass("ui-first-child");
+				}
+				
+				if (k == (o.selectItems.length - 1)) {
+					label_elem.addClass("ui-last-child");
+				}
 				label_elem.addClass("ui-btn-up-" + o.data_theme);
 				label_elem.html(label).appendTo(radio_elem);
 				radio_elem.appendTo(radio_group);
+				
+				radio_elem.bind("click.radiofield", function(e) {
+					$(this).find('input[type="radio"]').attr('checked','checked');
+					if (o.orientation == "vertical") {
+						$(this).removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
+					} else {
+						$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
+					}
+				});
 			});
 			
-			radio_group.appendTo($("<div class='ui-controlgroup ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
-			
-			$(".ui-radio").bind('click.radiofield',function(e){
-				var name=o.id;
-				$(this).find('input[type="radio"][name="'+name+'"]').attr('checked','checked');
-				if (o.orientation == "vertical") {
-					$(this).removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
-				} else {
-					$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
-				}
-			});
+			radio_group.appendTo($("<div border='1' class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
 			
 			this.inputs = el.children(".ui-controlgroup");
 		} else {
