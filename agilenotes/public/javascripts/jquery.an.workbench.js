@@ -1011,7 +1011,7 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: Model.GROUP_ROOT, checkbox: true, checkedNodes:ids});
+						$this.sideview({dbId:dbId, roots: [Model.GROUP_ROOT], checkbox: true, checkedNodes:ids});
 						setTimeout(function(){ $this.sideview("expand", Model.GROUP_ROOT); },200);
 						
 					},
@@ -1071,7 +1071,7 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: Model.ROLE_ROOT, checkbox: true, checkedNodes:ids});
+						$this.sideview({dbId:dbId, roots: [Model.ROLE_ROOT], checkbox: true, checkedNodes:ids});
 						setTimeout(function(){ $this.sideview("expand", Model.ROLE_ROOT); },200);
 					},
 					buttons: {
