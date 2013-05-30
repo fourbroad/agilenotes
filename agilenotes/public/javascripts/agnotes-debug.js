@@ -24,6 +24,7 @@ var Model = {
     SIDE_VIEW: "00000000000000000000000a",
     ACTION: "00000000000000000000000b",
     VALIDATE_METHOD:"00000000000000000000000c",
+    EXTENSION_POINT: "00000000000000000000000d",
     CATEGORY: "00000000000000000000000e",
     DATABASE: "00000000000000000000000f",
 
@@ -36,7 +37,7 @@ var Model = {
     GROUP_ROOT: "0000000000000000000e0008",
     ROLE_ROOT: "0000000000000000000e0009",
     SIDE_VIEW_ROOT: "0000000000000000000e000a",
-    ACTION_ROOT: "0000000000000000000e000b",
+    EXTENSION_ROOT: "0000000000000000000e000b",
     DATABASE_ROOT: "0000000000000000000e000f",
 
     // Cache of dbs, document type, page(form), view, side view.
@@ -45,63 +46,8 @@ var Model = {
     pages:{},
     views:{},
     sideViews:{},
+    extension:{},
     
-    typeId:function(rootId){
-    	if(rootId == this.META_ROOT){
-    		return this.META;
-    	}else	if(rootId == this.FORM_ROOT){
-    		return this.FORM;
-    	}else	if(rootId == this.VIEW_ROOT){
-    		return this.VIEW;
-    	}else	if(rootId == this.PAGE_ROOT){
-    		return this.PAGE;
-    	}else	if(rootId == this.TASK_ROOT){
-    		return this.TASK;
-    	}else if(rootId == this.OU_ROOT){
-    		return this.OU;
-    	}else if(rootId == this.GROUP_ROOT){
-    		return this.GROUP;
-    	}else if(rootId == this.ROLE_ROOT){
-    		return this.ROLE;
-    	}else if(rootId == this.SIDE_VIEW_ROOT){
-    		return this.SIDE_VIEW;
-    	}else if(rootId == this.ACTION_ROOT){
-    		return this.ACTION;
-    	}else if(rootId == this.DATABASE_ROOT){
-    		return this.DATABASE;
-    	}
-    },
-
-    typeName:function(typeId){
-    	if(typeId == this.META){
-    		return "Meta";
-    	}else	if(typeId == this.FORM){
-    		return "Form";
-    	}else	if(typeId == this.VIEW){
-    		return "View";
-    	}else	if(typeId == this.PAGE){
-    		return "Page";
-    	}else	if(typeId == this.TASK){
-    		return "Task";
-    	}else if(typeId == this.USER){
-    		return "User";
-    	}else if(typeId == this.OU){
-    		return "Organization Unit";
-    	}else if(typeId == this.GROUP){
-    		return "Group";
-    	}else if(typeId == this.ROLE){
-    		return "Role";
-    	}else if(typeId == this.SIDE_VIEW){
-    		return "Side View";
-    	}else if(typeId == this.CATEGORY){
-    		return "Category";
-    	}else if(typeId == this.ACTION){
-    		return "Action";
-    	}else if(typeId == this.DATABASE){
-    		return "Database";
-    	}
-    },
-
     rootId:function(typeId){
     	if(typeId == this.META){
     		return this.META_ROOT;
@@ -121,13 +67,25 @@ var Model = {
     		return this.ROLE_ROOT;
     	}else if(typeId == this.SIDE_VIEW){
     		return this.SIDE_VIEW_ROOT;
-    	}else if(typeId == this.ACTION){
-    		return this.ACTION_ROOT;
+    	}else if(typeId == this.EXTENSION_POINT){
+    		return this.EXTENSION_ROOT;
     	}else if(typeId == this.DATABASE){
     		return this.DATABASE_ROOT;
     	}
     },
 
+    getDb:function(dbId, callback){
+    	if(this.dbs[dbId]){
+    		callback(null,this.dbs[dbId]);
+    	}else{
+    		var self =this;
+        	$.ans.getDB(dbId,null,function(error,db){
+        		if(db) self.dbs[dbId] = db;
+        		callback(error,db);
+        	});
+    	}
+    },
+    
     getPages: function(dbId, ids, callback){
     	var self = this, sel = {$or:[]}, pages = [], page;
     	for(var f in ids){
@@ -145,8 +103,11 @@ var Model = {
     			for(var i in ids){
     				for(var j in pages){
     					if(pages[j]._id == ids[i]){
-    						sortedPages.push(pages[j]);
-    						self.pages[pages[j]._id] = pages[j];
+    						var type = pages[j].type; 
+    						if(type == Model.PAGE||type == Model.FORM){
+        						sortedPages.push(pages[j]);
+        						self.pages[pages[j]._id] = pages[j];
+    						}
     						break;
     					}
     				}
@@ -164,33 +125,29 @@ var Model = {
     	}
     },
     
-    getDb:function(dbId, callback){
-    	if(this.dbs[dbId]){
-    		callback(null,this.dbs[dbId]);
-    	}else{
-    		var self =this;
-        	$.ans.getDB(dbId,null,function(error,db){
-        		if(db) self.dbs[dbId] = db;
-        		callback(error,db);
-        	});
-    	}
-    },
-
-    loadToolbarActions: function(dbId, callback){
-    	var sel = {type:Model.ACTION, $or:[]};
-    	$.each(["toolbarHeader","toolbarMiddle","toolbarTail"], function(){
-    		sel.$or.push({extendPoint:this});
-    	});
-    	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-    		var tas = null;
-    		if(data){
-    			tas = {toolbarHeaderActions:[],toolbarMiddleActions:[],toolbarTailActions:[]};
-    			$.each(data.docs,function(){
-    				tas[this.extendPoint+"Actions"].push(this);
-    			});
+    loadExtensions: function(dbId, extensionPoints, callback){
+    	var self = this, sel = {$or:[]}, exts = {};
+    	$.each(extensionPoints, function(){
+    		if(self.extension[dbId]&&self.extension[dbId][this]){
+    			exts[this] = self.extension[dbId][this];
+    		}else{
+        		sel.$or.push({extensionPoint:this});
     		}
-    		callback(err, tas);
     	});
+    	if(sel.$or.length > 0){
+        	$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+        		if(data){
+        			$.each(data.docs,function(){
+        				self.extension[dbId] = self.extension[dbId]||{};
+        				self.extension[dbId][this.extensionPoint] = exts[this.extensionPoint]=exts[this.extensionPoint]||[]; 
+        				exts[this.extensionPoint].push(this);
+        			});
+        		}
+        		callback(err, exts);
+        	});
+    	}else{
+    		callback(null, exts);
+    	}
     },
 
     newDocument: function(element, dbId, typeId, opts){
@@ -429,15 +386,12 @@ var Model = {
     },
 
     _doOpenSideView:function(element, dbId, sideView, opts){
-		if(sideView && sideView.category == "treeView"){
+		if(sideView){
 			element.sideview($.extend(true, {dbId:dbId}, sideView, opts));
 			opts.opened && opts.opened(element.data("sideview"));
-		}else if(sideView && sideView.category == "outline"){
-			element.outline($.extend(true,sideView,opts));
-			opts.opened && opts.opened(element.data("outline"));
 		}
     },
-    
+
     openSideView: function(element, dbId, sideViewId, opts){
     	opts = opts || {};
     	var self = this, sideView = this.sideViews[sideViewId];
@@ -473,7 +427,6 @@ var Model = {
     	delete this.types[docId];
         delete this.pages[docId];
         delete this.views[docId];
-        delete this.pages[docId];
         delete this.sideViews[docId];
     }
 };
@@ -492,7 +445,7 @@ function DocWrapper(doc, parseDot){
 	this.prop = function(id, value, isTransient){
 		if(!id) return null;
 		if(value === undefined){
-			try{return eval("this._doc."+id)}catch(e){};
+			try{return eval("this._doc."+id);}catch(e){};
 		}else {
 			var oldValue = this.prop(id);
 			if(value == oldValue) return this;
@@ -659,8 +612,14 @@ function openDocument(dbId,docId, opts){
 	openDialog(dbId,docId,opts,'openDocument');
 }
 var openPage,openView,openPage,openSideView;
-openForm=openView=openPage=openSideView=function(dbId,sid, opts){
+openForm=openPage=function(dbId,sid, opts){
 	openDialog(dbId,sid,opts,'openPage');
+};
+openView=function(dbId,sid, opts){
+	openDialog(dbId,sid,opts,'openView');
+};
+openSideView=function(dbId,sid, opts){
+	openDialog(dbId,sid,opts,'openSideView');
 };
 
 /*
@@ -27377,7 +27336,7 @@ $.widget( "an.box", $.an.widget, {
 		if(link && link != "raw"){
 			var target = this.content.children(".target"), data = target.data(), hit = false;
 			for(var i in data){
-				if($.inArray(i, ["editor","gridview", "formview", "page", "sideview","outline"]) != -1){
+				if($.inArray(i, ["editor","gridview", "formview", "page", "sideview","explorer"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
@@ -27404,12 +27363,14 @@ $.widget( "an.box", $.an.widget, {
 	linkedWidget:function(){
 		var data = this.content.children(".an-gridview,.an-formview,.an-customview,.an-page,.an-editor").data(), 
 		    widget = null;
-		$.each(data,function(){
-			if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
-				widget = this;
-				return false;
-			}
-		});
+		if(data){
+			$.each(data,function(){
+				if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
+					widget = this;
+					return false;
+				}
+			});
+		}
 		return widget;
 	},
 
@@ -27424,7 +27385,7 @@ $.widget( "an.box", $.an.widget, {
 					data[i].option("mode", "edit");
 					hit = true;
 				}
-				if($.inArray(i, ["gridview", "formview", "page", "sideview","outline"]) != -1){
+				if($.inArray(i, ["gridview", "formview", "page", "sideview","explorer"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
@@ -28379,6 +28340,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			href = o.url+"/"+file.metadata.filepath;
 			if(/^image\/.*/.test(file["contentType"])){
 				imgsrc = href;
+			} else {
+				imgsrc += "#" + href;
 			}
 		}
 		
@@ -29057,13 +29020,7 @@ $.widget( "an.tree", {
 	_create: function() {
 		var self = this, el = this.element, o = this.options;
 		el.addClass("an-tree").empty();
-		this.contentProvider = {
-			getRoots: function(){ return []; },
-			getChildren: function(parentNode){ return []; },
-			hasChildren: function(node){ return false; },
-			getId: function(node){ return node.id ? node.id: null;}
-		};
-		o.contentProvider = o.contentProvider || this.contentProvider;
+		o.contentProvider = o.contentProvider || this._defaultContentProvider();
 		this._loadChildren(el);
 		el.delegate(".hitarea","click.tree",function(){
 			var li = $(this).parent();
@@ -29084,6 +29041,15 @@ $.widget( "an.tree", {
 		});
 	},
 
+	_defaultContentProvider: function(){
+		return {
+			getRoots: function(){ return []; },
+			getChildren: function(parentNode){ return []; },
+			hasChildren: function(node){ return false; },
+			getId: function(node){ return node.id ? node.id: null;}
+		};;
+	},
+	
 	refresh: function(nodeId){
 		var self = this;
 		if(nodeId){
@@ -29180,7 +29146,7 @@ $.widget( "an.tree", {
 	},
 	
 	_loadChildren: function(parent){
-		var self = this, o = this.options, ul = parent.children("ul"), cp = o.contentProvider||this.contentProvider;
+		var self = this, o = this.options, ul = parent.children("ul"), cp = o.contentProvider||this._defaultContentProvider();
 		if(ul.length == 0) ul = $("<ul/>").appendTo(parent);
 		
 		var ids = [];
@@ -33086,12 +33052,96 @@ $.widget("an.tabsx", $.ui.tabs, {
 
 (function( $, undefined ) {
 
+$.widget( "an.explorer", $.an.tree, {
+	
+	_create: function() {
+		$.an.tree.prototype._create.apply(this, arguments);
+		var self = this;
+		$(document).bind("documentCreated.explorer documentChanged.explorer documentDeleted.explorer", function(e,data){
+			$.each($.isArray(data)?data:[data], function(k,v){
+				if(e.type == "documentCreated" && v._path){
+					var ids = v._path.split(","), id = ids[ids.length-3];
+					self.refresh(id);
+				}else{
+					self.refresh(v._id);
+					self.refresh(Model.GROUP_ROOT); // TODO: optimize the refreshing of explorer GROUP_ROOT.
+				}
+			});
+		});
+	},
+
+	_defaultContentProvider: function(){
+		var o = this.options;
+		return {
+			getRoots: function(mountNodes){
+				var sel = {$or:[]};
+				$.each(o.roots, function(){ sel.$or.push({_id:this}); });
+				$.ans.getDoc(o.dbId,null,{selector:sel},function(err,data){
+					var nodes = [];
+					$.each(data.docs||[], function(k, root){
+						nodes.push({ id: root._id, text: root.title, data: root, "class": "folder root" });
+					});
+					mountNodes(nodes);
+				});
+			},
+			getChildren: function(parentNode,mountNodes){
+				var d = parentNode.data, sel; 
+				if(d._id == Model.EXTENSION_ROOT){
+					sel = {type:Model.EXTENSION_POINT};
+				}else if(d.type==Model.EXTENSION_POINT){
+					sel = {extensionPoint:d._id};
+				}else{
+					sel = {_path:{$regex:'^'+d._path+'[^,]+,$'}};
+					if(o.showUser&&(d.type == Model.GROUP)){
+						sel = {$or:[sel,{type:Model.USER, _groupPaths:d._path}]};
+					}else if(!o.showUser){
+						sel = {$and:[sel,{type:{$ne:Model.USER}}]};
+					}
+				}
+
+				$.ans.getDoc(o.dbId,null,{selector:sel},function(err,data){
+					var nodes = [];
+					$.each(data.docs, function(k, doc){
+						nodes.push({ id: doc._id, text: doc.title, data: doc, parent:parentNode, "class": (doc.type == Model.CATEGORY||doc.type == Model.OU||doc.type == Model.GROUP||doc.type == Model. ROLE||doc.type==Model.EXTENSION_POINT) ? "folder":"file"});
+					});
+					mountNodes(nodes);
+				});
+			},
+			hasChildren: function(node){
+				var type = node.data.type;
+				return type == Model.CATEGORY|| type == Model.OU||type == Model.GROUP||type == Model.ROLE||type==Model.EXTENSION_POINT;
+			},
+			getId: function(node){
+				return node.id ? node.id : null;
+			}
+		};
+	},
+	
+	destroy: function() {
+		$(document).unbind(".explorer");
+		$.an.tree.prototype.destroy.apply( this, arguments );
+	}
+});
+})( jQuery );/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
 $.widget( "an.page", {
 	options: {
 		mode:'browser',
 		actionSets: [],
 		wrapper:"<div/>",
 		formIds:{
+			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
 		}
@@ -33555,7 +33605,6 @@ $.widget( "an.form", $.an.page, {
 			text:["5080143085ac60df09000001","5092733215ca72150a000001"],
 			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
 			checkbox:["5080143085ac60df09000001","50af2d266cec663c0a000009"],
-			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
 			textarea:["5080143085ac60df09000001","50af2ca66cec663c0a000008"],
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
@@ -33710,59 +33759,6 @@ $.widget( "an.form", $.an.page, {
 		return $.an.page.prototype.destroy.apply(this, arguments);
 	}
 });
-})( jQuery );
-/*!
- * Agile Notes 1.0
- *
- * Copyright 2013, Sihong Zhu and other contributors
-* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
-* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
-* This software is not distributed under version 3 or later of the GPL.
- *
- * http://agilemore.com/agilenotes
- */
-
-(function( $, undefined ) {
-
-$.widget( "an.outline", {
-	options: {
-	},
-
-	_create: function() {
-		var self = this, o = this.options, el = this.element;
-		el.addClass("an-outline").tree({ 
-			contextmenu: o.contextmenu, 
-			contentProvider: o.contentProvider,
-			nodehover: o.nodehover,
-			nodeclick: o.nodeclick,
-			nodedblclick:o.nodedblclick
-		});
-		$.each(el.tree("option","roots")||[],function(k,v){ el.tree("expand",v); });
-
-		$(window).bind("outline.outline", function(e){
-			var ed = e.workbench.currentEditor();
-			self._setOption("contentProvider", ed&&ed.option("outline"));
-		}).bind("widgetselect.outline", function(e,widget){
-			el.tree("option","selectedNodes",[widget.option("id")]);
-		});
-	},
-
-	_setOption: function( key, value ) {
-		if ( key === "contentProvider" ) {
-			var el = this.element;
-			el.tree("option","contentProvider", value);
-			$.each(el.tree("option","roots")||[],function(k,v){ el.tree("expand",v); });
-		}
-		return $.Widget.prototype._setOption.apply(this, arguments ); 
-	},
-
-	destroy: function() {
-		$(window).unbind(".outline");
-		this.element.removeClass("an-outline");
-		$.Widget.prototype.destroy.apply( this, arguments );
-	}
-});
-
 })( jQuery );
 /*!
  * Agile Notes 1.0
@@ -34671,9 +34667,6 @@ $.widget( "an.toolbar", {
 
 $.widget( "an.view", {
 	options:{
-		skip: 0,
-		limit: 10,
-		total: 0,
 		mode: "browser",
 		actionSets:[]
 	},
@@ -34682,19 +34675,23 @@ $.widget( "an.view", {
 		var o = this.options, el = this.element;
 		el.addClass("an-view").addClass(o.view.name).empty();
 		$('<style type="text/css">'+(o.view.stylesheet||"")+'</style>').appendTo(el);
-		if(o.view&&o.view.limit) {
-			o.limit = o.view.limit = parseInt(o.view.limit);
-		}
-		if(o.view&&o.view.filter) {
-			o.filter = o.view.filter;
-		}
+
+		o.limit = o.limit||parseInt(o.view.limit)||10;
+		o.skip = o.skip||parseInt(o.view.skip)||0;
+		o.total = o.total||parseInt(o.view.total)||0;
+		o.filter = o.filter||o.view.filter;
+		o.showPager = o.showPager||o.view.showPager;
+		
 		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		
 		var data = {};
 		data[this.widgetName] = this;
 		$.each(eval("("+(o.view.actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
 		
+		o.showPager&&this._createPager();
+
 		this.docs = [];
 		this._loadDocs();
 	},
@@ -34720,9 +34717,9 @@ $.widget( "an.view", {
 		}
 	},
 	
-	createPager:function(){
+	_createPager:function(){
 		var o = this.options,self=this;
-		this.pager = $("<div class='pager'/>").css({
+		this.pager = $("<div style='display:none;' class='pager'/>").css({
 			left:0,right:0,bottom:0,height:o.pagerHeight
 		}).appendTo(this.element);
 		this.pager.addClass(o.className);
@@ -34789,7 +34786,12 @@ $.widget( "an.view", {
 	refresh:function(){
 		var o = this.options;
 		this['_'+o.mode]&&this['_'+o.mode]();
-		if(this.pager&&this.widgetName!=='gridview'){
+		this._refreshPager();
+	},
+
+	_refreshPager:function(){
+		var o = this.options;
+		if(this.pager){
 			if(o.totalPage <= 1){
 				this.pager.hide();
 				return this;
@@ -34835,11 +34837,12 @@ $.widget( "an.view", {
 			$.ans.getDoc(o.dbId,null,selectorStr,function(err,data){
 				self.docs = data.docs;
 				o.total = data.total;
-				if(self.pager&&self.widgetName!=='gridview'){
+				if(self.pager){
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
 				self._docsLoaded && self._docsLoaded();
+				self._trigger("documentloaded",null,data);
 			});
 		}
 	},
@@ -34891,7 +34894,6 @@ $.widget( "an.gridview", $.an.view, {
 		$.an.view.prototype._create.apply(this, arguments);
 		this.element.addClass("an-gridview");
 		var self = this, o = this.options;
-		o.showPager = o.view.showPager;
 		if(o.view.cellRender) o.cellRender = eval("("+o.view.cellRender+")");
 		this.element.agilegrid($.extend({
 			rowOffset: o.skip,
@@ -34946,6 +34948,9 @@ $.widget( "an.gridview", $.an.view, {
 			isColumnResizable:false,
 			isRowResizable:false
 		},this.options.view.options));		
+	},
+	
+	_createPager:function(){
 	},
 	
 	save:function(){
@@ -35010,11 +35015,7 @@ $.widget( "an.formview", $.an.view, {
 		o.itemWidth = o.view.itemWidth;
 		o.itemHeight = o.view.itemHeight;
 		el.addClass("an-formview");
-		this.documents = $("<div class='content'/>").appendTo(el);
-		
-		if(o.view.showPager){
-			this.createPager();
-		}
+		this.documents = $("<div class='content'/>").prependTo(el);
 	},
 
 	_showDocuments:function(){
@@ -35084,13 +35085,12 @@ $.widget( "an.customview", $.an.view, {
 	_create: function(){
 		$.an.view.prototype._create.apply(this, arguments);
 		var o = this.options, el = this.element;
-		o.showPager = o.view.showPager;
 		o.templateTemp = o.view.templateTemp;
 		o.templateSelector = o.view.templateSelector;
 		o.templateConverts = o.view.templateConverts;
 		o.templateContent = o.view.templateContent;
 		el.addClass("an-customview");
-		this.documents = $(o.templateContent).appendTo(el);
+		this.documents = $(o.templateContent).prependTo(el);
 				
 		if (o.templateTemp) {
 			o.templateTemp=$.templates(o.templateTemp);
@@ -35099,10 +35099,6 @@ $.widget( "an.customview", $.an.view, {
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
 			$.views.converters(o.templateConverts);
-		}
-
-		if(o.view.showPager){
-			this.createPager();
 		}
 	},
 
@@ -35350,9 +35346,9 @@ $.widget( "an.editor", {
 			}
 		});
 	},
+	
 	_validate:function(){
 		var self = this,valid=true;
-		
 		this.element.tabsx("option","panels").each(function(){
 			var data = $(this).data();;
 			for(var i in data){
@@ -35365,20 +35361,22 @@ $.widget( "an.editor", {
 		});
 		return valid;
 	},
+	
 	save: function(opts){
 		opts = opts || {};
 		var self = this, o = this.options, dbId = o.dbId, valid = true;
-		
 		this.element.tabsx("option","panels").each(function(){
 			var data = $(this).data();;
 			for(var i in data){
 				if($.inArray(i, ["form","page"]) != -1){
-					if((data[i].option(i)._id == o.document._id) && data[i].option("isDirty")){
-						o.document.content = data[i].option("content");
-						data[i].option("isDirty", false);
-						o.isDocDirty = true;
-					}else{
-						data[i].save();	
+					if(data[i].option("isDirty")){
+						if(data[i].option(i)._id == o.document._id){
+							o.document.content = data[i].option("content");
+							data[i].option("isDirty", false);
+							o.isDocDirty = true;
+						}else{
+							data[i].save();	
+						}
 					}
 					if(opts.validate && valid && form.option("mode")!="design"){
 						valid = form.option("isValid");
@@ -35387,12 +35385,14 @@ $.widget( "an.editor", {
 						}
 					}
 				}else	if($.inArray(i, ["gridview","formview","customview"]) != -1){
-					if((data[i].option("view")._id == o.document._id)&&data[i].option("isDirty")){
-						o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
-						data[i].option("isDirty", false);
-						o.isDocDirty = true;
-					}else{
-						data[i].save();	
+					if(data[i].option("isDirty")){
+						if(data[i].option("view")._id == o.document._id){
+							o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
+							data[i].option("isDirty", false);
+							o.isDocDirty = true;
+						}else{
+							data[i].save();	
+						}
 					}
 				}
 			}
@@ -35400,15 +35400,29 @@ $.widget( "an.editor", {
 		this.option("isFormDirty",false);
 		
 		if(valid && o.isDocDirty) {
-			var doc = this._getDocument();
+			var doc = this._getDocument(),opNew={options:{}},tags=false;
 			
 			if ($.type(opts.beforesave) == "function") {
 				opts.beforesave(doc); // here you can change the doc values
 			}
 
+			if (o.formIds) {
+				doc.formIds=o.formIds;
+			}
+			
+			if(o.task||opts.task){
+				opNew["options"]["task"]=o.task||opts.task;
+				tags=true;
+			}
+
 			if(o.isNew){
 				var def = o["default"]&&o["default"]._id;
-				Model.postDocument(dbId, doc, def?{options:{'default':def}}:null, function(err,result){
+				
+				if(def){
+					opNew["options"]["default"]=def;
+					tags=true;
+				}
+				Model.postDocument(dbId, doc, tags?opNew:null, function(err,result){
 					if(!err){
 						delete o.isNew;
 						$.extend(o.document, result);
@@ -35422,7 +35436,7 @@ $.widget( "an.editor", {
 					}
 				});
 			}else{
-				Model.updateDocument(dbId,doc._id,doc,null, function(err,result){
+				Model.updateDocument(dbId,doc._id,doc,tags?opNew:null, function(err,result){
 					if(!err){
 						$.extend(o.document, result);
 						self.option("isDocDirty",false);
@@ -35460,7 +35474,8 @@ $.widget( "an.editor", {
 			var cf = this._currentForm(); 
 			return cf&&cf.option("actionSets");
 		}else if(key === "outline" && value === undefined){
-			return this._currentForm().option("outline");
+			var form = this._currentForm();
+			if(form) return form.option("outline");
 		}else if(key === "document" && value === undefined){
 			return this._getDocument();
 		}else	if(key === "namedValues" && value === undefined){
@@ -35550,110 +35565,34 @@ $.widget( "an.editor", {
 
 (function( $, undefined ) {
 
-// TODO :  Refactoring sideview as a subclass of tree?
 $.widget( "an.sideview", {
-	options:{
-	},
 	
 	_create: function() {
-		var self = this, o = this.options;
-		this.element.tree({
-			checkbox:o.checkbox,
-			checkedNodes: o.checkedNodes,
-			contentProvider:{
-				getRoots: function(mountNodes){
-					var sel = {$or:[]};
-					$.each((o.roots&&o.roots.split(","))||[], function(){ sel.$or.push({_id:this}); });
-					$.ans.getDoc(o.dbId,null,{selector:sel},function(err,data){
-						var nodes = [];
-						$.each(data.docs||[], function(k, root){
-							nodes.push({ id: root._id, text: root.title, data: root, "class": "folder root" });
-						});
-						mountNodes(nodes);
-					});
-				},
-				getChildren: function(parentNode,mountNodes){
-					var d = parentNode.data, sel = {_path:{$regex:'^'+d._path+'[^,]+,$'}}; 
-					if(o.showUser&&(d.type == Model.GROUP)){
-						sel = {$or:[sel,{type:Model.USER, _groupPaths:d._path}]};
-					}else if(!o.showUser){
-						sel = {$and:[sel,{type:{$ne:Model.USER}}]};
-					}
-
-					$.ans.getDoc(o.dbId,null,{selector:sel},function(err,data){
-						var nodes = [];
-						$.each(data.docs, function(k, doc){
-							nodes.push({ id: doc._id, text: doc.title, data: doc, parent:parentNode, "class": (doc.type == Model.CATEGORY||doc.type == Model.OU||doc.type == Model.GROUP||doc.type == Model. ROLE) ? "folder":"file"});
-						});
-						mountNodes(nodes);
-					});
-				},
-				hasChildren: function(node){
-					var type = node.data.type;
-					return type == Model.CATEGORY|| type == Model.OU||type == Model.GROUP||type == Model.ROLE;
-				},
-				getId: function(node){
-					return node.id ? node.id : null;
-				}
-			},
-			nodeclick:o.nodeclick,
-			nodedblclick:o.nodedblclick,
-			contextmenu: o.contextmenu,
-			drop:function(e,data){self._trigger("drop",null, data);}
-		});
-
-		$(document).bind("documentCreated.sideview documentChanged.sideview documentDeleted.sideview", function(e,data){
-			$.each($.isArray(data)?data:[data], function(k,v){
-				if(e.type == "documentCreated" && v._path){
-					var ids = v._path.split(","), id = ids[ids.length-3];
-					self.refresh(id);
-				}else{
-					self.refresh(v._id);
-					self.refresh(Model.GROUP_ROOT); // TODO: optimize the refreshing of sideview GROUP_ROOT.
-				}
-			});
-		});
-	},
-
-	option: function(key, value) {
-		var el = this.element;
-		if(key == "checkedNodes" && value === undefined){
-			return el.tree("option", "checkedNodes");
-		}else if(key === "roots" && value === undefined){
-			return el.tree("option", "roots");
-		}else if(key === "selectedNodes" && value === undefined){
-			return el.tree("option", "selectedNodes");
-		}
+		var o = this.options, el = this.element;
+		if(o.name) el.addClass(o.name);
+		$('<style type="text/css">'+(o.stylesheet||"")+'</style>').appendTo(el);
+		$.extend(this, eval("try{("+(o.methods||"{}")+")}catch(e){}"));
 		
-		return $.Widget.prototype.option.apply(this, arguments);
-	},
-	
-	refresh: function(nodeId){
-		this.element.tree("refresh",nodeId);
-	},
-	
-	add:function(nodeId, node){
-		this.element.tree("add",nodeId, node).tree("refresh", node.id);
-	},
-	
-	"delete": function(nodeId){
-		this.element.tree("delete",nodeId);
-	},
-	
-	expand:function(nodeId){
-		this.element.tree("expand",nodeId);
-	},
-	
-	collapse:function(nodeId){
-		this.element.tree("collapse",nodeId);
+		var data = {};
+		data[this.widgetName] = this;
+		o.actions = eval("("+(o.actions||"[]")+")");
+		$.each(o.actions, function(k,action){
+			el.bind(action.events, data, action.handler);
+		});
+
+		this.createContent && this.createContent();
 	},
 	
 	destroy: function() {
-		$(document).unbind(".sideview");
+		var o = this.options, el = this.element;
+		$.each(o.actions, function(k,action){
+			el.unbind(action.events);
+		});
+		this.clean && this.clean();
 		$.Widget.prototype.destroy.apply( this, arguments );
 	}
 });
-})( jQuery );/*!
+})(jQuery);/*!
  * Agile Notes 1.0
  *
  * Copyright 2013, Sihong Zhu and other contributors
@@ -35672,7 +35611,19 @@ $.widget( "an.workbench", {
 		eastWidth: 260,
 		westViews: "",
 		eastViews: "",
-		sideViews: [{id:"50faab53a092004045000001", anchor:"west"}],
+		sideViews: [{id:"50b19b6449987bc16db5a1b8", anchor:"west"}],
+		extensionPoints:{startNew:"51959a88a092003a0f000011",
+		     toolbarGlobal:"519598d2a092003a0f000005",
+		     toolbarHeader:"5195994da092003a0f000008",
+		     toolbarCenter:"5195989ea092003a0f000001",
+		     toolbarTail:"51959981a092003a0f00000b",
+		     showSideView:"51959a53a092003a0f00000e",
+		     documentClick:"519ad731a092001a75000001",
+		     documentDoubleClick:"51998379a092001104000078", 
+		     documentContextMenuNew:"51949426a092000480000001",
+		     documentContextMenuMiddle:"519ad76ba092001a75000004", 
+		     documentContextMenuTop:"519ad8f8a092001a7500000f",
+		     documentContextMenuBottom:"519ad916a092001a75000012"},
 		openedDocuments:[]
 	},
 
@@ -35880,45 +35831,23 @@ $.widget( "an.workbench", {
 	},
 	
 	_loadActions:function(afterLoad){
-		var self = this, o = this.options, sel = {$or:[]};
-		this.startNewActions = [];
-		this.toolbarGlobalActions = [];
-		this.toolbarHeaderActions = [];
-		this.toolbarMiddleActions = [];
-		this.toolbarTailActions = [];
-		this.showSideViewActions = [];
-		this.documentClickActions = [];
-		this.documentDoubleClickActions = [];
-		this.categoryContextMenuNewActions = []; // New of context menu.
-		this.documentContextMenuCenterActions = []; // Center of context menu.
-		this.documentContextMenuTopActions = []; // Top of context menu.
-		this.documentContextMenuBottomActions = []; // Bottom of context menu.
-		$.each(["startNew","toolbarGlobal","toolbarHeader","toolbarMiddle","toolbarTail",
-		        "showSideView","documentClick", "documentDoubleClick", 
-		        "categoryContextMenuNew","documentContextMenuCenter", 
-		        "documentContextMenuTop", "documentContextMenuBottom"], function(){
-			sel.$or.push({type:Model.ACTION, extendPoint:this});
-		});
-		$.ans.getDoc(o.dbId, null, {selector:sel},function(err,data){
-			if(err){
-				console.log("Load Actions Error","Load actions error: "+err);
-			}else{
-				$.each(data.docs,function(){
-					self[this.extendPoint+"Actions"].push(this);
-				});
-				afterLoad();
-			}
-		});
+		var self = this, o = this.options, eps=[];
+		$.each(o.extensionPoints,function(k,v){ eps.push(v);});
+		Model.loadExtensions(o.dbId, eps, function(err, exts){
+			self.extensions = exts;
+			afterLoad();
+	    });
 	},
 	
 	_initMainToolbar:function(){
-		var self = this, o = this.options;
+		var self = this, o = this.options, eps = o.extensionPoints;
 		
 		// Set up start menu actions
 		var startActions = [], children = [];
 
 		// Add new Actions.
-		$.each(this.startNewActions, function(k,v){
+		var sna = this.extensions[eps.startNew]||[];
+		$.each(sna, function(k,v){
     		children.push({
     				id: k,
     				type:"menuItem",
@@ -35927,7 +35856,7 @@ $.widget( "an.workbench", {
     				enabled:eval("(0,"+(v.enabled||"function(){return false;}")+")")
     		});
 		});
-		if(this.startNewActions.length > 0) children.push({type:"seperator"});
+		if(sna.length > 0) children.push({type:"seperator"});
 		children.push({
 			id: "others",
 			type: "menuItem",
@@ -35940,16 +35869,16 @@ $.widget( "an.workbench", {
 					modal: true,
 					create: function(event, ui){
 						var $this = $(this);
-						$this.sideview({
+						$this.explorer({
 							dbId:o.dbId, 
-							roots:Model.META_ROOT,
+							roots:[Model.META_ROOT],
 							docdblclick:function(e,doc){ self.newDocument(doc._id);$this.dialog("close"); }
 						});
-						setTimeout(function(){ $this.sideview("expand", Model.META_ROOT); },200);
+						setTimeout(function(){ $this.explorer("expand", Model.META_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
-							var $this= $(this), docIds = $this.sideview("option","selectedNodes");
+							var $this= $(this), docIds = $this.explorer("option","selectedNodes");
 							$.each(docIds,function(){self.newDocument(this); });
 							$this.dialog( "close" );
 						},
@@ -35964,7 +35893,8 @@ $.widget( "an.workbench", {
 
 		// Add show side view actions.
 		children = [];
-		$.each(this.showSideViewActions, function(k,v){
+		var ssv = this.extensions[eps.showSideView]||[];
+		$.each(ssv, function(k,v){
     		children.push({
     				id: k,
     				type:"menuItem",
@@ -35973,7 +35903,7 @@ $.widget( "an.workbench", {
     				enabled:eval("(0,"+(v.enabled||"function(){return false;}")+")")
     		});
 		});
-		if(this.showSideViewActions.length > 0) children.push({type:"seperator"});
+		if(ssv.length > 0) children.push({type:"seperator"});
 		children.push({
 			id: "others",
 			type:"menuItem",
@@ -35986,17 +35916,17 @@ $.widget( "an.workbench", {
 					modal: true,
 					create: function(event, ui){
 						var $this = $(this);
-						$this.sideview({
+						$this.explorer({
 							dbId:o.dbId, 
-							roots: Model.SIDE_VIEW_ROOT,
+							roots: [Model.SIDE_VIEW_ROOT],
 							docdblclick:function(e,doc){ self.showSideView(doc._id);$this.dialog("close"); }
 						});
-						setTimeout(function(){ $this.sideview("expand", Model.SIDE_VIEW_ROOT); },200);
+						setTimeout(function(){ $this.explorer("expand", Model.SIDE_VIEW_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
 							var $this= $(this);
-							$.each($this.sideview("option","selectedNodes"),function(){ self.showSideView(this); });
+							$.each($this.explorer("option","selectedNodes"),function(){ self.showSideView(this); });
 							$this.dialog( "close" );
 						},
 						Cancel: function() { $( this ).dialog( "close" );}
@@ -36012,8 +35942,8 @@ $.widget( "an.workbench", {
 		startActions.push({id:"logout", type:"menuItem", text:"Logout",handler:function(){self._logout();},enabled:function(){return true;}});
 
     	// Set up global actions.
-    	var globalActions = {};
-    	$.each(this.toolbarGlobalActions, function(k,v){ // 'cut','copy','paste','undo','redo'
+    	var globalActions = {}, tga = this.extensions[eps.toolbarGlobal]||[];
+    	$.each(tga, function(k,v){ // 'cut','copy','paste','undo','redo'
     		globalActions[v._id] = {
     			_id: v._id,
     			type: "button",
@@ -36045,12 +35975,12 @@ $.widget( "an.workbench", {
 	},
 
 	reloadToolbar: function(){	
-		var _this=this;
-		clearTimeout(_this.time);
-		_this.time=setTimeout(function(){
+		var self=this, eps = this.options.extensionPoints;
+		clearTimeout(this.time);
+		this.time=setTimeout(function(){
 			console.log("reloadToolbar............................!");
 
-			var editor = _this.currentEditor(), actionSets = [];
+			var editor = self.currentEditor(), actionSets = [];
 			if(editor){
 				function createActionSet(actions, context){
 					var actionSet = {};
@@ -36076,22 +36006,22 @@ $.widget( "an.workbench", {
 					return actionSet;
 				}
 				
-				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||_this.options.dbId, 
+				var tas = editor.widget().data("toolbarActions"), dbId = editor.widget().data("dbid")||self.options.dbId, 
 					context = {editor:editor, dbId:dbId}, ass = editor.option('actionSets'), actionSet = {}, filter;
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarHeaderActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarHeader])||self.extensions[eps.toolbarHeader], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 				if($.isArray(ass)) actionSets = actionSets.concat(ass);
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarMiddleActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarCenter])||self.extensions[eps.toolbarCenter], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
-				actionSet = createActionSet((tas&&tas.toolbarHeaderActions)||_this.toolbarTailActions, context);
+				actionSet = createActionSet((tas&&tas[eps.toolbarTail])||self.extensions[eps.toolbarTail], context);
 				if(!$.isEmptyObject(actionSet)) actionSets.push(actionSet);
 			}
-			_this.toolbar.toolbar("option","actionSets", actionSets);
-			if(_this.toolbar.toolbar("option","isEmpty")){
-				_this.element.border("option",'north',{height:"0"});
+			self.toolbar.toolbar("option","actionSets", actionSets);
+			if(self.toolbar.toolbar("option","isEmpty")){
+				self.element.border("option",'north',{height:"0"});
 			}else{
-				var height = _this.toolbar.outerHeight(true);
-				_this.element.border("option",'north',{height:height ? height :"0"});
+				var height = self.toolbar.outerHeight(true);
+				self.element.border("option",'north',{height:height ? height :"0"});
 			}
 		},900);
 	},
@@ -36127,7 +36057,7 @@ $.widget( "an.workbench", {
 				}
 				$this.dialog( "close" );
 			});
-		}
+		};
 		$("<div class='workbench'/>").dialog({
 			title:"Login",
 			height: 260,
@@ -36161,51 +36091,21 @@ $.widget( "an.workbench", {
 	_logout:function(){
 		$.ans.logout(function(err,result){window.location.reload();});
 	},
-	
+
 	showSideView:function(viewId, anchor, opts){
-		var self = this, o = this.options, dbId = (opts&&opts.dbId) || o.dbId;
+		var self = this, o = this.options, dbId = (opts&&opts.dbId)||o.dbId;
 		$.ans.getDoc(dbId, viewId, null, function(err, sideView){
-			if(err){
-				console.log("Load view "+viewId+"error: "+err);
+			if(sideView){
+				self._doShowSideView(sideView, anchor||"west", opts);
 			}else{
-				if(sideView && sideView.category == "treeView"){
-					if(dbId != o.dbId){
-						var sel = {$or:[]}, actions = {};
-						actions.documentClickActions = [];
-						actions.documentDoubleClickActions = [];
-						actions.categoryContextMenuNewActions = []; // New of context menu.
-						actions.documentContextMenuCenterActions = []; // Center of context menu.
-						actions.documentContextMenuTopActions = []; // Top of context menu.
-						actions.documentContextMenuBottomActions = []; // Bottom of context menu.
-						$.each(["documentClick", "documentDoubleClick", "categoryContextMenuNew", 
-						        "documentContextMenuCenter", "documentContextMenuTop",
-						        "documentContextMenuBottom"], function(){
-							sel.$or.push({type:Model.ACTION, extendPoint:this});
-						});
-						$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-							if(err){
-								console.log("Load actions error:"+err);
-							}else{
-								$.each(data.docs,function(){
-									actions[this.extendPoint+"Actions"].push(this);
-								});
-								self._doShowSideView(sideView, anchor||"west", actions, opts);
-							}
-						});
-					}else{
-						self._doShowSideView(sideView, anchor||"west", null, opts);
-					}
-				}else if(sideView && sideView.category == "outline"){
-					self._doShowOutline(sideView, anchor||"east", opts);
-				}
+				console.log("Load view "+viewId+"error: "+err);
 			}
 		});
-		
 	},
 	
 	_docClick:function(context, actions){
 		var filter, action = {};
-		$.each(actions, function(k,v){
+		$.each(actions||[], function(k,v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				$.extend(true,action,v);
@@ -36219,7 +36119,7 @@ $.widget( "an.workbench", {
 
 	_docDblClick:function(context, actions){
 		var filter, action = {}, hit = false;
-		$.each(actions, function(k,v){
+		$.each(actions||[], function(k,v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				$.extend(true, action, v);
@@ -36232,119 +36132,41 @@ $.widget( "an.workbench", {
 		});
 		if(!hit) this.openDocument(context.document._id, {dbId:context.dbId});
 	},
-	
+
 	_docContextMenuActions:function(inActions, context, outActions){
+		if(!inActions) return outActions;
+		
+		var eps = this.options.extensionPoints;
 		function addAction(v){
 			filter = eval("(0,"+(v.filter||"function(){return true}")+")");
 			if(filter(context)){
 				outActions.push({ type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")") });
 			}
 		}
-		$.each((inActions&&inActions.documentContextMenuTopActions) || this.documentContextMenuTopActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuTop]||[], function(k,v){addAction(v);});
 		if(outActions.length > 0) outActions.push({type:"seperator"});
-		$.each((inActions&&inActions.documentContextMenuCenterActions) || this.documentContextMenuCenterActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuMiddle]||[], function(k,v){addAction(v);});
 		if(outActions.length >= 1&&outActions[outActions.length-1].type != "seperator") outActions.push({type:"seperator"});
-		$.each((inActions&&inActions.documentContextMenuBottomActions) || this.documentContextMenuBottomActions, function(k,v){addAction(v);});
+		$.each(inActions[eps.documentContextMenuBottom]||[], function(k,v){addAction(v);});
 		if(outActions.length>=1&&outActions[outActions.length-1].type == "seperator") outActions.pop();
 		return outActions;
 	},
-	
-	_doShowSideView: function(sideView, anchor, actions, opts){
+
+	_doShowSideView: function(sideView, anchor, opts){
 		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
 		    dbId = (opts&&opts.dbId) || o.dbId, tabs = this[anchor+"Tabs"], id = sideView._id, 
-		    el = this.element, panel = tabs.find("#"+id);
+		    el = this.element, panel = tabs.children("#"+id);
 		if(panel.size() > 0) return;
-		
 		var a = el.border("option",anchor);
 		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
 
 		tabs.tabsx("add","#"+id, title);
-		var sv = $("#"+id, tabs).sideview($.extend({
+		$("#"+id, tabs).sideview($.extend({
 			dbId:dbId,
-			drop:function(e,data){
-				var $this = $(this), s = data.source.data, t = data.target.data;
-				if(s._path == (t._path + s._id+",")) return;
-				$.ans.getDoc(dbId, "50d820e0a09200787e000000",{options:{exec:true, docId:s._id, parentId:t._id}},function(err, result){
-					if(!err){
-						$this.sideview("delete", s._id).sideview("add", t._id, data.source);
-					}
-					self.statusBar.html("Move " + s.name+" "+(err||result));
-				});
-			},
-			nodeclick: function(e, node){
-				var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-				      as = (actions&&actions.documentClickActions)||self.documentClickActions;
-				self._docClick(context, as);
-			},
-			nodedblclick:function(e,node){
-				var doc = node.data, context = {dbId:dbId, sideview: sv.sideview("option","sideview"), document:doc },
-				    as = (actions&&actions.documentDoubleClickActions) || self.documentDoubleClickActions;
-				self._docDblClick(context, as);
-			},
-			contextmenu: function(e,node){
-				e.preventDefault();
-				e.stopImmediatePropagation();
-				var doc = node.data, oe = e.originalEvent, outActions = [], 
-				    rootId = $(e.currentTarget).closest("li.root").attr("id"), filter, 
-				    context = { dbId: dbId, document: doc, rootId : rootId, parent: (node.parent && node.parent.data)||null, sideview: sv.data("sideview")};
-				if(doc.type == Model.CATEGORY || doc.type == Model.OU || doc.type == Model.GROUP || doc.type == Model.ROLE){
-					var children = [];
-					$.each((actions&&actions.categoryContextMenuNewActions)||self.categoryContextMenuNewActions, function(k,v){
-						filter = eval("(0,"+(v.filter||"function(){return true}")+")");
-						if(filter(context)){
-							children.push({type:"menuItem", text: v.title, context:context, handler:eval("(0,"+(v.handler||"function(){}")+")")});
-						}
-					});
-					if(!$.isEmptyObject(children)){
-						outActions.push({ type: "submenu", text: "New", children:children});
-					}
-				}
-				outActions = self._docContextMenuActions(actions,context, outActions);
-				if(outActions.length > 0){
-					$(oe.target).menu({
-						autoShow: true,
-						menuPosition:{of: oe},
-						actions: outActions,
-						select: function(e,ui){ $(this).menu("destroy"); },
-						collapseAll: function(e){ $(this).menu("destroy"); }
-					});
-				}
-			},
-			create:function(e,data){
-				self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-			}
+			create:function(e,data){self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});}
 		}, sideView, opts));
 	},
 
-	_doShowOutline: function(sideView, anchor, opts){
-		var self = this, o = this.options, title = sideView.title||sideView.name||sideView._id, 
-		    tabs = this[anchor+"Tabs"], id = sideView._id, el = this.element, panel = tabs.find("#"+id);
-		if(panel.size() > 0) return;
-
-		var a = el.border("option",anchor), editor = this.currentEditor();
-		if(!a.width) el.border("option",anchor, {width:o[anchor+"Width"], resizable:o[anchor+"Width"]>0});
-
-		tabs.tabsx("add","#" + id, title).children("#"+id).outline({
-			contentProvider: editor ? editor.option('outline'): null,
-			create:function(e,data){
-				self._afterShowSideView({id:sideView._id, anchor: anchor, options:opts});
-			},
-			nodehover: function(e, node){
-				var widget = node.data;
-				widget && widget.highlight();
-				e.preventDefault();
-			},
-			nodeclick: function(e, node){
-				var widget = node.data;
-				widget&&widget.scrollTo({ onlyIfOutside: true, offsetTop: 100, offsetLeft: 100 });
-			},
-			nodedblclick:function(e, node){
-				var widget = node.data;
-				widget&&widget.widget().dblclick();
-			}
-		});		
-	},
-	
 	authorization:function(docId, opts){
 		var o = this.options, dbId = (opts&&opts.dbId) || o.dbId;
 		$.ans.getDoc(dbId, docId, null,function(err,doc){
@@ -36402,6 +36224,10 @@ $.widget( "an.workbench", {
 	
 	_notifyWidgetSelect:function(widget){
 		$(window).trigger($.Event("widgetselect",{workbench:this}),widget);
+	},
+	
+	status:function(status){
+		this.statusBar.html(status);
 	},
 	
 	newDocument:function(typeId, opts){
@@ -36505,7 +36331,8 @@ $.widget( "an.workbench", {
 
 		var el = tabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -36559,7 +36386,8 @@ $.widget( "an.workbench", {
 			el= this.centerTabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -36615,7 +36443,8 @@ $.widget( "an.workbench", {
 			el= this.centerTabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 		if(dbId != o.dbId){
-			Model.loadToolbarActions(dbId, function(err, toolbarActions){
+			var eps = o.extensionPoints;
+			Model.loadExtensions(dbId, [eps.toolbarHeader,eps.toolbarCenter,eps.toolbarTail], function(err, toolbarActions){
 				if(err){
 					showDialog("Load Toolbar Actions", "Load toolbar actions: "+err);
 				}else{
@@ -36634,7 +36463,7 @@ $.widget( "an.workbench", {
 		opts = opts || {};
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId, tabs = this.centerTabs, 
-		    pid = viewId+"-view", el = tabs.tabsx("panel", pid); 
+		    pid = viewId+"-view", el = tabs.tabsx("panel", pid), eps = o.extensionPoints; 
 		if(el.size() > 0){
 			tabs.tabsx("select", pid);
 			if(el.is(".an-editor") && opts.mode != "design"){
@@ -36648,7 +36477,7 @@ $.widget( "an.workbench", {
 				return;
 			}
 		}else{
-	        el = tabs.tabsx("add","#"+pid, "...").children("#"+pid), sel = {$or:[]}, actions = {};
+	        el = tabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}
 
 		function doOpenView(el, dbId, viewId, actions, opts){
@@ -36666,19 +36495,12 @@ $.widget( "an.workbench", {
 		    },opts);
 			
 			var tas = {};
-			$.each(["Header","Middle", "Tail"],function(){
-				var name = "toolbar"+this+"Actions"; 
-				if(actions[name]) tas[name] = actions[name];
+			$.each(["Header","Center", "Tail"],function(){
+				var name = "toolbar"+this; 
+				if(actions[eps[name]]) tas[eps[name]] = actions[eps[name]];
 			});
 			tas = $.isEmptyObject(tas) ? undefined : tas;
 			el.data("toolbarActions",tas).data("dbId", dbId);
-			$.each(actions.editorEventActions||[], function(k,action){
-				var handler = eval("(0,"+(action.handler||"function(){}")+")");
-				el.bind(action.events, function(e){
-					handler.apply(self, arguments);
-				});
-			});
-			
 			optsx.opened = function(editor){
 				var view = editor;
 				if(editor.widgetName == "editor") view = editor.getForm(viewId);
@@ -36687,18 +36509,15 @@ $.widget( "an.workbench", {
 				document.title = o.title +" - "+ title;
 				viewType = viewType.toLowerCase();
 				view.option("docclick",function(e, doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc },
-		        	as = actions.documentClickActions || self.documentClickActions;
-		        	self._docClick(context, as);
+		        	self._docClick({dbId:dbId,view:el.data(viewType),document:doc}, 
+		        			actions[eps.documentClick]||self.extensions[eps.documentClick]);
 				});
 				view.option("docdblclick",function(e, doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc },
-		        	as = actions.documentDoubleClickActions || self.documentDoubleClickActions;
-		        	self._docDblClick(context, as);
+		        	self._docDblClick({dbId:dbId,view:el.data(viewType),document:doc}, 
+		        			actions[eps.documentDoubleClick]||self.extensions[eps.documentDoubleClick]);
 				});
 				view.option("contentActions",function(doc){
-		        	var context = {dbId:dbId, view:el.data(viewType), document:doc };
-		        	return self._docContextMenuActions(actions, context, []);
+		        	return self._docContextMenuActions(actions, {dbId:dbId, view:el.data(viewType), document:doc },[]);
 				});
 				self.reloadToolbar();
 				self._afterOpenEditor({method:"openView", id:viewId, options:opts});
@@ -36708,34 +36527,21 @@ $.widget( "an.workbench", {
 		}
 
 		if(dbId != o.dbId){
-			$.each(["toolbarHeader", "toolbarMiddle","toolbarTail","documentClick", 
-			        "documentDoubleClick", "documentContextMenuCenter", 
-			        "documentContextMenuTop", "documentContextMenuBottom", "editorEvent"], function(){
-				var s = {type:Model.ACTION, extendPoint:this};
-				if(this == "editorEvent") s.targetId = viewId;
-				sel.$or.push(s);
-				actions[this+"Actions"] = [];
+			var epids = [];
+			$.each(["toolbarHeader", "toolbarCenter","toolbarTail","documentClick", 
+			        "documentDoubleClick", "documentContextMenuMiddle", 
+			        "documentContextMenuTop", "documentContextMenuBottom"], function(){
+				epids.push(eps[this]);
 			});
-			$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
+			Model.loadExtensions(dbId, epids, function(err, exts){
 				if(err){
 					console.log("Load actions error: "+err);
 				}else{
-					$.each(data.docs,function(){
-						actions[this.extendPoint+"Actions"].push(this);
-					});
-					doOpenView(el, dbId, viewId, actions, opts);
+					doOpenView(el, dbId, viewId, exts, opts);
 				}
 			});
 		}else{
-			sel = {type:Model.ACTION, viewId: viewId, extendPoint:"editorEvent"};
-			$.ans.getDoc(dbId, null, {selector:sel},function(err,data){
-				if(err){
-					console.log("Load actions error: "+err);
-				}else{
-					actions.editorEventActions = data.docs;
-					doOpenView(el, dbId, viewId, actions, opts);
-				}
-			});
+			doOpenView(el, dbId, viewId, this.extensions, opts);
 		}
 		
 		return this;
@@ -36799,7 +36605,7 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: Model.GROUP_ROOT, checkbox: true, checkedNodes:ids});
+						$this.sideview({dbId:dbId, roots: [Model.GROUP_ROOT], checkbox: true, checkedNodes:ids});
 						setTimeout(function(){ $this.sideview("expand", Model.GROUP_ROOT); },200);
 						
 					},
@@ -36859,7 +36665,7 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: Model.ROLE_ROOT, checkbox: true, checkedNodes:ids});
+						$this.sideview({dbId:dbId, roots: [Model.ROLE_ROOT], checkbox: true, checkedNodes:ids});
 						setTimeout(function(){ $this.sideview("expand", Model.ROLE_ROOT); },200);
 					},
 					buttons: {
@@ -36927,9 +36733,9 @@ $.widget( "an.authorization", $.ui.dialog, {
 		$.ui.dialog.prototype._init.apply(this, arguments);
 		var self = this, o = this.options;
 		this.element.border({west:{selector:".west", width:o.westWidth, resizable:true }, center:{selector:".center" }});
-		this.organization.sideview({
+		this.organization.explorer({
 			dbId:o.dbId, 
-			roots: Model.OU_ROOT+","+ Model.GROUP_ROOT+","+Model.ROLE_ROOT,
+			roots:[Model.OU_ROOT,Model.GROUP_ROOT,Model.ROLE_ROOT],
 			nodeclick:function(e,node){
 				var doc = node.data;
 				self.center.find(".title").html(doc.title||doc.name||doc._id);
@@ -36962,7 +36768,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		}
 
 		if(doc.type == Model.META){
-			aclAuthz.typeName = Model.typeName(doc._id) || "Document";
+			aclAuthz.typeName = doc.title||doc.name||doc._id || "Document";
 			if(authz){
 				paths = authz.post && authz.post[pathsName];
 				post = paths && ($.inArray(path, paths)!=-1)? true : false;
@@ -36978,7 +36784,7 @@ $.widget( "an.authorization", $.ui.dialog, {
 		
 		return aclAuthz;
 	},
-
+	
 	_updateDocument:function(actor, data){
 		var doc = this.options.document, ids = data.id.split("."), list = doc[ids[0]] = doc[ids[0]] || {},  
 		    method = list[ids[1]] = list[ids[1]] || {}, pathsName = this._getPathsName(actor), 
