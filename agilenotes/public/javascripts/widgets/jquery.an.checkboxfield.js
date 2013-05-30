@@ -63,7 +63,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 				  $(this).find("label").removeClass("ui-btn-up-" + o.data_theme).addClass("ui-btn-hover-" + o.data_theme);
 			  }).bind("mouseout.checkboxfield",function(e){
 				  $(this).find("label").removeClass("ui-btn-hover-" + o.data_theme).addClass("ui-btn-up-" + o.data_theme);
-			  }).bind("click",function(e){
+			  }).bind("click.checkboxfield",function(e){
 				  e.stopPropagation();
 				  var $input=$(this).find('input');
 				  if( $input.attr("checked")){
@@ -137,7 +137,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 		}				
 	},
 	
-	/*_handleChange:function(key, value, oldValue){
+	_handleChange:function(key, value, oldValue){
 		var o = this.options;
 		if(key == "value"){
 			this.input.filter("[value="+o.value+"]").prop("checked",true);
@@ -154,7 +154,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 		}else{
 			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
-	},*/
+	},
 	
 	_makeResizable:function(){},
 	

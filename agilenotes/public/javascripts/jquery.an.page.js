@@ -30,6 +30,7 @@ $.widget( "an.page", {
 			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
 			checkbox:["5080143085ac60df09000001","519dbd9c3bcccb444800008c", "51a2ffeeac8f275c2700013b"],
 			button:["5080143085ac60df09000001","51933105ac8f2712ab000069"],
+			slider:["5080143085ac60df09000001","51a5a62dac8f2755d2000069"],
 			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
 			textarea:["5080143085ac60df09000001","50af2ca66cec663c0a000008"],
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
@@ -52,8 +53,6 @@ $.widget( "an.page", {
 		o.jsFiles = o.jsFiles || [];
 		if(o.mobile){
 			o.cssFiles = ["stylesheets/jquery.mobile-1.3.0.min.css",
-			              "stylesheets/jquery.mobile.structure-1.3.0.min.css",
-			              "stylesheets/jquery.mobile.theme-1.3.0.min.css",
 			              "stylesheets/jquery.an.mwidget.css"].concat(o.cssFiles);
 			o.jsFiles = ["javascripts/jquery-1.8.2.js",
 			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);

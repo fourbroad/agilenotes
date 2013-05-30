@@ -63,6 +63,52 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 		}
 	},
 	
+	_design:function() {
+		var o = this.options;
+		if (o.mobile) {
+			var dat = '<div data-corners="true" data-shadow="true" data-iconshadow="false"\
+				data-wrapperels="span"  data-disabled="true" data-label="' + o.label + '"\
+				aria-disabled="false">\
+				<span class="ui-btn-inner">\
+					<span class="ui-btn-text">' + o.label + '</span>';
+			if (o.data_icon) {
+				dat += '<span class="ui-icon ui-icon-arrow-d">&nbsp;</span>';
+			}
+				dat += '</span>\
+				<div class="content ui-btn-hidden" data-disabled="false"></div>\
+			</div>';
+			var html = $(dat);
+			
+			if (o.data_transition) {
+				html.attr("data-transition", o.data_transition);
+			}
+			
+			if (o.data_icon) {
+				html.attr("data-icon", o.data_icon);
+				html.addClass("ui-btn-icon-" + o.data_icon);
+			}
+			
+			if (o.data_iconpos) {
+				html.attr("data-iconpos", o.data_iconpos);
+			}
+			
+			if (o.data_theme) {
+				html.attr("data-theme", o.data_theme);
+			}
+			
+			if (o.data_inline) {
+				html.attr("data-inline", o.data_inline);
+			}
+			
+			if (o.isMini) {
+				html.attr("data-isMini", o.data_isMini);
+			}
+			
+			html.addClass("ui-btn ui-shadow ui-btn-corner-all ui-mini ui-btn-up-a");
+			this.content.html(html);
+		}
+	},
+	
 	destroy: function() {
 		this.content.button("destroy").remove();
 		this.element.removeClass("an-buttonwidget");

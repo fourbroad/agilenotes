@@ -91,6 +91,7 @@ document.write('\
 <script src="javascripts/lib/rte/w3cRange.js"><\/script>\
 <script src="javascripts/json2.js"><\/script>\
 <script src="javascripts/jsrender.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.sliderwidget.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
