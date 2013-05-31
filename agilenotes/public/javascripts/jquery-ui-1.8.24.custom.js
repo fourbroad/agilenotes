@@ -5889,6 +5889,7 @@ $.widget( "ui.button", {
 
 		$.Widget.prototype.destroy.call( this );
 	},
+	
 
 	_setOption: function( key, value ) {
 		$.Widget.prototype._setOption.apply( this, arguments );
