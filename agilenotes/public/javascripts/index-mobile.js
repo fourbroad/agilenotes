@@ -67,6 +67,7 @@ document.write('\
 <script src="javascripts/jquery.an.tabsx.js"><\/script>\
 <script src="javascripts/jquery.an.explorer.js"><\/script>\
 <script src="javascripts/jquery.an.page.js"><\/script>\
+<script src="javascripts/jquery.an.mpage.js"><\/script>\
 <script src="javascripts/jquery.an.form.js"><\/script>\
 <script src="javascripts/jquery.an.agilegrid.js"><\/script>\
 <script src="javascripts/jquery.an.toolbar.js"><\/script>\

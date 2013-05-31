@@ -52,7 +52,7 @@ $(function(){
 			loadValidateMethods(dbId, function(){
 				if(pageId){
 					$.ans.getDoc(dbId, pageId, null, function(err,page){
-						$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
+						$("#widget").pageMobile({title:page.title||page.name||pageId,dbId:dbId,page:page, mobile:page.mobile});
 					});
 				}else if(viewId){
 					$.ans.getDoc(dbId, viewId, null, function(err,view){
