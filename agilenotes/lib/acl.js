@@ -149,7 +149,7 @@ function acl(user, provider, method, selector, type, callback){
 		});
 		break;
 	case "get":
-		if (selector.category == "policy") {
+		if (selector.category == "policy" && selector.owner) {
 				selector._ownerID = user._id;
 			};
 	case "put":
