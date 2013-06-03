@@ -24,7 +24,7 @@ $.widget( "an.page", {
 		mFormIds:{
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
-			
+
 			text:["5080143085ac60df09000001","519095a03bcccb65f400008b"],
 			search:["5080143085ac60df09000001","51932b05ac8f2725e1000048"],
 			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
@@ -40,7 +40,8 @@ $.widget( "an.page", {
 			radio:["5080143085ac60df09000001","51a2b48dac8f2770b7000001","51850c1ca092003b12000024"],
 			select:["5080143085ac60df09000001","51850b35a09200784a000122","508259700b27990c0a000003"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
-		    rte:["5080143085ac60df09000001"]
+		    rte:["5080143085ac60df09000001"],
+            collapsible:["5080143085ac60df09000001","51a8639ebd94293c2f000081"]
 		}
 	},
 
@@ -48,7 +49,7 @@ $.widget( "an.page", {
 		this.element.addClass("an-page");
 		var o = this.options, page = o[this.widgetName];
 		$.extend(this, eval("try{("+(page.methods||"{}")+")}catch(e){}"));
-		
+
 		o.cssFiles = o.cssFiles || [];
 		o.jsFiles = o.jsFiles || [];
 		if(o.mobile){
@@ -82,16 +83,16 @@ $.widget( "an.page", {
 			          "stylesheets/jquery.an.rte.css",
 			          "stylesheets/base.css"].concat(o.cssFiles);
 	        o.jsFiles = ["javascripts/jquery-1.8.2.js",
-	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);	
+	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
 		}
-		
+
 		this._initPage();
 	},
-	
+
 	_initPage:function(){
 		this.refresh();
 	},
-	
+
 	_createOutline:function(){
 		var self = this, page = this.options[this.widgetName], root = this._getPage();
 		return {
@@ -123,11 +124,11 @@ $.widget( "an.page", {
 			getId: function(node){ return node.id ? node.id : null; }
 		};
 	},
-	
+
 	_isContainer:function(el){
 		return el.is("[type=tabsx], [type=box]");
 	},
-	
+
 	_getWidgetObj:function(el){
 		var widget = null, type = el.attr("type");
 		if(el.is(".box")){
@@ -137,7 +138,7 @@ $.widget( "an.page", {
 		}
 		return widget;
 	},
-	
+
 	option: function(key, value) {
 		var o = this.options;
 		if(key === "actionSets" && value === undefined){
@@ -148,7 +149,7 @@ $.widget( "an.page", {
 			if(o.isDirty) this._syncPageContent();
 			return o[this.widgetName].content;
 		}
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
+		var ret = $.Widget.prototype.option.apply(this, arguments );
 		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
 	},
 
@@ -159,9 +160,9 @@ $.widget( "an.page", {
 			this._handleChange(key,value,oldValue);
 			this._trigger("optionchanged",null,{key:key, value:value, oldValue:oldValue});
 		}
-		return this; 
+		return this;
 	},
-	
+
 	_handleChange:function(key, value, oldValue){
 		var o = this.options;
 		if(key === "mode"){
@@ -183,7 +184,7 @@ $.widget( "an.page", {
 		var o = this.options;
 		this["_"+o.mode] && this["_"+o.mode]();
 	},
-	
+
 	_browser:function(){
 		this.rte && this.rte.hide();
 		if(!this.$page){
@@ -239,7 +240,7 @@ $.widget( "an.page", {
 			w && w.widget().show();
 		});
 	},
-	
+
 	hideWidget:function(){
 		var self = this;
 		$.each(arguments,function(){
@@ -247,7 +248,7 @@ $.widget( "an.page", {
 			w && w.widget().hide();
 		});
 	},
-	
+
 	_createPage:function(){
 		var o = this.options, page = o[this.widgetName], el = this.element;
 		$('<style type="text/css">'+(page.stylesheet||"")+'</style>').appendTo(el);
@@ -258,7 +259,7 @@ $.widget( "an.page", {
 		$.each(eval("("+(o[this.widgetName].actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
-		
+
 		this._refreshWidgets();
 	},
 
@@ -277,10 +278,10 @@ $.widget( "an.page", {
 					var $this = $(this),wid;
 					wid = self._getWidgetObj($this);
 					wid&&wid.destroy();
-				});	
+				});
 			},
 			onload:function(){
-				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc")); 
+				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc"));
 				$doc.bind("paste.page",function(e){
 					setTimeout(function(){
 						self._refreshWidgets();
@@ -291,7 +292,7 @@ $.widget( "an.page", {
 					$doc.find(".widget.selected").removeClass("selected");
 					if(e.type == "widgetclick" || e.type == "widgetdblclick"){
 						if(widget.selectable(e.originalEvent)){
-							var el = widget.widget(); 
+							var el = widget.widget();
 							el.addClass("selected");
 							!$.browser.chrome&&sel.select(el[0]);
 							self._trigger("widgetselect",null, widget);
@@ -299,7 +300,7 @@ $.widget( "an.page", {
 						self.rte.rte("updatePath");
 						if(e.type=="widgetdblclick"){
 							var type = widget.option("type");
-							if(self.rteWidgetActive(type)) self.rteWidget(type);	
+							if(self.rteWidgetActive(type)) self.rteWidget(type);
 						}
 					}
 					self.rte.trigger(e, widget);
@@ -323,7 +324,7 @@ $.widget( "an.page", {
 	_getPage:function(){
 		return this.options.mode=="design" ? $(this.rte.rte("option","doc")): this.$page;
 	},
-	
+
 	_refreshWidgets: function(page){
 		var self = this;
 		(page || this._getPage()).find(".widget").each(function(){
@@ -331,7 +332,7 @@ $.widget( "an.page", {
 		});
 		return this;
 	},
-	
+
 	_refreshWidget: function(el){
 		var self = this, o = this.options, type = el.attr("type");
 		if(el.is(".box")){
@@ -362,7 +363,7 @@ $.widget( "an.page", {
 			}else{
 				el[type+"widget"]({
 					parent:function(){return self;},
-					mode:o.mode, 
+					mode:o.mode,
 					dbId:o.dbId,
 					mobile:o.mobile,
 					optionchanged:function(e,data){
@@ -375,7 +376,7 @@ $.widget( "an.page", {
 			}
 		}
 	},
-	
+
 	_createActionSets:function(){
 		if(this.options.mode == "design"){
 			return [this._controlActionSet(),this._formatActionSet(), this._tableActionSet()];
@@ -386,7 +387,7 @@ $.widget( "an.page", {
 		var actions = this.rte.rte("option","actions");
 		return this._createActionSet(["properties","cleanFormat"],actions);
 	},
-	
+
 	_formatActionSet:function(){
 		var actions = this.rte.rte("option","actions");
 		return this._createActionSet(["bold","italic","underline","strikethrough","subscript",
@@ -395,10 +396,10 @@ $.widget( "an.page", {
 		        "indent","orderedList","unorderedList","link","deleteLink","horizontalRule",
 		        "blockQuote","blockElement","stopFloat","image"],actions);
 	},
-	
+
 	_tableActionSet:function(){
 		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow", 
+		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow",
 		"columnBefore","columnAfter","deleteColumn", "cellProps","mergeCells",
 		"splitCells"],actions);
 	},
@@ -421,7 +422,7 @@ $.widget( "an.page", {
 		this.rte && this.rte.rte("rteWidget", type, this.options.formIds[type], opts);
 		return this;
 	},
-	
+
 	rteWidgetActive: function(type){
 		return this.rte && this.rte.rte("rteWidgetActive", type);
 	},
@@ -433,24 +434,24 @@ $.widget( "an.page", {
 	sourceCode:function(){
 		if(this.rte){
 			var mode = this.rte.rte("option", "mode");
-			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");	
+			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");
 		}
 	},
-	
+
 	sourceCodeActive:function(){
-		return this.rte && this.rte.rte("option", "mode") == "sourcecode"; 
+		return this.rte && this.rte.rte("option", "mode") == "sourcecode";
 	},
-	
+
 	// TODO: optimize following code.
 	handler: function(){self.option("mode",o.mode =="sourcecode"?"design":"sourcecode");},
 	checked: function(){return o.mode =="sourcecode";},
-	
+
 	highlightWidget: function(id, highlight){
-		var w = this.getWidget(id); 
+		var w = this.getWidget(id);
 		w&&w.highlight(highlight);
 		return this;
 	},
-	
+
 	scrollTo: function(id, opts){
 		var o = this.options;
 		if(o.mode == "design"){
@@ -460,7 +461,7 @@ $.widget( "an.page", {
 			this.$page.find("#"+id).scrollTo(opts);
 		}
 	},
-	
+
 	save: function(){
 		var self =this, o = this.options, page = o[this.widgetName];
 		if(o.isDirty){
@@ -471,14 +472,14 @@ $.widget( "an.page", {
 		}
 		return this;
 	},
-	
-	print: function(){ 
-		var o = this.options, loc = window.location, 
+
+	print: function(){
+		var o = this.options, loc = window.location,
 		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&pageid="+o[this.widgetName]._id;
 		print(url);
 		return this;
 	},
-	
+
 	destroy: function() {
 		$(this.options.document).unbind(".page");
 		this.element.unbind(".page").removeClass("an-page").children("style").remove();

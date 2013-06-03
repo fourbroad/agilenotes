@@ -22,15 +22,15 @@
 }
 
 .field[type=textarea]>.content{
-    display:inline-block;	
+    display:inline-block;
 }
 
 .field[type=textarea]>.content>textarea{
-	width:100%; 
-	height:100%; 
-	zoom:1; 
+	width:100%;
+	height:100%;
+	zoom:1;
 	padding:0;
-	margin:0; 
+	margin:0;
 	outline:none;
 	resize: none;
 }
@@ -139,8 +139,8 @@
 }
 
 .widget.design.selected {
-	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important; 
-	font-weight: normal; 
+	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important;
+	font-weight: normal;
 	color: #555555;
 }
 
@@ -168,4 +168,58 @@
 
 .widget.field.design.ui-checkbox > .content{
 	border:0;
+}
+
+/*collapsiblewidget */
+.an-collapsiblewidget-header{
+    display:inline-block;
+    font-size:16px;
+    font-weight:bold;
+    color:#222222;
+    border:1px solid #ccc;
+    border-radius:9.6px;
+    text-shadow:#FFFFFF 0px 1px 0px;
+    padding:9px 12px 9px 40px;
+    position:relative;
+    cursor:pointer;
+    white-space:nowrap;
+}
+.an-collapsiblewidget-header:hover{
+    border:1px solid #bbb;
+    background:#dfdfdf;
+    text-shadow:0;
+    background-image: -webket-linear-gradient(#f6f6f6,#e0e0e0);
+    background-image: -moz-linear-gradient(#f6f6f6,#e0e0e0);
+    background-image: -o-linear-gradient(#f6f6f6,#e0e0e0);
+    background-image: linear-gradient(#f6f6f6,#e0e0e0);
+}
+.an-collapsiblewidget-collapse-icon,.an-collapsiblewidget-extend-icon{
+    position:absolute;
+    margin-top: -9px;
+    top: 50%;
+    left: 10px;
+    height: 18px;
+    width: 18px;
+    display:block;
+    background-color: rgba(0, 0, 0, 0.4);
+    background-image: url("images/icons-18-white.png");
+    background-repeat: no-repeat;
+    border-radius: 9px 9px 9px 9px;
+}
+.an-collapsiblewidget-collapse-icon{
+   background-position: -1px -1px;
+}
+.an-collapsiblewidget-extend-icon{
+   background-position: -37px -1px;
+}
+.an-collapsiblewidget-content{
+   display:none;
+   padding:10px 15px;
+   color:#333;
+   font-family:Helvetica,Arial,sans-serif;
+   text-shadow:0 1px 0 #FFFFFF;
+   font-size:16px;
+}
+.an-collapsiblewidget-content-extend{
+   display:block;
 }
