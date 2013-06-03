@@ -194,7 +194,7 @@ $.widget( "an.workbench", {
 					}
 				});
 			});
-			self._loadActions(function(){ self._initMainToolbar(); }); // TODO 优化工具条的刷新。
+			self._loadActions(function(){ self._initMainToolbar(); });
 		});
 
 		window.workbench = this;
@@ -429,7 +429,7 @@ $.widget( "an.workbench", {
 				var height = self.toolbar.outerHeight(true);
 				self.element.border("option",'north',{height:height ? height :"0"});
 			}
-		},900);
+		},800);
 	},
 	
 	currentEditor:function(){
