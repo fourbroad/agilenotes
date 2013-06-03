@@ -1394,7 +1394,7 @@ $.widget( "an.rte", {
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
     		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime",
     		                                          "textarea", "file","grid","jsrender","password","rte", "search",
-    		                                          "slider", "toggle"])!=-1);
+    		                                          "toggle"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
     		n = $n.get(0);
     	}
@@ -1422,6 +1422,9 @@ $.widget( "an.rte", {
 			}else if($n.is(".box") && attrs[type+"box"]){
 				md[type+"box"] = attrs[type+"box"];
 				delete attrs[type+"box"];
+			}else if($n.is(".widget") && attrs[type+"widget"]){
+				md[type+"widget"] = attrs[type+"widget"];
+				delete attrs[type+"widget"];
 			}
 			if(!equals(md, oldmd)){
 				$n.setMetadata(md);

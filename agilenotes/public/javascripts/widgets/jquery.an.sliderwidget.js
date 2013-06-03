@@ -16,17 +16,17 @@ $.widget( "an.sliderwidget",  $.an.widget, {
 		var o = this.options;
 		$.an.widget.prototype._create.apply(this, arguments);
 		this.element.addClass("an-sliderwidget");
-		if (!this.min) {
-			this.min = 1;
+		if (!o.min) {
+			o.min = 1;
 		}
 		
-		if (!this.max) {
-			this.max = 100;
+		if (!o.max) {
+			o.max = 100;
 		}
 		
 		var input = $("<input type='number' data-type='range' data-highlight='false' />").addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset ui-slider-input");
 		this.content.append(input);
-		this.content.slider().attr("id", o.id).attr('min', this.min).attr('max', this.max).bind("change.sliderfield", function(e) {
+		this.content.slider().attr('min', o.min).attr('max', o.max).bind("change.sliderfield", function(e) {
 			$(e.target).find(">input").val($($(e.target)).val());
 		});
 	},
