@@ -37,7 +37,7 @@ $.widget( "an.editor", {
 			forms[v._id] = v; 
 		});
 
-		el.append("<ul/>").tabsx({
+		el.append("<ul />").tabsx({
 			tabTemplate: "<li><a href='#{href}' hidefocus='true'>#{label}</a></li>",
 			show: function(event, ui) {
 				var $p = $(ui.panel), id = $p.attr("id"), d = forms[id], type = d.type;
@@ -46,6 +46,7 @@ $.widget( "an.editor", {
 					for(var i in data){
 						if($.inArray(i, ["form","page","gridview","formview"]) != -1){
 							if(!o.design || !(/-design$/.test(id))) data[i].option("mode", o.mode);
+							data[i].option("mobile", o.mobile);
 							self._trigger("tabshow",event, data[i]);
 							break;
 						}
@@ -58,7 +59,7 @@ $.widget( "an.editor", {
 							change:function(){ 
 								o.change&&o.change();
 							},
-							mobile:typeof(o.mobile) != 'undefined' ? o.mobile : false,
+							mobile:o.mobile,
 							readOnly:o.readOnly,
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){

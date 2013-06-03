@@ -24,6 +24,7 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 		var self = this, o = this.options, el = this.element;
 		if(o.mobile){
 			var checkbox_group = $("<div class='ui-controlgroup-controls' />");
+			checkbox_group.append($("<label />").attr("for", o.id).html(o.label));
 			$.each(o.selectItems||[], function(k,v){
 				var checkbox_elem = $("<div class='ui-checkbox incheck' />");
 				$("<input type='checkbox'/>").attr({id:o.id+k, name:o.id, value:this.value})

@@ -26,9 +26,8 @@
 }
 
 .field[type=textarea]>.content>textarea{
-	width:100%;
-	height:100%;
-	zoom:1;
+	width:100%; 
+	zoom:1; 
 	padding:0;
 	margin:0;
 	outline:none;
@@ -36,10 +35,12 @@
 }
 
 .widget.design[type=radio]>label {
+	display:block;
 	margin:0;
 }
 
 .widget[type=radio] >label{
+	display:block;
 	margin:0;
 }
 
@@ -93,7 +94,6 @@
 .field[type=select]>.content>select,
 .field[type=textarea]>.content {
 	width:100%;
-	height:100%;
 }
 
 

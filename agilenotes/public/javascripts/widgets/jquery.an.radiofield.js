@@ -26,6 +26,7 @@ $.widget( "an.radiofield", $.an.inputfield, {
 		var self = this, o = this.options, el = this.element;	
 		if (o.mobile) {
 			var radio_group = $("<div class='ui-controlgroup-controls' />");
+			radio_group.append($("<label />").attr("for", o.id).html(o.label).css("display", "block"));
 			$.each(o.selectItems||[], function(k,v){
 				var radio_elem = $("<div class='ui-radio' />");
 				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
@@ -62,8 +63,6 @@ $.widget( "an.radiofield", $.an.inputfield, {
 			});
 			
 			radio_group.appendTo($("<div border='1' class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
-			
-			this.inputs = el.children(".ui-controlgroup");
 		} else {
 			$.each(o.selectItems||[], function(k,v){
 				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
@@ -72,9 +71,10 @@ $.widget( "an.radiofield", $.an.inputfield, {
 				$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
 				if(o.orientation == "vertical") el.append("<br>");
 			});
-			this.inputs = el.children("input");
+			
 		}
 		
+		this.inputs = el.children("input");
 		this.contents = el.children(".content");
 		if(!$.isEmptyObject(o.validate)){
 			this.inputs.addClass($.toJSON({validate:o.validate}));
@@ -135,6 +135,9 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		if (this.options.mobile) {
+			this.element.children(".ui-controlgroup").unbind(".radiofield").remove();
+		}
 		this.inputs.unbind(".radiofield").remove();
 		this.contents.remove();
 		this.element.removeClass("an-radiofield" ).children("br").remove();

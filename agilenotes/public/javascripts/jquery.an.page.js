@@ -42,6 +42,7 @@ $.widget( "an.page", {
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
 		    rte:["5080143085ac60df09000001"],
             collapsible:["5080143085ac60df09000001","51a8639ebd94293c2f000081"]
+		    toggle:["5080143085ac60df09000001","51a565753bcccb5b0e0000ac"]
 		}
 	},
 
@@ -196,6 +197,11 @@ $.widget( "an.page", {
 	},
 
 	_edit:function(){
+		var o = this.options;
+		if (o.mobile) {
+			o.jsFiles = ["javascripts/jquery.mobile-1.3.0.min.js",
+			             "javascripts/index-mobile.js"].concat(o.jsFiles);
+		}
 		this.rte && this.rte.hide();
 		if(!this.$page){
 			this._createPage();
