@@ -216,6 +216,7 @@ var Model = {
 					if(err){
 						console.log("Load forms "+type.forms+" error: "+err);
 					}else{
+						optsx.mobile = doc.mobile;
 						optsx.forms = forms;
 						element.editor(optsx);
 						opts.opened && opts.opened(element.data("editor"));
@@ -299,6 +300,7 @@ var Model = {
     	opts = opts || {};
     	var self = this;
     	if(this.pages[pageId]){
+    		opts.mobile = this.pages[pageId].mobile;
     		this._doOpenPage(element, dbId, this.pages[pageId], opts);
     	}else{
     		$.ans.getDoc(dbId, pageId, null, function(err, page){

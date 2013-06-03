@@ -195,6 +195,11 @@ $.widget( "an.page", {
 	},
 
 	_edit:function(){
+		var o = this.options;
+		if (o.mobile) {
+			o.jsFiles = ["javascripts/jquery.mobile-1.3.0.min.js",
+			             "javascripts/index-mobile.js"].concat(o.jsFiles);
+		}
 		this.rte && this.rte.hide();
 		if(!this.$page){
 			this._createPage();
