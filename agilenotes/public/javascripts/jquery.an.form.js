@@ -170,7 +170,8 @@ $.widget( "an.form", $.an.page, {
 		if(field.size() == 0) return;
 		field.each(function(){
 			var self=this;
-			$(self)[$(self).attr("type")+"field"]("option","value", null);
+			var fn = $(self)[$(self).attr("type")+"field"];
+			if($.isFunction(fn))fn("option","value", null);
 		});
 	},
 
