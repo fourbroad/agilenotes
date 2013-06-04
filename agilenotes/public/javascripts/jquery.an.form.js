@@ -172,7 +172,7 @@ $.widget( "an.form", $.an.page, {
 			if($(this).attr("type")=="select"){
 				_this.field(this.id,$(this).find("select").val());
 			}else if($.isFunction($(this)[$(this).attr("type")+"field"])){
-				_this.field(this.id,null);
+				_this.field(this.id,"");
 			}
 		});
 	},
