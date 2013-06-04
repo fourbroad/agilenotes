@@ -144,8 +144,9 @@ function acl(user, provider, method, selector, type, callback){
 		});
 		break;
 	case "get":
-		if (selector.category == "policy" && selector.owner) {
+		if ( selector.owner ==='true'  ) {
 				selector._ownerID = user._id;
+				delete selector.owner;
 			};
 	case "put":
 	case "delete":

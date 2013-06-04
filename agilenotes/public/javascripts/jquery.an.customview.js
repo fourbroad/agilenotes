@@ -43,6 +43,10 @@ $.widget( "an.customview", $.an.view, {
 			var html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
 		}
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
+		}
 	},
 	
 	_docsLoaded:function(){
