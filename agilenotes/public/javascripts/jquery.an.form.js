@@ -156,6 +156,24 @@ $.widget( "an.form", $.an.page, {
 		return this;
 	},
 	
+	reset:function(){
+		var o = this.options,staticAttr=["type","_path"],doc=o.document._doc;
+		this.element.find("form")[0].reset();
+		for(var q in doc){
+			if(q=="_id"){
+				doc[q]=new ObjectId().toString();
+			}else if(q!="type"&&q!="_path"){
+				delete doc[q];
+			}
+		}
+		var field = this._getPage().find(".field"); 
+		if(field.size() == 0) return;
+		field.each(function(){
+			var self=this;
+			$(self)[$(self).attr("type")+"field"]("option","value", null);
+		});
+	},
+
 	validate:function(){
 		return this.validator?this.validator.form():true;
 	},
