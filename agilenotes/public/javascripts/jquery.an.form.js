@@ -157,7 +157,7 @@ $.widget( "an.form", $.an.page, {
 	},
 	
 	reset:function(){
-		var o = this.options,staticAttr=["type","_path"],doc=o.document._doc;
+		var o = this.options,staticAttr=["type","_path"],doc=o.document._doc,_this=this;
 		this.element.find("form")[0].reset();
 		for(var q in doc){
 			if(q=="_id"){
@@ -169,9 +169,11 @@ $.widget( "an.form", $.an.page, {
 		var field = this._getPage().find(".field"); 
 		if(field.size() == 0) return;
 		field.each(function(){
-			var self=this;
-			var fn = $(self)[$(self).attr("type")+"field"];
-			if($.isFunction(fn))fn("option","value", null);
+			if($(this).attr("type")=="select"){
+				_this.field(this.id,$(this).find("select").val());
+			}else if($.isFunction($(this)[$(this).attr("type")+"field"])){
+				_this.field(this.id,null);
+			}
 		});
 	},
 
