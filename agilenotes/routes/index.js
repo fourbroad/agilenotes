@@ -318,7 +318,7 @@ function postDoc(req,res){
 				if(error) {
 					res.send({result:error}, 416);
 				}else{
-					doc._create_at = new Date();
+					doc._create_at = new Date().toJSON();
 					if(doc.type == Model.TASK && doc.taskType == "interval"){
 						doc.userId = req.user._id;
 					}
@@ -415,7 +415,7 @@ function putDoc(req,res){
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
 					doc.userId = req.user._id;
 				}
-				doc._update_at = new Date();
+				doc._update_at = new Date().toJSON();
 				function update(selector, fields){
 					options.multi = true;
 					provider.update(selector, {$set:fields}, options, function(error,result){
