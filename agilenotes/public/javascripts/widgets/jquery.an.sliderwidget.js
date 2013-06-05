@@ -25,10 +25,16 @@ $.widget( "an.sliderwidget",  $.an.widget, {
 		}
 		
 		var input = $("<input type='number' data-type='range' data-highlight='false' />").addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset ui-slider-input");
+		$("<label />").attr("for", this.id).html(o.label).appendTo(this.content);
+		input.attr("name", o.id);
 		this.content.append(input);
-		this.content.slider().attr('min', o.min).attr('max', o.max).bind("change.sliderfield", function(e) {
+		var self = this;
+		this.content.slider().attr('min', o.min).attr('max', o.max).bind("change.sliderwidget", function(e) {
 			$(e.target).find(">input").val($($(e.target)).val());
+			o.value = $($(e.target)).val();
+			self._trigger("optionchanged", null, { key : "value", value : $($(e.target)).val()});
 		});
+		
 	},
 
 	_makeResizable:function(){},
@@ -40,20 +46,18 @@ $.widget( "an.sliderwidget",  $.an.widget, {
 						data-corners="true" data-shadow="true" data-iconshadow="true"\
 						data-wrapperels="span" data-theme="c" role="slider" aria-valuemin="0"\
 						aria-valuemax="100" aria-valuenow="0" aria-valuetext="0" title="0"\
-						aria-labelledby="slider1-label" style="left: 0%;">\
+						aria-labelledby="slider1-label" style="left: 50%;">\
 						<span class="ui-btn-inner">\
 							<span class="ui-btn-text"></span>\
 						</span>\
 					</a>\
 				</div>');
-		var el = $("<div class='ui-slider' style='margin-top:0' />");
-		link.appendTo(el);
-		el.appendTo(this.content);
+		link.appendTo(this.content);
 		$(this.content.find(">input")).attr('disabled', true);
 	},
 	
 	destroy: function() {
-		this.content.slider("destroy").unbind(".sliderfield").remove();
+		this.content.slider("destroy").unbind(".sliderwidget").remove();
 		this.element.removeClass("an-sliderwidget");
 		return $.an.widget.prototype.destroy.apply(this, arguments);
 	}
