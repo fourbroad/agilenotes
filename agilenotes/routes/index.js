@@ -485,6 +485,7 @@ function delDoc(req,res){
 function getAttachment(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, filepath = params[1],
 	    q = req.query,options = q.options, provider = providers.getProvider(dbid);
+	var iconv = require('iconv-lite');
 	if(filepath && (filepath != "")){
 		provider.findAttachmentByPath(docid, filepath, function(error,gridStore){
 			if(gridStore && gridStore.stream){
@@ -494,7 +495,9 @@ function getAttachment(req,res){
 				res.setHeader("Content-length", gridStore.length);
 				var baseName = gridStore.metadata.filename ? gridStore.metadata.filename : gridStore.metadata.filepath;
 				var names = baseName.split("/");
-				res.header("Content-Disposition", "attachment; filename=" + names[names.length - 1]);
+				var str = iconv.decode(names[names.length - 1], 'iso-8859-1'); //return unicode string from iso-8859-1 encoded bytes
+				var buf = iconv.encode(str, 'utf-8');//return utf-8 encoded bytes from unicode string
+				res.header("Content-Disposition", "attachment; filename=" + buf);
 
 				// Register events
 				stream.on("data", function(chunk) { res.write(chunk); });
