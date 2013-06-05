@@ -14,7 +14,7 @@
 $.widget( "an.collapsiblewidget", $.an.widget, {
 	_create: function() {
         $.an.widget.prototype._create.apply(this, arguments);
-        var o = this.options;console.log(o)
+        var o = this.options;
         if(o.mobile){
            // o.headerText = o.headerText || 'Section Header';
             //o.contentText = o.contentText || 'Content';
@@ -27,7 +27,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
                     .toggleClass('an-collapsiblewidget-extend-icon');
                 $(this).next()
                     .toggleClass('an-collapsiblewidget-content-extend');
-            })
+            });
         }
 	},
     _design: function(){

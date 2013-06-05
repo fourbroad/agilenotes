@@ -79,32 +79,27 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 			</div>';
 			var html = $(dat);
 			
-			if (o.data_transition) {
-				html.attr("data-transition", o.data_transition);
-			}
-			
 			if (o.data_icon) {
-				html.attr("data-icon", o.data_icon);
 				html.addClass("ui-btn-icon-" + o.data_icon);
 			}
 			
 			if (o.data_iconpos) {
-				html.attr("data-iconpos", o.data_iconpos);
+				html.addClass('ui-btn-icon-' + o.data_iconpos);
 			}
 			
 			if (o.data_theme) {
-				html.attr("data-theme", o.data_theme);
+				html.addClass("ui-btn-up-" + o.data_theme);
 			}
 			
 			if (o.data_inline) {
-				html.attr("data-inline", o.data_inline);
+				html.addClass("ui-btn-inline");
 			}
 			
 			if (o.isMini) {
-				html.attr("data-isMini", o.data_isMini);
+				html.addClass('ui-mini');
 			}
 			
-			html.addClass("ui-btn ui-shadow ui-btn-corner-all ui-mini ui-btn-up-a");
+			html.addClass("ui-btn ui-shadow ui-btn-corner-all");
 			this.content.html(html);
 		}
 	},

@@ -172,7 +172,7 @@
 
 /*collapsiblewidget */
 .an-collapsiblewidget-header{
-    display:inline-block;
+    display:block;
     font-size:16px;
     font-weight:bold;
     color:#222222;
@@ -183,6 +183,7 @@
     position:relative;
     cursor:pointer;
     white-space:nowrap;
+    margin:0 1em;
 }
 .an-collapsiblewidget-header:hover{
     border:1px solid #bbb;
@@ -219,7 +220,28 @@
    font-family:Helvetica,Arial,sans-serif;
    text-shadow:0 1px 0 #FFFFFF;
    font-size:16px;
+   margin:0 1em;
 }
 .an-collapsiblewidget-content-extend{
    display:block;
+}
+
+.an-sliderwidget:visited, .an-sliderwidget:hover, .an-sliderwidget a.ui-link-inherit {
+    color: #2F3E46;
+}
+.an-sliderwidget {
+	background: linear-gradient(#F6F6F6, #E0E0E0) repeat scroll 0 0 #DFDFDF;
+    border: 1px solid #BBBBBB;
+    color: #222222;
+    font-weight: bold;
+    text-shadow: 0 1px 0 #FFFFFF;
+}
+
+.an-sliderwidget label {
+	display:block;
+	margin-bottom:0.4em;
+}
+
+.ui-slider{
+	height:auto !important;
 }
