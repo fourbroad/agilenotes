@@ -318,7 +318,7 @@ function postDoc(req,res){
 				if(error) {
 					res.send({result:error}, 416);
 				}else{
-					doc._create_at = new Date();
+					doc._create_at = new Date().toJSON();
 					if(doc.type == Model.TASK && doc.taskType == "interval"){
 						doc.userId = req.user._id;
 					}
@@ -415,7 +415,7 @@ function putDoc(req,res){
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
 					doc.userId = req.user._id;
 				}
-				doc._update_at = new Date();
+				doc._update_at = new Date().toJSON();
 				function update(selector, fields){
 					options.multi = true;
 					provider.update(selector, {$set:fields}, options, function(error,result){
@@ -486,6 +486,7 @@ function delDoc(req,res){
 function getAttachment(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, filepath = params[1],
 	    q = req.query,options = q.options, provider = providers.getProvider(dbid);
+	var iconv = require('iconv-lite');
 	if(filepath && (filepath != "")){
 		provider.findAttachmentByPath(docid, filepath, function(error,gridStore){
 			if(gridStore && gridStore.stream){
@@ -495,7 +496,13 @@ function getAttachment(req,res){
 				res.setHeader("Content-length", gridStore.length);
 				var baseName = gridStore.metadata.filename ? gridStore.metadata.filename : gridStore.metadata.filepath;
 				var names = baseName.split("/");
-				res.header("Content-Disposition", "attachment; filename=" + names[names.length - 1]);
+				var str = iconv.decode(names[names.length - 1], 'iso-8859-1'); //return unicode string from iso-8859-1 encoded bytes
+				var buf = iconv.encode(str, 'utf-8');//return utf-8 encoded bytes from unicode string
+				var userAgent = req.headers['user-agent'].toLowerCase();
+				if (userAgent.indexOf("msie") != -1) {
+					buf = encodeURI(names[names.length - 1]);
+				}
+				res.header("Content-Disposition", "attachment; filename=" + buf);
 
 				// Register events
 				stream.on("data", function(chunk) { res.write(chunk); });
