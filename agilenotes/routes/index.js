@@ -497,6 +497,10 @@ function getAttachment(req,res){
 				var names = baseName.split("/");
 				var str = iconv.decode(names[names.length - 1], 'iso-8859-1'); //return unicode string from iso-8859-1 encoded bytes
 				var buf = iconv.encode(str, 'utf-8');//return utf-8 encoded bytes from unicode string
+				var userAgent = req.headers['user-agent'].toLowerCase();
+				if (userAgent.indexOf("msie") != -1) {
+					buf = encodeURI(names[names.length - 1]);
+				}
 				res.header("Content-Disposition", "attachment; filename=" + buf);
 
 				// Register events
