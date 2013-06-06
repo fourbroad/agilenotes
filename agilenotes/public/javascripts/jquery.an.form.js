@@ -174,6 +174,7 @@ $.widget( "an.form", $.an.page, {
 			}else if($.isFunction($(this)[$(this).attr("type")+"field"])){
 				_this.field(this.id,"");
 			}
+			_this.getWidget(this.id).element.trigger("change");
 		});
 	},
 

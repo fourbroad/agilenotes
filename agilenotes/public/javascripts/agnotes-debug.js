@@ -18103,6 +18103,7 @@ $.widget( "ui.button", {
 
 		$.Widget.prototype.destroy.call( this );
 	},
+	
 
 	_setOption: function( key, value ) {
 		$.Widget.prototype._setOption.apply( this, arguments );
@@ -33742,6 +33743,27 @@ $.widget( "an.form", $.an.page, {
 		return this;
 	},
 	
+	reset:function(){
+		var o = this.options,staticAttr=["type","_path"],doc=o.document._doc,_this=this;
+		this.element.find("form")[0].reset();
+		for(var q in doc){
+			if(q=="_id"){
+				doc[q]=new ObjectId().toString();
+			}else if(q!="type"&&q!="_path"){
+				delete doc[q];
+			}
+		}
+		var field = this._getPage().find(".field"); 
+		if(field.size() == 0) return;
+		field.each(function(){
+			if($(this).attr("type")=="select"){
+				_this.field(this.id,$(this).find("select").val());
+			}else if($.isFunction($(this)[$(this).attr("type")+"field"])){
+				_this.field(this.id,"");
+			}
+		});
+	},
+
 	validate:function(){
 		return this.validator?this.validator.form():true;
 	},
@@ -35108,6 +35130,10 @@ $.widget( "an.customview", $.an.view, {
 			var html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
 		}
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
+		}
 	},
 	
 	_docsLoaded:function(){
@@ -35788,7 +35814,7 @@ $.widget( "an.workbench", {
 					}
 				});
 			});
-			self._loadActions(function(){ self._initMainToolbar(); }); // TODO 优化工具条的刷新。
+			self._loadActions(function(){ self._initMainToolbar(); });
 		});
 
 		window.workbench = this;
@@ -36023,7 +36049,7 @@ $.widget( "an.workbench", {
 				var height = self.toolbar.outerHeight(true);
 				self.element.border("option",'north',{height:height ? height :"0"});
 			}
-		},900);
+		},800);
 	},
 	
 	currentEditor:function(){
