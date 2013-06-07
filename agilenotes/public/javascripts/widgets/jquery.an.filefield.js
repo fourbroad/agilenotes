@@ -59,15 +59,16 @@ $.widget( "an.filefield", $.an.inputfield, {
 					break;
 				}
 			}
-			self.loadIcons();
 			self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-		}).delegate("li[data-id=uploadButton]", "click.filefield", function(e){
+			$(this).closest("li").remove();
+		})/*.delegate("li[data-id=uploadButton]", "click.filefield", function(e){
 			e.preventDefault();
 			e.stopImmediatePropagation();
 			self.input.click();
-		});
-		this.input = $("<input type='file'/>").hide().appendTo(this.element).bind("change",$.proxy(this, "_uploadFile"));
-		this.loadIcons();
+		})*/;
+		this.input = $("<input type='file'/>").hide().appendTo(this.element);//.bind("change",$.proxy(this, "_uploadFile"));
+		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
+		//this.loadIcons();
 	},
 	
 	_uploadFile:function(e){
@@ -87,6 +88,41 @@ $.widget( "an.filefield", $.an.inputfield, {
 		});
 	},
 	
+	_createSwfUpload:function(placeElem,callback){
+		var settings = {
+			flash_url : "javascripts/swfupload/swfupload.swf",
+			upload_url: "/tmp",
+			file_post_name:"file",
+			post_params: {"file" : ""},
+			file_size_limit : "10 MB",
+			file_types : "*.*",
+			file_types_description : "All Files",
+			file_upload_limit : 100,
+			file_queue_limit : 0,
+			custom_settings : {
+				cancelButtonId : "btnCancel"
+			},
+			debug: false,
+			button_image_url: "stylesheets/images/selection.png",
+			button_width: "64",
+			button_height: "64",
+			button_placeholder:placeElem,
+			button_text: '',
+			button_action:SWFUpload.BUTTON_ACTION.SELECT_FILE,
+			file_queued_handler : fileQueued,
+			file_queue_error_handler : fileQueueError,
+			file_dialog_complete_handler : fileDialogComplete,
+			upload_start_handler : uploadStart,
+			upload_progress_handler : uploadProgress,
+			upload_error_handler : uploadError,
+			upload_success_handler : callback,
+			upload_complete_handler : uploadComplete,
+			queue_complete_handler : function(){} // Queue plugin event
+		};
+		console.log(settings);
+		this.swfUpload = new SWFUpload(settings);
+	},
+
 	loadIcons: function(){
 		var self = this, o = this.options;
 		this.files.empty();
@@ -96,12 +132,26 @@ $.widget( "an.filefield", $.an.inputfield, {
 			}
 		});
 		if(o.mode == "edit" || o.mode == "design"){
-			var size = this.files.children().size();
+			var size = this.files.children().size(),upload = this.files.find("li[data-id=uploadButton]");
 			if((size < o.maxCount)||(size<1 && o.maxCount==1)){
 				var li = $("<li/>").attr("data-id", "uploadButton");
 			    $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).attr("src", "stylesheets/images/selection.png").appendTo(li);
 //			    $("<strong/>").text("Upload...").appendTo(li);
 			    li.appendTo(this.files);
+
+				if(!self.swfUpload){
+					self._createSwfUpload(li.find("img")[0],function(data,resp){
+						resp=$.parseJSON(resp);
+						upload.progressbar("destroy").addClass("ui-widget-content");
+						resp._tmp = true;
+						var oldValue = [].concat(o.value);
+						o.value.push(resp);
+						self._addIcon(resp);
+						self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
+					});
+				}else{
+					
+				}
 			}
 		}
 	},
@@ -109,14 +159,15 @@ $.widget( "an.filefield", $.an.inputfield, {
 	_addIcon:function(file){
 		var o = this.options, li = $("<li/>").attr("data-id", file._id), 
 		    imgsrc = "stylesheets/images/file.png", href = "";
+		var imgFormat="jpg,jpeg,png,gif";
 		if(file._tmp){
 			href = "/tmp/"+file._id;
-			if(/^image\/.*/.test(file["contentType"])){
+			if(imgFormat.match(file["filename"].match(/(?=.)[^.]+$/g)[0])){
 				imgsrc = href;
 			}
 		}else if(file.metadata){
 			href = o.url+"/"+file.metadata.filepath;
-			if(/^image\/.*/.test(file["contentType"])){
+			if(imgFormat.match(file["filename"].match(/(?=.)[^.]+$/g)[0])){
 				imgsrc = href;
 			} else {
 				imgsrc += "#" + href;
@@ -132,7 +183,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 
 	    if(o.showFileName) $("<strong/>").text(file.filename).appendTo(li);
 	    if(o.showFileSize) $("<span/>").text(file.length).appendTo(li);
-	    li.appendTo(this.files);
+	    li.prependTo(this.files);
 	},
 	
 	_addUploadButton: function(target){
