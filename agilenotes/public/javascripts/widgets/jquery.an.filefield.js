@@ -119,7 +119,6 @@ $.widget( "an.filefield", $.an.inputfield, {
 			upload_complete_handler : uploadComplete,
 			queue_complete_handler : function(){} // Queue plugin event
 		};
-		console.log(settings);
 		this.swfUpload = new SWFUpload(settings);
 	},
 
