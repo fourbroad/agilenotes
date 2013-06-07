@@ -20,7 +20,7 @@ $.widget("an.tabsx", $.ui.tabs, {
 
 	_create: function() {
 		var self = this, o = this.options;
-		if(o.mode == "edit" && o.slideshow){
+		if((o.mode == "edit"||o.mode == "browser") && o.slideshow){
 			o.fx = o.fxs ? o.fxs : {'opacity' : 'toggle', 'duration' : 200};
 		}
 		$.ui.tabs.prototype._create.apply(this, arguments);
@@ -36,7 +36,7 @@ $.widget("an.tabsx", $.ui.tabs, {
 			self._navMenu.css({border: "1px solid #CCCCCC",margin:'0px',padding:'0px'});
 		});
 		
-		if(o.mode == "edit" && o.slideshow){
+		if((o.mode == "edit"||o.mode == "browser") && o.slideshow){
 			this._slideshow(o.duration);
 		}else{
 			this.element.bind( "tabsxadd.tabsx", $.proxy(this, "_showMenu") );
