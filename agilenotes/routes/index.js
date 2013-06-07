@@ -179,7 +179,7 @@ function rend(req,res){
 function _parseCookie(cookieStr) {
 	 var cookieValue = {};
 	 var $ = require("jquery");
-     if (cookieStr && cookieStr != '') {
+     if (cookieStr && cookieStr != '' && typeof(cookieStr) == 'string') {
          var cookies = cookieStr.split(';');
          var tmp = null;
          for (var i = 0; i < cookies.length; i++) {
@@ -188,7 +188,7 @@ function _parseCookie(cookieStr) {
              cookieValue[tmp[0]] = typeof(tmp[1]) != 'undefined' ? decodeURIComponent(tmp[1]) : '';
          }
      }
-     return cookieValue;
+     return typeof(cookieStr) == 'string' ? cookieValue : cookieStr;
 }
 
 // TODO将exec作为一项独立的操作进行授权和访问控制。
