@@ -346,18 +346,29 @@ function postDoc(req,res){
 									var respArr = [];
 									for (var i = 0; i < options.task.length; i++) {
 										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
-											var response = [];
-											var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
-											if (typeof(req.headers.cookie) != 'undefined') {
-												opts.headers.cookie =_parseCookie(opts.headers.cookie);
+											if (!data) {
+												respArr.push("document not found or not authorized!", "document not found or not authorized!");
+											} else {
+												var index = 0;
+												for (var j = 0; j < options.task.length; j++) {
+													if (data._id.toString() == options.task[j].id) {
+														index = j;
+														break;
+													}
+												}
+												var response = [];
+												var opts = {query:q, headers:req.headers, method:req.method,body:options.task[index].args};
+												if (typeof(req.headers.cookie) != 'undefined') {
+													opts.headers.cookie =_parseCookie(opts.headers.cookie);
+												}
+												process([ data ] , response, opts, function(error, response) {
+													data.success = data.error ? false : true;
+													respArr.push(data
+														|| error
+														|| { success : false, result : "document not found or not authorized!",
+															msg : "document not found or not authorized!" });
+												});
 											}
-											process([ data ] , response, opts, function(error, response) {
-												data.success = data.error ? false : true;
-												respArr.push(data
-													|| error
-													|| { success : false, result : "document not found or not authorized!",
-														msg : "document not found or not authorized!" });
-											});
 										});
 									}	
 									
