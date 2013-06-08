@@ -343,6 +343,7 @@ var Model = {
     				});
     			}
     		}else{
+    			vt = (vt=="customizedview"?"view":vt);
     			element[vt]($.extend(true, { title: title, dbId: dbId, view: viewDoc, isViewEditor:true }, opts));
     			opts.opened && opts.opened(element.data(vt));
     		}
@@ -10416,14 +10417,6 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
 
    getAttachmentPath: function(dbId,docId,attachment){
 	   return "/dbs/"+dbId+"/"+docId+"/attachments/"+attachment;
-   },
-
-   postAttachment: function(dbId,docId,input,options){
-	   var form = $('<form action="" method="POST"></form>')
-	       .append(input.clone().attr("name","attachment"));	
-	   var o = {url: "/dbs/"+dbId+"/"+docId+"/attachments"};
-	   $.extend(o, options);
-	   form.ajaxSubmit(o);
    },
 
    delAttachment: function(dbId,docId,attachment){},
@@ -27337,7 +27330,7 @@ $.widget( "an.box", $.an.widget, {
 		if(link && link != "raw"){
 			var target = this.content.children(".target"), data = target.data(), hit = false;
 			for(var i in data){
-				if($.inArray(i, ["editor","gridview", "formview", "page", "sideview","explorer"]) != -1){
+				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
@@ -27362,11 +27355,11 @@ $.widget( "an.box", $.an.widget, {
 	},
 	
 	linkedWidget:function(){
-		var data = this.content.children(".an-gridview,.an-formview,.an-customview,.an-page,.an-editor").data(), 
+		var data = this.content.children(".an-view,.an-page,.an-editor").data(), 
 		    widget = null;
 		if(data){
 			$.each(data,function(){
-				if($.inArray(this.widgetName,["editor","gridview","formview","customview","page"]) != -1){
+				if($.inArray(this.widgetName,["editor","gridview","formview","customview","view","page"]) != -1){
 					widget = this;
 					return false;
 				}
@@ -27386,7 +27379,7 @@ $.widget( "an.box", $.an.widget, {
 					data[i].option("mode", "edit");
 					hit = true;
 				}
-				if($.inArray(i, ["gridview", "formview", "page", "sideview","explorer"]) != -1){
+				if($.inArray(i, ["gridview", "formview","view", "page", "sideview","explorer"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
@@ -28283,32 +28276,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 				}
 			}
 			self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-			$(this).closest("li").remove();
-		})/*.delegate("li[data-id=uploadButton]", "click.filefield", function(e){
-			e.preventDefault();
-			e.stopImmediatePropagation();
-			self.input.click();
-		})*/;
-		this.input = $("<input type='file'/>").hide().appendTo(this.element);//.bind("change",$.proxy(this, "_uploadFile"));
-		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
-		//this.loadIcons();
-	},
-	
-	_uploadFile:function(e){
-		var self = this, o = this.options, upload = this.files.find("li[data-id=uploadButton]");
-		$.ans.postTemp(this.input,{
-    		  uploadProgress: function(event, position, total, percent){
-    			  upload.progressbar("option", "value", percent*100);
-    		  },
-    		  success: function(resp){
-    			  upload.progressbar("destroy").addClass("ui-widget-content");
-    			  resp._tmp = true;
-    			  var oldValue = [].concat(o.value);
-    			  o.value.push(resp);
-    			  self.loadIcons();
-  				self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-    		  }
+			self.loadIcons();
 		});
+		this.input = $("<input type='file'/>").hide().appendTo(this.element);
+		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
 	},
 	
 	_createSwfUpload:function(placeElem,callback){
@@ -28346,34 +28317,47 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 
 	loadIcons: function(){
-		var self = this, o = this.options;
-		this.files.empty();
+		var self = this, o = this.options,lis=this.files.children(),size=0;
+		for(var i=0;i<lis.size();i++){
+			if(lis.eq(i).attr("data-id")!="uploadButton"){
+				lis.eq(i).remove();
+			}
+		}
 		$.each(o.value, function(k,v){
 			if(!v._del){
+				size++;
 				self._addIcon(v);
 			}
 		});
 		if(o.mode == "edit" || o.mode == "design"){
-			var size = this.files.children().size(),upload = this.files.find("li[data-id=uploadButton]");
-			if((size < o.maxCount)||(size<1 && o.maxCount==1)){
-				var li = $("<li/>").attr("data-id", "uploadButton");
-			    $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).attr("src", "stylesheets/images/selection.png").appendTo(li);
-//			    $("<strong/>").text("Upload...").appendTo(li);
-			    li.appendTo(this.files);
-
-				if(!self.swfUpload){
-					self._createSwfUpload(li.find("img")[0],function(data,resp){
-						resp=$.parseJSON(resp);
-						upload.progressbar("destroy").addClass("ui-widget-content");
-						resp._tmp = true;
-						var oldValue = [].concat(o.value);
-						o.value.push(resp);
-						self._addIcon(resp);
-						self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-					});
+			var li=this.files.find('li[data-id="uploadButton"]');
+			if(li.length==0){
+				li = $("<li/>").attr("data-id", "uploadButton");
+				var $img=$("<img/>");
+				$img.css({width:o.itemWidth, height:o.itemHeight}).appendTo(li);
+				li.appendTo(this.files);
+				if(o.mode == "design"){
+					$img.css("backgroundImage","url(stylesheets/images/selection.png)");
 				}else{
-					
+					if(!self.swfUpload){
+						self._createSwfUpload(li.children("img")[0],function(data,resp){
+							resp=$.parseJSON(resp);
+							resp._tmp = true;
+							var oldValue = [].concat(o.value);
+							o.value.push(resp);
+							self._addIcon(resp);
+							if(self.files.children().size()-1 >= o.maxCount){
+								li.hide();
+							}
+							self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
+						});
+					}
 				}
+			}
+			if(size >= o.maxCount){
+				li.hide();
+			}else{
+				li.show();
 			}
 		}
 	},
@@ -28509,6 +28493,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		this.swfUpload&&this.swfUpload.destroy();
 		this.content.undelegate(".filefield");
 		this.element.removeClass( "an-filefield wrapper");
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
@@ -35157,12 +35142,13 @@ $.widget( "an.customview", $.an.view, {
 
 	_create: function(){
 		$.an.view.prototype._create.apply(this, arguments);
+
 		var o = this.options, el = this.element;
+		el.addClass("an-customview");
 		o.templateTemp = o.view.templateTemp;
 		o.templateSelector = o.view.templateSelector;
 		o.templateConverts = o.view.templateConverts;
 		o.templateContent = o.view.templateContent;
-		el.addClass("an-customview");
 		this.documents = $(o.templateContent).prependTo(el);
 				
 		if (o.templateTemp) {
@@ -35200,7 +35186,7 @@ $.widget( "an.customview", $.an.view, {
 	},
 	
 	save:function(){
-		var self = this, value = {};
+		var value = {};
 		$.extend(this.options.view.options, value);
 		return $.an.view.prototype.save.apply(this,arguments);
 	},
@@ -35260,10 +35246,10 @@ $.widget( "an.editor", {
 			tabTemplate: "<li><a href='#{href}' hidefocus='true'>#{label}</a></li>",
 			show: function(event, ui) {
 				var $p = $(ui.panel), id = $p.attr("id"), d = forms[id], type = d.type;
-				if($p.is(".an-form,.an-page,.an-gridview,.an-formview")){
+				if($p.is(".an-form,.an-page,.an-view")){
 					var data = $p.data();
 					for(var i in data){
-						if($.inArray(i, ["form","page","gridview","formview"]) != -1){
+						if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){
 							if(!o.design || !(/-design$/.test(id))) data[i].option("mode", o.mode);
 							self._trigger("tabshow",event, data[i]);
 							break;
@@ -35288,7 +35274,7 @@ $.widget( "an.editor", {
 										el.tabsx("option","panels").each(function(){
 											var data = $(this).data();
 											for(var i in data){
-												if($.inArray(i, ["form","page","gridview","formview"]) != -1){ 
+												if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){ 
 													isFormDirty = data[i].option("isDirty");
 													if(isFormDirty) break;
 												}
@@ -35316,8 +35302,11 @@ $.widget( "an.editor", {
 							create:function(){ self._trigger("tabcreated",event, $(this).data("page")); }
 						},opt));
 					}else if (type == Model.VIEW){
-						var vt = d.viewType||"gridview", vt = vt.toLowerCase(), 
-						    optsx = {
+						var vt = d.viewType||"gridview", vt = vt.toLowerCase();
+						
+						vt = (vt == "customizedview"?"view":vt);
+						
+						var optsx = {
 							    view: d,
 							    create:function(){ self._trigger("tabcreated",event, $(this).data(vt)); }
 						    };
@@ -35354,17 +35343,18 @@ $.widget( "an.editor", {
 		$(this.doc).bind("propchanged.editor",function(e,id,value,oldValue,trans){
 			if(!trans) self.option("isDocDirty", true);
 			if(o.design && (docType==Model.FORM||docType==Model.PAGE||docType==Model.VIEW)){
-				var docId = doc._id+"-design", form= $.extend(true, {}, doc);
+				var docId = doc._id+"-design", dd= $.extend(true, {}, doc);
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
-					if($this.is(".an-form")){
-						$this.form("option","form", form);
-					}else if($this.is(".an-page")){
-						$this.page("option","form", form);
-					}else if($this.is(".an-gridview")){
-						$this.gridview("option","view", form);
-					}else if($this.is(".an-formview")||$this.is(".an-customview")){
-						$this.formview("option", "view", form);
+					if($this.is(".an-form,.an-page,.an-view")){
+						var data = $p.data();
+						for(var i in data){
+							if($.inArray(i, ["form","page"]) != -1){
+								$this[i]("option",i,dd);
+							}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+								$this[i]("option","view",dd);
+							}
+						}
 					}
 				});
 			}
@@ -35393,15 +35383,17 @@ $.widget( "an.editor", {
 					}
 					el.children("#"+id+".ui-tabs-panel").each(function(){
 						var $this = $(this);
-						if($this.is(".an-form")){
-							$this.form("option","form", forms[id]);
-						}else if($this.is(".an-page")){
-							$this.page("option","form", forms[id]);
-						}else if($this.is(".an-gridview")){
-							$this.gridview("option","view", forms[id]);
-						}else if($this.is(".an-formview")||$this.is(".an-customview")){
-							$this.formview("option", "view", forms[id]);
+						if($this.is(".an-form,.an-page,.an-view")){
+							var data = $this.data();
+							for(var i in data){
+								if($.inArray(i, ["form","page"]) != -1){
+									$this[i]("option",i,forms[id]);
+								}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+									$this[i]("option","view",forms[id]);
+								}
+							}
 						}
+
 					});
 				}
 			}
@@ -35461,7 +35453,7 @@ $.widget( "an.editor", {
 							self.element.tabsx("select", form.option("form")._id);
 						}
 					}
-				}else	if($.inArray(i, ["gridview","formview","customview"]) != -1){
+				}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
 					if(data[i].option("isDirty")){
 						if(data[i].option("view")._id == o.document._id){
 							o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
@@ -35600,7 +35592,7 @@ $.widget( "an.editor", {
 		if(o.design && (id == o.document._id)) id = id+"-design";
 		var data = this.element.tabsx("panel", id).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -35608,7 +35600,7 @@ $.widget( "an.editor", {
 	_currentForm:function(){
 		var data = $(this.element.tabsx("option","selectedPanel")).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -35730,7 +35722,7 @@ $.widget( "an.workbench", {
 				add: function(e, ui ) { if(v == "center") node.tabsx('select', '#' + ui.panel.id); },
 				show: function(e, ui) {
 					var panel = $(ui.panel), editor;
-					$.each(["editor","gridview", "formview", "page"], function(k,v){
+					$.each(["editor","gridview", "formview", "customview","view","page"], function(k,v){
 						editor = panel.data(v); 
 						if(editor) {
 							var title = editor.option('title');
@@ -36106,7 +36098,7 @@ $.widget( "an.workbench", {
 	currentEditor:function(){
 		var panel = $(this.centerTabs.tabsx("option","selectedPanel")), data = panel.data(), editor = null;
 		$.each(data||{}, function(k,v){
-			if($.inArray(k,["editor","gridview","formview","customview","page"]) != -1){
+			if($.inArray(k,["editor","gridview","formview","customview","view","page"]) != -1){
 				editor = v;
 				return false;
 			}
@@ -36543,16 +36535,15 @@ $.widget( "an.workbench", {
 		    pid = viewId+"-view", el = tabs.tabsx("panel", pid), eps = o.extensionPoints; 
 		if(el.size() > 0){
 			tabs.tabsx("select", pid);
-			if(el.is(".an-editor") && opts.mode != "design"){
-				el.editor("destroy");
-			} else if (el.is(".an-formview, .an-gridview, .an-customview") && opts.mode == "design"){
-				var data = el.data();
-				for(var i in data){
-					if($.inArray(i, ["formview", "gridview", "customview"]) != -1) data[i].destroy();
+			$.each(["editor","gridview", "formview", "customview","view"], function(k,v){
+				editor = el.data(v); 
+				if(editor && ((v == "editor" && opts.mode != "design")||(v != "editor" && opts.mode == "design"))) {
+					editor.destroy();
+				}else{
+					return;
 				}
-			}else{
-				return;
-			}
+			});
+			
 		}else{
 	        el = tabs.tabsx("add","#"+pid, "...").children("#"+pid);
 		}

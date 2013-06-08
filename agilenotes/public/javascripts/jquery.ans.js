@@ -248,14 +248,6 @@
 	   return "/dbs/"+dbId+"/"+docId+"/attachments/"+attachment;
    },
 
-   postAttachment: function(dbId,docId,input,options){
-	   var form = $('<form action="" method="POST"></form>')
-	       .append(input.clone().attr("name","attachment"));	
-	   var o = {url: "/dbs/"+dbId+"/"+docId+"/attachments"};
-	   $.extend(o, options);
-	   form.ajaxSubmit(o);
-   },
-
    delAttachment: function(dbId,docId,attachment){},
    
    getTempPath: function(filename){
