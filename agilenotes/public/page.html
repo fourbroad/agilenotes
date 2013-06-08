@@ -53,15 +53,10 @@ $(function(){
 						$("#widget").page({title:page.title||page.name||pageId,dbId:dbId,page:page});
 					});
 				}else if(viewId){
-					$.ans.getDoc(dbId, viewId, null, function(err,view){
-						$("#widget").gridview({
-							title:view.title||view.name||viewId, 
-							dbId:dbId, 
-							view:view,
-							docdblclick:function(e,data){
-								window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
-							}
-						});
+					Model.openView($("#widget"), dbId, viewId, {
+						docdblclick:function(e,data){
+							window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
+						}
 					});
 				}else if(docId){
 					$.ans.getDoc(dbId,docId,null,function(err,doc){
