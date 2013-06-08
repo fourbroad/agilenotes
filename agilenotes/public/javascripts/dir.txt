@@ -62,3 +62,7 @@
 ..\javascripts\lib\rte\w3cRange.js
 ..\javascripts\json2.js
 ..\javascripts\jsrender.js
+..\javascripts\swfupload\swfupload.js
+..\javascripts\swfupload\swfupload.queue.js
+..\javascripts\swfupload\fileprogress.js
+..\javascripts\swfupload\handlers.js
