@@ -134,11 +134,12 @@ $.widget( "an.filefield", $.an.inputfield, {
 			var size = this.files.children().size(),upload = this.files.find("li[data-id=uploadButton]");
 			if((size < o.maxCount)||(size<1 && o.maxCount==1)){
 				var li = $("<li/>").attr("data-id", "uploadButton");
-			    $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).attr("src", "stylesheets/images/selection.png").appendTo(li);
+			    $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).appendTo(li);
 //			    $("<strong/>").text("Upload...").appendTo(li);
 			    li.appendTo(this.files);
 
 				if(!self.swfUpload){
+					
 					self._createSwfUpload(li.find("img")[0],function(data,resp){
 						resp=$.parseJSON(resp);
 						upload.progressbar("destroy").addClass("ui-widget-content");
@@ -148,8 +149,6 @@ $.widget( "an.filefield", $.an.inputfield, {
 						self._addIcon(resp);
 						self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
 					});
-				}else{
-					
 				}
 			}
 		}
@@ -286,6 +285,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		this.swfUpload&&this.swfUpload.destroy();
 		this.content.undelegate(".filefield");
 		this.element.removeClass( "an-filefield wrapper");
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
