@@ -19,12 +19,13 @@ $.widget( "an.customview", $.an.view, {
 
 	_create: function(){
 		$.an.view.prototype._create.apply(this, arguments);
+
 		var o = this.options, el = this.element;
+		el.addClass("an-customview");
 		o.templateTemp = o.view.templateTemp;
 		o.templateSelector = o.view.templateSelector;
 		o.templateConverts = o.view.templateConverts;
 		o.templateContent = o.view.templateContent;
-		el.addClass("an-customview");
 		this.documents = $(o.templateContent).prependTo(el);
 				
 		if (o.templateTemp) {
@@ -62,7 +63,7 @@ $.widget( "an.customview", $.an.view, {
 	},
 	
 	save:function(){
-		var self = this, value = {};
+		var value = {};
 		$.extend(this.options.view.options, value);
 		return $.an.view.prototype.save.apply(this,arguments);
 	},

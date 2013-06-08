@@ -343,6 +343,7 @@ var Model = {
     				});
     			}
     		}else{
+    			vt = (vt=="customizedview"?"view":vt);
     			element[vt]($.extend(true, { title: title, dbId: dbId, view: viewDoc, isViewEditor:true }, opts));
     			opts.opened && opts.opened(element.data(vt));
     		}
