@@ -60,7 +60,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 				}
 			}
 			self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-			$(this).closest("li").remove();
+			self.loadIcons();
 		});
 		this.input = $("<input type='file'/>").hide().appendTo(this.element);
 		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
@@ -101,30 +101,47 @@ $.widget( "an.filefield", $.an.inputfield, {
 	},
 
 	loadIcons: function(){
-		var self = this, o = this.options;
-		this.files.empty();
+		var self = this, o = this.options,lis=this.files.children(),size=0;
+		for(var i=0;i<lis.size();i++){
+			if(lis.eq(i).attr("data-id")!="uploadButton"){
+				lis.eq(i).remove();
+			}
+		}
 		$.each(o.value, function(k,v){
 			if(!v._del){
+				size++;
 				self._addIcon(v);
 			}
 		});
 		if(o.mode == "edit" || o.mode == "design"){
-			var size = this.files.children().size();
-			if((size < o.maxCount)||(size<1 && o.maxCount==1)){
-				var li = $("<li/>").attr("data-id", "uploadButton");
-			    $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).appendTo(li);
-			    li.appendTo(this.files);
-
-			    if(!self.swfUpload){
-					self._createSwfUpload(li.children("img")[0],function(data,resp){
-						resp=$.parseJSON(resp);
-						resp._tmp = true;
-						var oldValue = [].concat(o.value);
-						o.value.push(resp);
-						self._addIcon(resp);
-						self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
-					});
+			var li=this.files.find('li[data-id="uploadButton"]');
+			if(li.length==0){
+				li = $("<li/>").attr("data-id", "uploadButton");
+				var $img=$("<img/>");
+				$img.css({width:o.itemWidth, height:o.itemHeight}).appendTo(li);
+				li.appendTo(this.files);
+				if(o.mode == "design"){
+					$img.css("backgroundImage","url(stylesheets/images/selection.png)");
+				}else{
+					if(!self.swfUpload){
+						self._createSwfUpload(li.children("img")[0],function(data,resp){
+							resp=$.parseJSON(resp);
+							resp._tmp = true;
+							var oldValue = [].concat(o.value);
+							o.value.push(resp);
+							self._addIcon(resp);
+							if(self.files.children().size()-1 >= o.maxCount){
+								li.hide();
+							}
+							self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
+						});
+					}
 				}
+			}
+			if(size >= o.maxCount){
+				li.hide();
+			}else{
+				li.show();
 			}
 		}
 	},
