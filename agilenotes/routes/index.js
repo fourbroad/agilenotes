@@ -345,12 +345,12 @@ function postDoc(req,res){
 								if (options.task) {
 									var respArr = [];
 									for (var i = 0; i < options.task.length; i++) {
-										var response = [];
-										var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
-										if (typeof(req.headers.cookie) != 'undefined') {
-											opts.headers.cookie =_parseCookie(opts.headers.cookie);
-										}
 										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
+											var response = [];
+											var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
+											if (typeof(req.headers.cookie) != 'undefined') {
+												opts.headers.cookie =_parseCookie(opts.headers.cookie);
+											}
 											process([ data ] , response, opts, function(error, response) {
 												data.success = data.error ? false : true;
 												respArr.push(data
