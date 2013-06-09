@@ -28345,10 +28345,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 							resp._tmp = true;
 							var oldValue = [].concat(o.value);
 							o.value.push(resp);
-							self._addIcon(resp);
-							if(self.files.children().size()-1 >= o.maxCount){
-								li.hide();
+							if(self.files.children().size() >= o.maxCount){
+								setTimeout(function(){li.hide();},50);//prevent to throw error under the browers of ie
 							}
+							self._addIcon(resp);
 							self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
 						});
 					}
@@ -34899,7 +34899,7 @@ $.widget( "an.view", {
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				self._docsLoaded && self._docsLoaded();
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
 			});
 		}
@@ -35347,7 +35347,7 @@ $.widget( "an.editor", {
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
 					if($this.is(".an-form,.an-page,.an-view")){
-						var data = $p.data();
+						var data = $this.data();
 						for(var i in data){
 							if($.inArray(i, ["form","page"]) != -1){
 								$this[i]("option",i,dd);
