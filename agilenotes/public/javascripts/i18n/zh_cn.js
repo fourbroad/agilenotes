@@ -69,4 +69,9 @@ $.i18n.pager={
 		last: "最后页",
 		display: "共{total}条，显示其中{currentPagerFirst}至{currentPagerLast}条"
 }
+
+$.i18n.dialog={
+		ok: "确定",
+		cancel: "取消"
+}
 })(jQuery);
