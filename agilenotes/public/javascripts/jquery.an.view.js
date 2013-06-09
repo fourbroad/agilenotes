@@ -187,7 +187,7 @@ $.widget( "an.view", {
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				self._docsLoaded && self._docsLoaded();
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
 			});
 		}
