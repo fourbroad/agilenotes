@@ -373,8 +373,6 @@ var Model = {
     	opts = opts || {};
     	var self = this, view = this.views[viewId];
     	if(view){
-    		console.log(view);
-        	delete view.templateContent;
     		this._doOpenView(element, dbId, view, opts);
     	}else{
     		$.ans.getDoc(dbId, viewId, null, function(err, view){
