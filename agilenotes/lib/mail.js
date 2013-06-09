@@ -9,6 +9,7 @@ function setProviders(pro) {
 }
 
 function _genMessage(config, doc, attachments, callback) {
+	config.sender = config.sender || "";
 	if (!config.user) {
 		callback("sender user is null!", {});
 	} else if (!doc.to) {
