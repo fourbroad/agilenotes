@@ -110,7 +110,7 @@ function validate(dbid, doc, callback){
 				var f = $("<form/>").append(forms[i].content);
 				f.find(".field[type!=button]").each(function(){
 					var $this = $(this), field = $this.attr("id"), md = $this.metadata(), 
-					    input = $("<input type='text'/>").attr("name",$this.attr("name")).appendTo($this),
+					    input = $("<input type='text'/>").attr("name",$this.attr("id") || $this.attr("name")).appendTo($this),
 					    value = eval("try{doc['"+field+"']}catch(e){}");
 					if(value){
 						input.attr("value",value);
