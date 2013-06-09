@@ -28,7 +28,7 @@ $.widget( "an.view", {
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
 		
-		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
 		
 		var data = {};
 		data[this.widgetName] = this;
