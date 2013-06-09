@@ -110,7 +110,7 @@ function validate(dbid, doc, callback){
 				var f = $("<form/>").append(forms[i].content);
 				f.find(".field[type!=button]").each(function(){
 					var $this = $(this), field = $this.attr("id"), md = $this.metadata(), 
-					    input = $("<input type='text'/>").attr("name",$this.attr("name")).appendTo($this),
+					    input = $("<input type='text'/>").attr("name",$this.attr("id") || $this.attr("name")).appendTo($this),
 					    value = eval("try{doc['"+field+"']}catch(e){}");
 					if(value){
 						input.attr("value",value);
@@ -345,19 +345,30 @@ function postDoc(req,res){
 								if (options.task) {
 									var respArr = [];
 									for (var i = 0; i < options.task.length; i++) {
-										var response = [];
-										var opts = {query:q, headers:req.headers, method:req.method,body:options.task[i].args};
-										if (typeof(req.headers.cookie) != 'undefined') {
-											opts.headers.cookie =_parseCookie(opts.headers.cookie);
-										}
 										provider.findOne({_id:new BSON.ObjectID(options.task[i].id)}, [], {}, function(err, data) {
-											process([ data ] , response, opts, function(error, response) {
-												data.success = data.error ? false : true;
-												respArr.push(data
-													|| error
-													|| { success : false, result : "document not found or not authorized!",
-														msg : "document not found or not authorized!" });
-											});
+											if (!data) {
+												respArr.push("document not found or not authorized!", "document not found or not authorized!");
+											} else {
+												var index = 0;
+												for (var j = 0; j < options.task.length; j++) {
+													if (data._id.toString() == options.task[j].id) {
+														index = j;
+														break;
+													}
+												}
+												var response = [];
+												var opts = {query:q, headers:req.headers, method:req.method,body:options.task[index].args};
+												if (typeof(req.headers.cookie) != 'undefined') {
+													opts.headers.cookie =_parseCookie(opts.headers.cookie);
+												}
+												process([ data ] , response, opts, function(error, response) {
+													data.success = data.error ? false : true;
+													respArr.push(data
+														|| error
+														|| { success : false, result : "document not found or not authorized!",
+															msg : "document not found or not authorized!" });
+												});
+											}
 										});
 									}	
 									
