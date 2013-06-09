@@ -42,6 +42,7 @@ Waats = function(provider, config, policy, c_type) {
 	this.msgid = this._genMsgId(this._MSG['waats_GDSCode']);
 	var date = new Date();
 	this.start_time = date;
+	policy = this._addCflag(policy);
 	this.xml = this.gen_xml(policy);
 	this.g_policy = policy;
 };
@@ -328,6 +329,33 @@ Waats.prototype._getTypeCode = function(doc) {
 	return doc;
 };
 
+Waats.prototype._addCflag = function(policy) {
+	var insured = policy['Insured'];
+	var item = null;
+	for (var i = 0; i < insured.length; i++) {
+		item = insured[i];
+		if (policy.PHName == item.Name && policy.PHIdNo == item.IdNo) {
+			policy['Insured'][i]['cflag'] = "1";
+		} else {
+			policy['Insured'][i]['cflag'] = "2";
+		}
+	}
+	
+	var flag = 0;
+	for (var j = 0; j < insured.length; j++) {
+		item = insured[j];
+		if (policy.PHName == item.Name && policy.PHIdNo == item.IdNo) {
+			flag = 1;
+		}
+	}
+	
+	if (flag <= 0) {
+		policy['Insured'].push({Name:policy.PHName, BirthDt:policy.PHBirth, typeCode:"IND", cflag:0});
+	}
+	
+	return policy;
+};
+
 Waats.prototype.gen_xml = function(policy) {
 	var xml = '';
 	var i = 0;
@@ -435,7 +463,7 @@ Waats.prototype.gen_xml = function(policy) {
 			}
 
 			xml += "<BenefitIn><BenefitCd>1</BenefitCd></BenefitIn>";
-			xml += "<IsInsuredFlag>" + policy['Insured'].length + "</IsInsuredFlag></Insured>";
+			xml += "<IsInsuredFlag>" + c['cflag'] + "</IsInsuredFlag></Insured>";
 		}
 
 		xml += "</Segment></TINS_XML_DATA>";
