@@ -142,7 +142,7 @@ $.widget( "an.editor", {
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
 					if($this.is(".an-form,.an-page,.an-view")){
-						var data = $p.data();
+						var data = $this.data();
 						for(var i in data){
 							if($.inArray(i, ["form","page"]) != -1){
 								$this[i]("option",i,dd);
