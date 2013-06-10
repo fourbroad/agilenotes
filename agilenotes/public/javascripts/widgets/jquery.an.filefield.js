@@ -129,10 +129,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 							resp._tmp = true;
 							var oldValue = [].concat(o.value);
 							o.value.push(resp);
-							self._addIcon(resp);
-							if(self.files.children().size()-1 >= o.maxCount){
-								li.hide();
+							if(self.files.children().size() >= o.maxCount){
+								setTimeout(function(){li.hide();},50);//prevent to throw error under the browers of ie
 							}
+							self._addIcon(resp);
 							self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
 						});
 					}

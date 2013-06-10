@@ -28,7 +28,7 @@ $.widget( "an.view", {
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
 		
-		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
 		
 		var data = {};
 		data[this.widgetName] = this;
@@ -187,7 +187,7 @@ $.widget( "an.view", {
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				self._docsLoaded && self._docsLoaded();
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
 			});
 		}

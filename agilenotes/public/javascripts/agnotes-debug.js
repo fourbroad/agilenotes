@@ -568,6 +568,7 @@ function print(url){
 }
 
 function showDialog(title, message, opts){
+	var lng=window.database.local;
 	opts = opts||{};
 	var buttons = [];
 	$.each(opts.buttons||[],function(){
@@ -575,8 +576,12 @@ function showDialog(title, message, opts){
 		buttons.push({text:btn.text, click:function(){ btn.handler&&btn.handler($( this ).data("dialog")); }});
 	});
 	
+	var txtCon="OK";
+	if(lng&&lng!='en'){
+		txtCon=$.i18n.dialog.ok;
+	}
 	if(buttons.length == 0){
-		buttons.push({text:"OK",click:function(){$( this ).dialog( "close" );}});
+		buttons.push({text:txtCon,click:function(){$( this ).dialog( "close" );}});
 	}
 	
 	$("<div/>").dialog({
@@ -27920,6 +27925,7 @@ $.widget( "an.datetimefield", $.an.inputfield, {
 			dateFormat: this.options.dateFormat?this.options.dateFormat:'mm/dd/yy',
 			minDate: this.options.minDate && eval("("+ this.options.minDate +")") || null,
 			maxDate: this.options.maxDate && eval("("+ this.options.maxDate +")") || null,
+			yearRange:this.options.yearRange?this.options.yearRange:"c-10:c+10",
 			changeMonth:true,
 			changeYear:true,
 			onClose: function() {
@@ -28345,10 +28351,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 							resp._tmp = true;
 							var oldValue = [].concat(o.value);
 							o.value.push(resp);
-							self._addIcon(resp);
-							if(self.files.children().size()-1 >= o.maxCount){
-								li.hide();
+							if(self.files.children().size() >= o.maxCount){
+								setTimeout(function(){li.hide();},50);//prevent to throw error under the browers of ie
 							}
+							self._addIcon(resp);
 							self._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:oldValue, isTransient:o.isTransient});
 						});
 					}
@@ -34740,7 +34746,7 @@ $.widget( "an.view", {
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
 		
-		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
 		
 		var data = {};
 		data[this.widgetName] = this;
@@ -34899,7 +34905,7 @@ $.widget( "an.view", {
 					o.currentPage = Math.floor(o.skip/o.limit+1);
 					o.totalPage = Math.ceil(o.total/o.limit);
 				}
-				self._docsLoaded && self._docsLoaded();
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
 			});
 		}
@@ -35347,7 +35353,7 @@ $.widget( "an.editor", {
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
 					if($this.is(".an-form,.an-page,.an-view")){
-						var data = $p.data();
+						var data = $this.data();
 						for(var i in data){
 							if($.inArray(i, ["form","page"]) != -1){
 								$this[i]("option",i,dd);
