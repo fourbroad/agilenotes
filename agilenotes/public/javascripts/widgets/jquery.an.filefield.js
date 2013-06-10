@@ -55,7 +55,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			var id = $(this).closest("li").attr("data-id"), oldValue = [].concat(o.value);
 			for(var i = 0; i < o.value.length; i++){
 				if(o.value[i]._id == id){
-					o.value[i]._del = true;
+					o.value.splice(i,1);
+					//o.value[i]._del = true;
 					break;
 				}
 			}
@@ -108,10 +109,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 			}
 		}
 		$.each(o.value, function(k,v){
-			if(!v._del){
+			//if(!v._del){
 				size++;
 				self._addIcon(v);
-			}
+			//}
 		});
 		if(o.mode == "edit" || o.mode == "design"){
 			var li=this.files.find('li[data-id="uploadButton"]');
