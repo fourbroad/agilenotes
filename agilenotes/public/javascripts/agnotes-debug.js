@@ -568,6 +568,7 @@ function print(url){
 }
 
 function showDialog(title, message, opts){
+	var lng=window.database.local;
 	opts = opts||{};
 	var buttons = [];
 	$.each(opts.buttons||[],function(){
@@ -575,8 +576,12 @@ function showDialog(title, message, opts){
 		buttons.push({text:btn.text, click:function(){ btn.handler&&btn.handler($( this ).data("dialog")); }});
 	});
 	
+	var txtCon="OK";
+	if(lng&&lng!='en'){
+		txtCon=$.i18n.dialog.ok;
+	}
 	if(buttons.length == 0){
-		buttons.push({text:"OK",click:function(){$( this ).dialog( "close" );}});
+		buttons.push({text:txtCon,click:function(){$( this ).dialog( "close" );}});
 	}
 	
 	$("<div/>").dialog({
@@ -27920,6 +27925,7 @@ $.widget( "an.datetimefield", $.an.inputfield, {
 			dateFormat: this.options.dateFormat?this.options.dateFormat:'mm/dd/yy',
 			minDate: this.options.minDate && eval("("+ this.options.minDate +")") || null,
 			maxDate: this.options.maxDate && eval("("+ this.options.maxDate +")") || null,
+			yearRange:this.options.yearRange?this.options.yearRange:"c-10:c+10",
 			changeMonth:true,
 			changeYear:true,
 			onClose: function() {
@@ -28271,7 +28277,8 @@ $.widget( "an.filefield", $.an.inputfield, {
 			var id = $(this).closest("li").attr("data-id"), oldValue = [].concat(o.value);
 			for(var i = 0; i < o.value.length; i++){
 				if(o.value[i]._id == id){
-					o.value[i]._del = true;
+					o.value.splice(i,1);
+					//o.value[i]._del = true;
 					break;
 				}
 			}
@@ -28324,10 +28331,10 @@ $.widget( "an.filefield", $.an.inputfield, {
 			}
 		}
 		$.each(o.value, function(k,v){
-			if(!v._del){
+			//if(!v._del){
 				size++;
 				self._addIcon(v);
-			}
+			//}
 		});
 		if(o.mode == "edit" || o.mode == "design"){
 			var li=this.files.find('li[data-id="uploadButton"]');
@@ -34740,7 +34747,7 @@ $.widget( "an.view", {
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
 		
-		$.extend(this, eval("try{("+(o.view.methods||"{}")+")}catch(e){}"));
+		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
 		
 		var data = {};
 		data[this.widgetName] = this;
