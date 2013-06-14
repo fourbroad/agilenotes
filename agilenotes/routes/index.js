@@ -111,7 +111,7 @@ function validate(dbid, doc, callback){
 				f.find(".field[type!=button]").each(function(){
 					var $this = $(this), field = $this.attr("id"), md = $this.metadata(), 
 					    input = $("<input type='text'/>").attr("name",$this.attr("name")).appendTo($this),
-					    value = eval("try{doc."+field+"}catch(e){}");
+					    value = eval("try{doc['"+field+"']}catch(e){}");
 					if(value){
 						input.attr("value",value);
 					}
@@ -179,7 +179,7 @@ function rend(req,res){
 function _parseCookie(cookieStr) {
 	 var cookieValue = {};
 	 var $ = require("jquery");
-     if (cookieStr && cookieStr != '') {
+     if (cookieStr && cookieStr != '' && typeof(cookieStr) == 'string') {
          var cookies = cookieStr.split(';');
          var tmp = null;
          for (var i = 0; i < cookies.length; i++) {
@@ -188,7 +188,7 @@ function _parseCookie(cookieStr) {
              cookieValue[tmp[0]] = typeof(tmp[1]) != 'undefined' ? decodeURIComponent(tmp[1]) : '';
          }
      }
-     return cookieValue;
+     return typeof(cookieStr) == 'string' ? cookieValue : cookieStr;
 }
 
 // TODO将exec作为一项独立的操作进行授权和访问控制。

@@ -1011,13 +1011,12 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: [Model.GROUP_ROOT], checkbox: true, checkedNodes:ids});
-						setTimeout(function(){ $this.sideview("expand", Model.GROUP_ROOT); },200);
-						
+						$this.explorer({dbId:dbId, roots: [Model.GROUP_ROOT], checkbox: true, checkedNodes:ids});
+						setTimeout(function(){ $this.explorer("expand", Model.GROUP_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
-							var $this= $(this), nodes = $this.sideview("option","checkedNodes");
+							var $this= $(this), nodes = $this.explorer("option","checkedNodes");
 							user._groupPaths = [];
 							$.each(nodes||[], function(k,node){ user._groupPaths.push(node.data._path); });
 							Model.updateDocument(dbId, userId, user, null,function(err,result){
@@ -1071,12 +1070,12 @@ $.widget( "an.workbench", {
 							var a = v.split(",");
 							ids.push(a[a.length-2]);
 						});
-						$this.sideview({dbId:dbId, roots: [Model.ROLE_ROOT], checkbox: true, checkedNodes:ids});
-						setTimeout(function(){ $this.sideview("expand", Model.ROLE_ROOT); },200);
+						$this.explorer({dbId:dbId, roots:[Model.ROLE_ROOT], checkbox: true, checkedNodes:ids});
+						setTimeout(function(){ $this.explorer("expand", Model.ROLE_ROOT); },200);
 					},
 					buttons: {
 						OK: function() {
-							var $this= $(this), nodes = $this.sideview("option","checkedNodes"),
+							var $this= $(this), nodes = $this.explorer("option","checkedNodes"),
 							    paths = doc._rolePaths = [];
 							$.each(nodes||[], function(k,node){ paths.push(node.data._path); });
 							Model.updateDocument(dbId, docId, doc, null,function(err,result){

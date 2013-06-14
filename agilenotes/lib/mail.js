@@ -16,7 +16,7 @@ function _genMessage(config, doc, attachments, callback) {
 	} else if (!doc.subject) {
 		callback("subject is null !", null);
 	} else {
-		var message = { from : config.user, to : doc.to, subject : doc.subject, //
+		var message = { from : config.sender + "<" + config.user + ">", to : doc.to, subject : doc.subject, //
 		headers : { 'X-Laziness-level' : 1000 },
 
 		html : doc.content };

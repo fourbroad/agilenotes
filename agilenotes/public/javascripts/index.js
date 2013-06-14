@@ -95,6 +95,10 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.sliderwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.collapsiblewidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.togglefield.js"><\/script>\
+<script src="javascripts/swfupload/swfupload.js"><\/script>\
+<script src="javascripts/swfupload/swfupload.queue.js"><\/script>\
+<script src="javascripts/swfupload/fileprogress.js"><\/script>\
+<script src="javascripts/swfupload/handlers.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
