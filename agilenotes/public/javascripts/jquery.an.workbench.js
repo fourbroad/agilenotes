@@ -145,7 +145,7 @@ $.widget( "an.workbench", {
 		});
 
 		// load actions of document.
-		this._loadActions(function(){
+		this._loadExtensions(function(){
 			self._initMainToolbar();
 			// load opened documents.
 			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
@@ -182,9 +182,9 @@ $.widget( "an.workbench", {
 			var hit = false;
 			$.each($.isArray(data)?data:[data], function(k,v){
 				self.centerTabs.find("a[href^=#"+v._id+"]").html(v.title);
-				if(v.type == Model.ACTION){ hit = true; }
+				if(v.extensionPoint){ hit = true; }
 			});
-			if(hit) self._loadActions(function(){ self._initMainToolbar(); });
+			if(hit) self._loadExtensions(function(){ self._initMainToolbar(); });
 		}).bind("documentDeleted.workbench",function(e,data){
 			$.each($.isArray(data)?data:[data], function(k,v){
 				self.centerTabs.find("a[href^=#"+v._id+"]").each(function(){
@@ -194,7 +194,7 @@ $.widget( "an.workbench", {
 					}
 				});
 			});
-			self._loadActions(function(){ self._initMainToolbar(); });
+			self._loadExtensions(function(){ self._initMainToolbar(); });
 		});
 
 		window.workbench = this;
@@ -236,7 +236,7 @@ $.widget( "an.workbench", {
 	    }
 	},
 	
-	_loadActions:function(afterLoad){
+	_loadExtensions:function(afterLoad){
 		var self = this, o = this.options, eps=[];
 		$.each(o.extensionPoints,function(k,v){ eps.push(v);});
 		Model.loadExtensions(o.dbId, eps, function(err, exts){
