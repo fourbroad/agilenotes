@@ -245,3 +245,43 @@
 .ui-slider{
 	height:auto !important;
 }
+
+.an-btn-inline {
+	display:block;
+}
+
+.an-navbar-widget{
+	width:100%;
+	height:21px;
+}
+
+.ui-block-a {
+	float:left !important;
+	margin-left:0 !important;
+	padding-left:0 !important;
+}
+
+.ui-block-a a {
+	margin-left:0 !important;
+	margin-right:0 !important;
+	width:100% !important;
+}
+
+.c{
+zoom:1;
+}
+.c:after{
+clear:both;
+display:block;
+visibility:hidden;
+height:0;
+content:'.';
+} 
+
+.an-footer {
+	position:absolute !important;
+	margin:0 !important;
+	padding:0 !important;
+	bottom:0 !important;
+	width:100% !important;
+}

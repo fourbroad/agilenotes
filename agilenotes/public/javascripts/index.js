@@ -99,6 +99,8 @@ document.write('\
 <script src="javascripts/swfupload/swfupload.queue.js"><\/script>\
 <script src="javascripts/swfupload/fileprogress.js"><\/script>\
 <script src="javascripts/swfupload/handlers.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.navbarwidget.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.listviewfield.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
