@@ -11,11 +11,14 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.sliderwidget",  $.an.widget, {
+$.widget( "an.sliderfield",  $.an.inputfield, {
 	_create: function() {
-		var o = this.options;
-		$.an.widget.prototype._create.apply(this, arguments);
-		this.element.addClass("an-sliderwidget");
+		$.an.inputfield.prototype._create.apply(this, arguments);
+		this.element.addClass("an-sliderfield");
+	},
+	
+	_createControl : function() {
+		var o = this.options, self = this;
 		if (!o.min) {
 			o.min = 1;
 		}
@@ -24,43 +27,44 @@ $.widget( "an.sliderwidget",  $.an.widget, {
 			o.max = 100;
 		}
 		
-		//var input = $("<input type='number' data-type='range' data-highlight='false' />").addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset ui-slider-input");
-		$("<label />").attr("for", this.id).html(o.label).appendTo(this.content);
-		//input.attr("name", o.id);
-		//this.content.append(input);
-		var self = this;
-		this.content.slider(o).attr("min", o.min).attr("max", o.max).bind("change.sliderwidget", function(e) {
-			/*$(e.target).find(">input").val($($(e.target)).val());
-			o.value = $($(e.target)).val();
-			self._trigger("optionchanged", null, { key : "value", value : $($(e.target)).val()});*/
-			$(e.target).parent().siblings().eq(0).find(">div >input").val($($(e.target)).val());
-		});
-		
+		this.input = $("<input type='text'/>").attr({ name : o.id }).attr({min:o.min, max:o.max}).bind(
+			"change.inputfield keyup.inputfield",
+			function(e) {
+				var value = self.input.val(), oldValue = o.value;
+				if (value != oldValue) {
+					o.value = value;
+					self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+						isTransient : o.isTransient });
+				}
+			}).addClass("content ui-shadow-inset ui-corner-all ui-btn-shadow ui-body-c ui-input-text");
 	},
-
+	
+	_edit : function() {
+		this.input.appendTo(this.content).slider(this.options);
+	},
+	
 	_makeResizable:function(){},
 	
 	_design:function() {
-		var link = $('<div role="application" class="ui-slider-track ui-btn-down-c ui-btn-corner-all">\
-					<a href="#"\
-						class="ui-slider-handle ui-btn ui-shadow ui-btn-corner-all ui-btn-up-c"\
-						data-corners="true" data-shadow="true" data-iconshadow="true"\
-						data-wrapperels="span" data-theme="c" role="slider" aria-valuemin="0"\
-						aria-valuemax="100" aria-valuenow="0" aria-valuetext="0" title="0"\
-						aria-labelledby="slider1-label" style="left: 50%;">\
-						<span class="ui-btn-inner">\
-							<span class="ui-btn-text"></span>\
-						</span>\
-					</a>\
-				</div>');
-		link.appendTo(this.content);
-		$(this.content.find(">input")).attr('disabled', true);
+		if(!this.linkStr){
+			this.linkStr= $('<input type="text" disabled="disabled" class="content ui-shadow-inset ui-corner-all ui-btn-shadow ui-body-c ui-input-text ui-slider-input"><div role="application" class="ui-slider-track ui-btn-down-c ui-btn-corner-all">\
+			<a href="#"\
+			class="ui-slider-handle ui-btn ui-shadow ui-btn-corner-all ui-btn-up-c"\
+			data-corners="true" data-shadow="true" data-iconshadow="true"\
+			data-wrapperels="span" data-theme="c" role="slider" aria-valuemin="0"\
+			aria-valuemax="100" aria-valuenow="0" aria-valuetext="0" title="0"\
+			aria-labelledby="slider1-label" style="left: 50%;">\
+			<span class="ui-btn-inner">\
+				<span class="ui-btn-text"></span>\
+			</span>\
+		</a>\
+	</div>');
+			this.linkStr.appendTo(this.content.removeClass("content"));
+			}
 	},
 	
 	destroy: function() {
-		this.content.slider("destroy").unbind(".sliderwidget").remove();
-		this.element.removeClass("an-sliderwidget");
-		return $.an.widget.prototype.destroy.apply(this, arguments);
+		return $.an.inputfield.prototype.destroy.apply(this, arguments);
 	}
 });
 })( jQuery );
