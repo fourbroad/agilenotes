@@ -80,7 +80,7 @@ $.widget( "an.navbarwidget",  $.an.widget, {
 				if (o.iconpos && o.iconpos != 'bottom') {
 					link.append(subspan).addClass(linkClass);
 				}
-				link.append($("<div />").html(v.label || "Button"));
+				link.append(v.label || "Button");
 				if (o.iconpos && o.iconpos == 'bottom') {
 					link.append(subspan).addClass(linkClass);
 				}

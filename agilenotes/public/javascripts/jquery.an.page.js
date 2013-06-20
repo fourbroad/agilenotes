@@ -318,8 +318,6 @@ $.widget( "an.page", {
 					$this.attr( "role", "main" );
 				}
 			});
-	
-			$("div[data-role=navbar]",$page).navbar({create: function( event, ui ) {}});
 		}catch(e) {
 			
 		}
