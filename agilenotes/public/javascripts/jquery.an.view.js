@@ -180,7 +180,7 @@ $.widget( "an.view", {
             param.skip = o.skip;
             param.limit = o.limit;
             param.sort = o.view.sort;
-            $.post(taskUrl,param,function(data){
+            $.get(taskUrl,param,function(data){
                 self.docs = data.docs;
 				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
