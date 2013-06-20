@@ -37,7 +37,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 				$("<img class='button' width='24' height='24' src='stylesheets/images/delete.png' />").appendTo(this)
 				    .position({of: $(this), my: "right top", at: "right top"});
 			}else if(e.type == "mouseleave"){
-				$(this).find("img.button").remove();	
+				$(this).find("img.button").remove();
 			}
        }).delegate("img.button", "hover.filefield", function(e){
 			if(e.type == "mouseenter"){
@@ -66,10 +66,11 @@ $.widget( "an.filefield", $.an.inputfield, {
 		this.input = $("<input type='file'/>").hide().appendTo(this.element);
 		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
 	},
-	
+
 	_createSwfUpload:function(placeElem,callback){
 		var settings = {
 			flash_url : "javascripts/swfupload/swfupload.swf",
+            button_window_mode : 'transparent',
 			upload_url: "/tmp",
 			file_post_name:"file",
 			post_params: {"file" : ""},
@@ -146,9 +147,9 @@ $.widget( "an.filefield", $.an.inputfield, {
 			}
 		}
 	},
-	
+
 	_addIcon:function(file){
-		var o = this.options, li = $("<li/>").attr("data-id", file._id), 
+		var o = this.options, li = $("<li/>").attr("data-id", file._id),
 		    imgsrc = "stylesheets/images/file.png", href = "";
 		var imgFormat="jpg,jpeg,png,gif";
 		if(file._tmp){
@@ -164,7 +165,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 				imgsrc += "#" + href;
 			}
 		}
-		
+
 	    var img = $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).attr("src", imgsrc);
 	    if(o.downloadable){
 	    	img.wrap("<a target='_blank'/>").parent().attr("href", href).appendTo(li);
@@ -176,7 +177,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	    if(o.showFileSize) $("<span/>").text(file.length).appendTo(li);
 	    li.prependTo(this.files);
 	},
-	
+
 	_addUploadButton: function(target){
 		var o = this.options;
 		if((target.size() >= o.maxCount)||(target.size()>=1 && o.maxCount==1)) return target;
@@ -185,7 +186,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 //	    $("<strong/>").text("Upload...").appendTo(li);
 	    return target.add(li.get());
 	},
-	
+
 	_delUploadButton:function(){
 		this.files.find("li#uploadButton").remove();
 	},
@@ -197,7 +198,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 		}else{
 			data = this.data.find("li");
 		}
-		
+
 		function sorted(data, customOptions) {
 			var options = {
 				reversed : false,
@@ -219,7 +220,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 			});
 			return $(arr);
 		};
-		
+
 		if (by == 'size') {
 			data = sorted(data, {
 				by : function(v) {
@@ -238,14 +239,14 @@ $.widget( "an.filefield", $.an.inputfield, {
 			data = this._addUploadButton(data);
 		}
 
-		this.files.quicksand(data, { 
-			duration : 800, 
-			easing : 'easeInOutQuad', 
+		this.files.quicksand(data, {
+			duration : 800,
+			easing : 'easeInOutQuad',
 //			adjustHeight : "dynamic",
 			useScaling : true
 		}, function(){});
 	},
-	
+
 	_handleChange:function(key, value, oldValue){
 		if(key === "sortBy"){
 			var o = this.options;
@@ -257,7 +258,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 			$.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
 	},
-	
+
 	refresh:function(){
 		var self = this, o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
@@ -276,7 +277,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 
 		this.loadIcons();
 	},
-	
+
 	destroy: function() {
 		this.swfUpload&&this.swfUpload.destroy();
 		this.content.undelegate(".filefield");
