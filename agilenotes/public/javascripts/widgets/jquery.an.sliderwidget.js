@@ -24,15 +24,16 @@ $.widget( "an.sliderwidget",  $.an.widget, {
 			o.max = 100;
 		}
 		
-		var input = $("<input type='number' data-type='range' data-highlight='false' />").addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset ui-slider-input");
+		//var input = $("<input type='number' data-type='range' data-highlight='false' />").addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset ui-slider-input");
 		$("<label />").attr("for", this.id).html(o.label).appendTo(this.content);
-		input.attr("name", o.id);
-		this.content.append(input);
+		//input.attr("name", o.id);
+		//this.content.append(input);
 		var self = this;
-		this.content.slider().attr('min', o.min).attr('max', o.max).bind("change.sliderwidget", function(e) {
-			$(e.target).find(">input").val($($(e.target)).val());
+		this.content.slider(o).attr("min", o.min).attr("max", o.max).bind("change.sliderwidget", function(e) {
+			/*$(e.target).find(">input").val($($(e.target)).val());
 			o.value = $($(e.target)).val();
-			self._trigger("optionchanged", null, { key : "value", value : $($(e.target)).val()});
+			self._trigger("optionchanged", null, { key : "value", value : $($(e.target)).val()});*/
+			$(e.target).parent().siblings().eq(0).find(">div >input").val($($(e.target)).val());
 		});
 		
 	},
