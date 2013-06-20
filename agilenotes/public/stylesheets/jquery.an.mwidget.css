@@ -83,7 +83,7 @@
 .field[type=datetime]>.content,
 .field[type=select]>.content,
 .field[type=textarea]>.content {
-	min-width:80px;
+	min-width:10px;
 	min-height:21px;
 }
 
@@ -240,10 +240,6 @@
 .an-sliderwidget label {
 	display:block;
 	margin-bottom:0.4em;
-}
-
-.ui-slider{
-	height:auto !important;
 }
 
 .an-btn-inline {
