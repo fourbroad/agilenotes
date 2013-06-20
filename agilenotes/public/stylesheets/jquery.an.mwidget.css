@@ -279,7 +279,7 @@ content:'.';
 } 
 
 .an-footer {
-	position:absolute !important;
+	position:fixed !important;
 	margin:0 !important;
 	padding:0 !important;
 	bottom:0 !important;
