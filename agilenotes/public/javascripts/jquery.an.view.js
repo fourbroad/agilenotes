@@ -16,7 +16,7 @@ $.widget( "an.view", {
 		mode: "browser",
 		actionSets:[]
 	},
-	
+
 	_create: function(){
 		var o = this.options, el = this.element;
 		el.addClass("an-view").addClass(o.view.name).empty();
@@ -27,15 +27,15 @@ $.widget( "an.view", {
 		o.total = o.total||parseInt(o.view.total)||0;
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
-		
+
 		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
-		
+
 		var data = {};
 		data[this.widgetName] = this;
 		$.each(eval("("+(o.view.actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
-		
+
 		o.showPager&&this._createPager();
 
 		this.docs = [];
@@ -43,7 +43,7 @@ $.widget( "an.view", {
 	},
 
 	option: function(key, value) {
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
+		var ret = $.Widget.prototype.option.apply(this, arguments );
 		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
 	},
 
@@ -56,13 +56,13 @@ $.widget( "an.view", {
 		}
 		return this;
 	},
-	
+
 	_handleChange:function(key,value,oldValue){
 		if(key === "mode" || key === "view"){
 			this.refresh();
 		}
 	},
-	
+
 	_createPager:function(){
 		var o = this.options,self=this;
 		this.pager = $("<div style='display:none;' class='pager'/>").css({
@@ -99,33 +99,33 @@ $.widget( "an.view", {
 
 		this.pager.append("<div class='info'>");
 	},
-	
-	firstpage:function(e,data){ 
-		this.options.skip = 0; 
+
+	firstpage:function(e,data){
+		this.options.skip = 0;
 		this._loadDocs();
 	},
-	
+
 	prevpage:function(){
 		var o = this.options;
 		o.skip = o.skip - o.limit;
-		this._loadDocs(); 
+		this._loadDocs();
 	},
-	
+
 	gotopage:function(page){
 		var o = this.options;
 		o.skip = (page-1)*o.limit;
 		this._loadDocs();
 	},
-	
+
 	nextpage:function(){
 		var o = this.options;
 		o.skip = o.skip + o.limit;
 		this._loadDocs();
 	},
-	
+
 	lastpage:function(){
 		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		o.skip = Math.floor(o.total/o.limit)*o.limit;
 		this._loadDocs();
 	},
 
@@ -162,17 +162,32 @@ $.widget( "an.view", {
 			this.pager.find(".info").html(info);
 		}
 	},
-	
+
 	reload: function(){
 		this._loadDocs();
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
+		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr, taskUrl = o.view.taskUrl;
 
 		if($.type(o.view.sort)=="string"){
 			opts.sort=eval("("+o.view.sort+")");
 		}
+
+        if($.type(taskUrl) == 'string' && taskUrl.replace(/(^\s*)|(\s*$)/g,'') != ''){
+            var param = {};
+            param.filter = typeof filter == 'string' ? eval("("+filter+")") : filter;
+            param.skip = o.skip;
+            param.limit = o.limit;
+            param.sort = o.view.sort;
+            $.post(taskUrl,param,function(data){
+                self.docs = data.docs;
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
+				self._trigger("documentloaded",null,data);
+            })
+            return;
+        }
+
 		if($.type(sel)=="string"){
 			sel = eval("("+sel+")");
 			if($.type(filter)=="string"){
@@ -192,25 +207,25 @@ $.widget( "an.view", {
 			});
 		}
 	},
-	
+
 	_getRow: function(row){
 		return this.docs[row-this.options.skip];
 	},
-	
+
 	_delRow: function(row){
 		var self = this, o = this.options;
 		Model.deleteDocument(o.dbId, this.docs[row-o.skip]._id,null, function(err,result){
 			self._loadDocs();
 		});
 	},
-	
+
 	save:function(){
 		var self = this, o = this.options, view = o.view;
 		Model.updateDocument(o.dbId, view._id, view, null, function(err,result){
 			self.option("isDirty",false);
 		});
 	},
-	
+
 	destroy: function() {
 		this.element.children("style").remove();
 		this.element.unbind(".view").empty();
