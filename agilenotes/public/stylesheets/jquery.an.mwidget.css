@@ -83,7 +83,7 @@
 .field[type=datetime]>.content,
 .field[type=select]>.content,
 .field[type=textarea]>.content {
-	min-width:80px;
+	min-width:10px;
 	min-height:21px;
 }
 
@@ -242,10 +242,6 @@
 	margin-bottom:0.4em;
 }
 
-.ui-slider{
-	height:auto !important;
-}
-
 .an-btn-inline {
 	display:block;
 }
@@ -279,7 +275,7 @@ content:'.';
 } 
 
 .an-footer {
-	position:absolute !important;
+	position:fixed !important;
 	margin:0 !important;
 	padding:0 !important;
 	bottom:0 !important;
