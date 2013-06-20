@@ -96,6 +96,7 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.collapsiblewidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.navbarwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.listviewfield.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.customhtmlfield.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
