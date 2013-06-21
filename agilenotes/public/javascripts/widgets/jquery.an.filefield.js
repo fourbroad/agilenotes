@@ -70,6 +70,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	_createSwfUpload:function(placeElem,callback){
 		var settings = {
 			flash_url : "javascripts/swfupload/swfupload.swf",
+			button_window_mode : "transparent",
 			upload_url: "/tmp",
 			file_post_name:"file",
 			post_params: {"file" : ""},
@@ -128,6 +129,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 						self._createSwfUpload(li.children("img")[0],function(data,resp){
 							resp=$.parseJSON(resp);
 							resp._tmp = true;
+							if(!o.value)o.value=[];
 							var oldValue = [].concat(o.value);
 							o.value.push(resp);
 							if(self.files.children().size() >= o.maxCount){

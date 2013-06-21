@@ -95,6 +95,7 @@ document.write('\
 <script src="javascripts/swfupload/swfupload.queue.js"><\/script>\
 <script src="javascripts/swfupload/fileprogress.js"><\/script>\
 <script src="javascripts/swfupload/handlers.js"><\/script>\
+<script src="javascripts/jquery.an.loading.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
