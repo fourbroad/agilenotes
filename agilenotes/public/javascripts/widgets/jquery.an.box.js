@@ -240,7 +240,7 @@ $.widget( "an.box", $.an.widget, {
 		if(link && link != "raw"){
 			var target = this.content.children(".target"), data = target.data(), hit = false;
 			for(var i in data){
-				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer"]) != -1){
+				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer","mobilelistview"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
@@ -269,7 +269,7 @@ $.widget( "an.box", $.an.widget, {
 		    widget = null;
 		if(data){
 			$.each(data,function(){
-				if($.inArray(this.widgetName,["editor","gridview","formview","customview","view","page"]) != -1){
+				if($.inArray(this.widgetName,["editor","gridview","formview","customview","view","page","mobilelistview"]) != -1){
 					widget = this;
 					return false;
 				}

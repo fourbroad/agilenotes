@@ -32,7 +32,6 @@ $.widget( "an.customhtmlfield", $.an.field, {
 			if($('.customhtml').listview){
 				$('.customhtml').listview();
 			}
-			$.mobile.ajaxEnabled = true;
 			}catch (e){}
 		} 
 		
@@ -78,15 +77,19 @@ $.widget( "an.customhtmlfield", $.an.field, {
 			//self.content.html(data);
 		}, 'html');*/
 		//console.log(document.body.innerHTML);
-		$.ajax({
+		//var fram = '<iframe style="display:none;" src="http://192.168.1.52:8080/page2.html?dbid=519093fbac8f2702b2000002&formid=51abf3e521c7d6005b000069" />';
+		//console.log($(fram));
+		//this.content.html(fram);
+		//this.content.find();
+		/*$.ajax({
 			  type: "GET",
 			  url: "http://192.168.1.52:8080/page2.html?dbid=519093fbac8f2702b2000002&formid=51abf3e521c7d6005b000069",
 			  dataType: "html",
 			  success:function(data){
-				  console.log(data);
-				  console.log($(data));
+				  fram.html(data);
+				  this.content.html(fram);
 			  }
-			});
+			});*/
 	},
 
 

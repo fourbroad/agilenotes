@@ -59,7 +59,7 @@ $.widget( "an.workbench", {
 				add: function(e, ui ) { if(v == "center") node.tabsx('select', '#' + ui.panel.id); },
 				show: function(e, ui) {
 					var panel = $(ui.panel), editor;
-					$.each(["editor","gridview", "formview", "customview","view","page"], function(k,v){
+					$.each(["editor","gridview", "formview", "customview","view","page","mobilelistview"], function(k,v){
 						editor = panel.data(v); 
 						if(editor) {
 							var title = editor.option('title');
@@ -435,7 +435,7 @@ $.widget( "an.workbench", {
 	currentEditor:function(){
 		var panel = $(this.centerTabs.tabsx("option","selectedPanel")), data = panel.data(), editor = null;
 		$.each(data||{}, function(k,v){
-			if($.inArray(k,["editor","gridview","formview","customview","view","page"]) != -1){
+			if($.inArray(k,["editor","gridview","formview","customview","view","page","mobilelistview"]) != -1){
 				editor = v;
 				return false;
 			}
@@ -872,7 +872,7 @@ $.widget( "an.workbench", {
 		    pid = viewId+"-view", el = tabs.tabsx("panel", pid), eps = o.extensionPoints; 
 		if(el.size() > 0){
 			tabs.tabsx("select", pid);
-			$.each(["editor","gridview", "formview", "customview","view"], function(k,v){
+			$.each(["editor","gridview", "formview", "customview","view","mobilelistview"], function(k,v){
 				editor = el.data(v); 
 				if(editor && ((v == "editor" && opts.mode != "design")||(v != "editor" && opts.mode == "design"))) {
 					editor.destroy();
