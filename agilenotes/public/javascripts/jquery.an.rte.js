@@ -75,6 +75,17 @@ $.widget( "an.rte", {
 					doc.execCommand('styleWithCSS', false, o.styleWithCSS);
 				}catch(e){}
 			}
+			
+			if (o.mobile) {
+				var iself = this;
+				this.width = "100%";
+				setTimeout(function() {
+					var bHeight = iself.contentWindow.document.body.scrollHeight;
+					var dHeight = iself.contentWindow.document.documentElement.scrollHeight;
+					var height = Math.max(bHeight, dHeight);
+					iself.height = height; 
+				}, 500);
+			}
 
 			self.$body = $(body);
 			if(o.cssClass) self.$body.addClass(o.cssClass);
@@ -93,6 +104,11 @@ $.widget( "an.rte", {
 		$.each(o.jsFiles,function(){
 			html +="<script type='text/javascript' language='javascript' src='"+this+"'></script>";
 		});
+		
+		/*if (o.mobile && o.modelType === 'page') {
+			html += '<script src="javascripts/jquery.mobile-1.3.1.js"></script>\
+				<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">';
+		}*/
 		html += '<style id="stylesheet" type="text/css">'+(o.stylesheet||"")+'</style>';
 
 		doc.open();

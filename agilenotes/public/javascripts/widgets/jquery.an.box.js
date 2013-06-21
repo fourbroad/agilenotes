@@ -136,6 +136,7 @@ $.widget( "an.box", $.an.widget, {
 					opts.opened && opts.opened(editor);
 				}
 		    });
+		optsx.mode = optsx.mode != 'design' ? 'edit' : optsx.mode;
 		Model.newDocument(el, dbId, typeId, optsx);
 		return this;
 	},
@@ -171,7 +172,7 @@ $.widget( "an.box", $.an.widget, {
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
-	        optsx = $.extend(true, {mode:"edit"}, opts, {
+	        optsx = $.extend(true, {mode: opts.mode != 'design' ? "edit" : opts.mode}, opts, {
 	        	opened: function(editor){
 	    			var form = editor.option("currentForm"), title = opts.title || form.title || form._id;
 	    			self._showFootButtons(opts.footAreaButtons||[]);
@@ -205,7 +206,7 @@ $.widget( "an.box", $.an.widget, {
 		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
-	        optsx = $.extend(true, {mode:"edit"}, opts,{
+	        optsx = $.extend(true, {mode:opts.mode != 'design' ? "edit" : opts.mode}, opts,{
 	        	opened: function(page){
 	    			var p = page.option("page"), title = opts.title || p.title || p._id;
 	    			self._showFootButtons(opts.footAreaButtons||[]);
@@ -241,12 +242,13 @@ $.widget( "an.box", $.an.widget, {
 			var target = this.content.children(".target"), data = target.data(), hit = false;
 			for(var i in data){
 				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer"]) != -1){
-					data[i].option("mode", "browser");
+					data[i].option("mode", o.mobile ? (o.mode || "browser") : "browser");
 					hit = true;
 				}
 			}
 			if(!hit){
 				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
+				if (o.mobile) opts.mode = o.mode;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -315,6 +317,7 @@ $.widget( "an.box", $.an.widget, {
 	
 	_design:function(){
 		var o = this.options, link = o.link;
+		if (o.mobile) o.mode = "design";
 		this._browser();
 		this.option("contextmenu2", true);
 		if(link == "raw"){
