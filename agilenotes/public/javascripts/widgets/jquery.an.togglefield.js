@@ -18,13 +18,22 @@ $.widget( "an.togglefield", $.an.sliderfield, {
 	},
 	
 	_createControl : function() {
-		var o = this.options;
+		var o = this.options, self = this;
 		o.ontext = o.ontext || "On";
 		o.offtext = o.offtext || "Off";
 		this.input = $('<select >\
 		    <option value="no">' + o.ontext + '</option>\
 		    <option value="yes">' + o.offtext + '</option>\
-		  </select>').attr({ name : o.id });
+		  </select>').attr({ name : o.id }).bind(
+			"change.inputfield keyup.inputfield",
+			function(e) {
+				var value = self.input.val(), oldValue = o.value;
+				if (value != oldValue) {
+					o.value = value;
+					self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+						isTransient : o.isTransient });
+				}
+			});
 	},
 	
 	_edit : function() {
