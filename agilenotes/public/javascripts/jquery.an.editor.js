@@ -44,7 +44,7 @@ $.widget( "an.editor", {
 				if($p.is(".an-form,.an-page,.an-view")){
 					var data = $p.data();
 					for(var i in data){
-						if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){
+						if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1){
 							if(!o.design || !(/-design$/.test(id))) data[i].option("mode", o.mode);
 							data[i].option("mobile", o.mobile);
 							self._trigger("tabshow",event, data[i]);
@@ -71,7 +71,7 @@ $.widget( "an.editor", {
 										el.tabsx("option","panels").each(function(){
 											var data = $(this).data();
 											for(var i in data){
-												if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){ 
+												if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1){ 
 													isFormDirty = data[i].option("isDirty");
 													if(isFormDirty) break;
 												}
@@ -107,7 +107,7 @@ $.widget( "an.editor", {
 							    view: d,
 							    create:function(){ self._trigger("tabcreated",event, $(this).data(vt)); }
 						    };
-						if(vt == "formview"||vt == "customview") optsx.form = o.form;
+						if(vt == "formview"||vt == "customview"||vt == "mobilelistview") optsx.form = o.form;
 						$p[vt]($.extend(true,optsx,opt));
 					}
 				}
@@ -148,7 +148,7 @@ $.widget( "an.editor", {
 						for(var i in data){
 							if($.inArray(i, ["form","page"]) != -1){
 								$this[i]("option",i,dd);
-							}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+							}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 								$this[i]("option","view",dd);
 							}
 						}
@@ -185,7 +185,7 @@ $.widget( "an.editor", {
 							for(var i in data){
 								if($.inArray(i, ["form","page"]) != -1){
 									$this[i]("option",i,forms[id]);
-								}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+								}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 									$this[i]("option","view",forms[id]);
 								}
 							}
@@ -250,7 +250,7 @@ $.widget( "an.editor", {
 							self.element.tabsx("select", form.option("form")._id);
 						}
 					}
-				}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+				}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 					if(data[i].option("isDirty")){
 						if(data[i].option("view")._id == o.document._id){
 							o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
@@ -389,7 +389,7 @@ $.widget( "an.editor", {
 		if(o.design && (id == o.document._id)) id = id+"-design";
 		var data = this.element.tabsx("panel", id).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -397,7 +397,7 @@ $.widget( "an.editor", {
 	_currentForm:function(){
 		var data = $(this.element.tabsx("option","selectedPanel")).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1) return data[i]; 
 		}
 		return null;
 	},

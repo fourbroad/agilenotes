@@ -32,6 +32,7 @@ function loadValidateMethods(dbId, callback){
 }
 
 $(function(){
+	$.mobile.ajaxEnabled = true;
 	var dbId = getUrlParam("dbid"), pageId = getUrlParam("pageid"),
 	    viewId = getUrlParam("viewid"), docId = getUrlParam("docid"),
 	    formId = getUrlParam("formid"), mode = getUrlParam("edit");
@@ -114,6 +115,16 @@ $(function(){
 			});
 		}
 	});
+});
+
+function timedMsg()
+{
+	setTimeout(console.log(document.body.innerHTML),5000)
+}
+
+$(document).ready(function(){
+	timedMsg();
+  
 });
 </script>
 </head>

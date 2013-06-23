@@ -11,7 +11,7 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.customview", $.an.view, {
+$.widget( "an.mobilelistview", $.an.view, {
 	options: {
 		printable: false,
 		pagerPosition: "bottom" // bottom, both sides
@@ -21,7 +21,7 @@ $.widget( "an.customview", $.an.view, {
 		$.an.view.prototype._create.apply(this, arguments);
 
 		var o = this.options, el = this.element;
-		el.addClass("an-customview");
+		el.addClass("an-mobilelistbview");
 		o.templateTemp = o.view.templateTemp;
 		o.templateSelector = o.view.templateSelector;
 		o.templateConverts = o.view.templateConverts;
@@ -43,7 +43,10 @@ $.widget( "an.customview", $.an.view, {
 		if (o.templateTemp) {
 			var html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
-		}		
+		}
+		if($(o.templateSelector).listview){
+			$(o.templateSelector).listview();
+		}
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
 			$.views.converters(o.templateConverts);
