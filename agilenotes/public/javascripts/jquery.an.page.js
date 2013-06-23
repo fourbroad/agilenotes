@@ -16,6 +16,7 @@ $.widget( "an.page", {
 		mode:'browser',
 		actionSets: [],
 		wrapper:"<div/>",
+		modelType:'page',
 		formIds:{
 			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
@@ -43,9 +44,14 @@ $.widget( "an.page", {
 		    rte:["5080143085ac60df09000001"],
             collapsible:["5080143085ac60df09000001","51a8639ebd94293c2f000081"],
 		    toggle:["5080143085ac60df09000001","51a565753bcccb5b0e0000ac"],
+<<<<<<< HEAD
 		    navbar:["5080143085ac60df09000001", "51c02b6eac8f274167000120"],
 		    listview:["5080143085ac60df09000001","51ad5e1f21c7d6296100006c","51ad54a921c7d63144000144"],
 		    customhtml:["5080143085ac60df09000001","51c175e221c7d6118800023a"]
+=======
+		    navbar:["5080143085ac60df09000001", "51c17808caa05a042500004a", "51c02b6eac8f274167000120"],
+		    listview:["5080143085ac60df09000001","51ad5e1f21c7d6296100006c","51ad54a921c7d63144000144"]
+>>>>>>> e1166c2f3c9663a5b5e769bf6f3536911d07bb4e
 		}
 	},
 
@@ -57,7 +63,7 @@ $.widget( "an.page", {
 		o.cssFiles = o.cssFiles || [];
 		o.jsFiles = o.jsFiles || [];
 		if(o.mobile){
-			o.cssFiles = ["stylesheets/jquery.mobile-1.3.0.min.css",
+			o.cssFiles = ["stylesheets/jquery.mobile-1.3.1.min.css",
 			              "stylesheets/jquery.an.mwidget.css"].concat(o.cssFiles);
 			o.jsFiles = ["javascripts/jquery-1.8.2.js",
 			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
@@ -200,11 +206,6 @@ $.widget( "an.page", {
 	},
 
 	_edit:function(){
-		var o = this.options;
-		if (o.mobile) {
-			o.jsFiles = ["javascripts/jquery.mobile-1.3.0.min.js",
-			             "javascripts/index-mobile.js"].concat(o.jsFiles);
-		}
 		this.rte && this.rte.hide();
 		if(!this.$page){
 			this._createPage();
@@ -319,8 +320,6 @@ $.widget( "an.page", {
 					$this.attr( "role", "main" );
 				}
 			});
-	
-			$("div[data-role=navbar]",$page).navbar({create: function( event, ui ) {}});
 		}catch(e) {
 			
 		}
@@ -334,6 +333,8 @@ $.widget( "an.page", {
 			cssFiles:o.cssFiles,
 			jsFiles:o.jsFiles,
 			dbId:o.dbId,
+			mobile:o.mobile,
+			modelType:o.modelType,
 			stylesheet:stylesheet,
 			cssClass:page.name,
 			restore:function(page){self._refreshWidgets(page); },

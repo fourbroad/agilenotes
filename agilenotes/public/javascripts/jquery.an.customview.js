@@ -43,7 +43,7 @@ $.widget( "an.customview", $.an.view, {
 		if (o.templateTemp) {
 			var html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
-		}
+		}		
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
 			$.views.converters(o.templateConverts);

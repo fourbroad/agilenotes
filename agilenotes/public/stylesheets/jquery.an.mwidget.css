@@ -83,7 +83,7 @@
 .field[type=datetime]>.content,
 .field[type=select]>.content,
 .field[type=textarea]>.content {
-	min-width:80px;
+	min-width:10px;
 	min-height:21px;
 }
 
@@ -242,10 +242,6 @@
 	margin-bottom:0.4em;
 }
 
-.ui-slider{
-	height:auto !important;
-}
-
 .an-btn-inline {
 	display:block;
 }
@@ -279,9 +275,48 @@ content:'.';
 } 
 
 .an-footer {
-	position:absolute !important;
+	position:fixed !important;
 	margin:0 !important;
 	padding:0 !important;
 	bottom:0 !important;
 	width:100% !important;
+	left:0 !important;
+}
+
+.an-footer ul {
+	padding:0 !important;
+}
+
+.an-header {
+	display: block;
+    font-size: 16px;
+    margin: 0;
+    padding:0;
+    min-height: 1.1em;
+    outline: 0 none !important;
+    overflow: hidden;
+    padding: 0;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.an-navbarwidget {
+	display:inline-block !important;
+}
+
+.an-navbarwidget.left {
+	float:left !important;
+}
+
+.an-navbarwidget.right {
+	float:right !important;
+}
+
+.an-navbarwidget.top {
+	
+}
+
+.an-navbarwidget.bottom {
+	
 }

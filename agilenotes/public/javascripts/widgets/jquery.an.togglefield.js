@@ -11,78 +11,57 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.togglefield", $.an.inputfield, {
-
-
+$.widget( "an.togglefield", $.an.sliderfield, {
 	_create: function() {
-		$.an.field.prototype._create.apply(this, arguments);
+		$.an.sliderfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-togglefield");
-	},	
-
+	},
+	
 	_createControl : function() {
-		var self = this, o = this.options, el = this.element;
-		console.log(this);
-		console.log(el);
-		console.log(o);
-		if (o.mobile) {
-			var cl = this.element.find(".content").eq(0);
-			cl.addClass("codiqa-control ui-field-contain ui-body ui-br");
-			this.select = $('<select />').attr({id:o.id, name:o.id, value:this.value})
-		    .addClass("ui-slider-switch").appendTo(cl);
-			var toggle_content = $('<div />').addClass('ui-slider ui-slider-switch ui-btn-down-c ui-btn-corner-all').appendTo(cl);
-			toggle_content.html('<span class="ui-slider-label ui-slider-label-a ui-btn-active ui-btn-corner-all" role="img" style="width: 0%;">On</span><span class="ui-slider-label ui-slider-label-b ui-btn-down-c ui-btn-corner-all" role="img" style="width: 100%;">Off</span>');
-			var toggle_a_content = $('<div />').addClass("ui-slider-inneroffset").appendTo(toggle_content);
-			var toogle_a = $('<a />').addClass('ui-slider-handle ui-slider-handle-snapping ui-btn ui-btn-up-c ui-shadow ui-btn-corner-all')
-									.html('<span class="ui-btn-inner"><span class="ui-btn-text"></span></span>').appendTo(toggle_a_content);	
-		} 
+		var o = this.options, self = this;
+		o.ontext = o.ontext || "On";
+		o.offtext = o.offtext || "Off";
+		this.input = $('<select >\
+		    <option value="no">' + o.ontext + '</option>\
+		    <option value="yes">' + o.offtext + '</option>\
+		  </select>').attr({ name : o.id }).bind(
+			"change.inputfield keyup.inputfield",
+			function(e) {
+				var value = self.input.val(), oldValue = o.value;
+				if (value != oldValue) {
+					o.value = value;
+					self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+						isTransient : o.isTransient });
+				}
+			});
 	},
-
-	_makeResizable : function() {
-	},
-
-	_browser : function() {
-		//this.input.detach();
-		/*var c = this.content;
-		if (c.is(".ui-resizable")) c.resizable("destroy");
-		c.html(this.options.value + "").css("display", "");*/
-	},
-
+	
 	_edit : function() {
-		//this.input.detach().val(this.options.value).appendTo(this.content.empty());
+		this.input.appendTo(this.content).slider(this.options);
 	},
-
-	_design : function() {
-		//this.input.detach();
-		var self = this, o = this.options, c = this.content;
-		if (c.is(".ui-resizable")) c.resizable("destroy");
-		/*c.html(o.value + "").css({ width : o.width, height : o.height, display : "" }).resizable(
-			{ stop : function(e, ui) {
-				o.width = c.width();
-				o.height = c.height();
-				$.extend(true, o.metadata[self.widgetName], { width : o.width, height : o.height });
-				self._updateMetadata();
-				self._trigger("resize", null, { size : ui.size, oldSize : ui.originalSize });
-			} });*/
+	
+	_makeResizable:function(){},
+	
+	_design:function() {
+		if(!this.select){
+			var o = this.options;
+			if (o.mobile) {
+				var cl = this.element.find(".content").eq(0);
+				cl.addClass("codiqa-control ui-field-contain ui-body ui-br");
+				this.select = $('<select />').attr({id:o.id, name:o.id, value:this.value})
+			    .addClass("ui-slider-switch").appendTo(cl);
+				var toggle_content = $('<div />').addClass('ui-slider ui-slider-switch ui-btn-down-c ui-btn-corner-all').appendTo(cl);
+				toggle_content.html('<span class="ui-slider-label ui-slider-label-a ui-btn-active ui-btn-corner-all" role="img" style="width: 0%;">On</span><span class="ui-slider-label ui-slider-label-b ui-btn-down-c ui-btn-corner-all" role="img" style="width: 100%;">Off</span>');
+				var toggle_a_content = $('<div />').addClass("ui-slider-inneroffset").appendTo(toggle_content);
+				$('<a />').addClass('ui-slider-handle ui-slider-handle-snapping ui-btn ui-btn-up-c ui-shadow ui-btn-corner-all')
+										.html('<span class="ui-btn-inner"><span class="ui-btn-text"></span></span>').appendTo(toggle_a_content);
+				this.content.removeClass("content");
+			}
+			}
 	},
-
-	_handleChange : function(key, value, oldValue) {
-		if (key === "label") {
-			this.input && this.input.remove();
-			this.element.children("label").remove();
-			this._createControl();
-			this._createLabel();
-		} else {
-			$.an.field.prototype._handleChange.apply(this, arguments);
-		}
-	},
-
-	/*highlight : function(highlight) {
-		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover", highlight);
-	},*/
-
-	destroy : function() {
-		//this.input && this.input.unbind(".togglefield").remove();
-		this.element.removeClass("an-togglefield");
-		return $.an.field.prototype.destroy.apply(this, arguments);
-	} });
+	
+	destroy: function() {
+		return $.an.sliderfield.prototype.destroy.apply(this, arguments);
+	}
+});
 })( jQuery );

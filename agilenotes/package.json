@@ -5,8 +5,35 @@
   "scripts": {
     "start": "node agilenotes"
   },
-  "dependencies": {
-    "express": "3.0.0beta7",
-    "jade": "*"
-  }
+    "dependencies": {
+      "sparser" : "0.1.3",
+      "connect-redis" : "1.4.4",
+      "ejs" : "0.8.3", 
+      "encoding" : "0.1.5",
+      "excel-libxl" : "0.0.5", 
+      "express" : "3.0.0beta7",
+      "iconv" : "2.0.2",
+      "iconv-lite" : "0.2.7",
+      "inbox" : "0.1.28", 
+      "jquery" : "1.7.3", 
+      "jsdom" : "0.2.15",
+      "mailcomposer" : "0.1.29",
+      "mailparser" : "0.2.33",
+      "mime" : "1.2.9",
+      "mimelib" : "0.2.10",
+      "mongodb" : "1.1.7",
+      "node" : "0.0.0", 
+      "poplib" : "0.1.5", 
+      "node-wkhtml" : "0.1.0alpha1", 
+      "nodemailer" : "0.3.40", 
+      "office" : "0.0.6", 
+      "passport" : "0.1.12",
+      "passport-local" : "0.1.6", 
+      "rai" : "0.1.7",
+      "request" : "2.11.4",
+      "simplesmtp" : "0.2.3",
+      "xml2json" : "0.3.2",
+      "xmlhttprequest" : "1.4.2",
+      "xoauth2" : "0.1"
+	}
 }
