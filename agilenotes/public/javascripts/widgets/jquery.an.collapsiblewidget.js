@@ -14,25 +14,68 @@
 $.widget( "an.collapsiblewidget", $.an.widget, {
 	_create: function() {
         $.an.widget.prototype._create.apply(this, arguments);
-        var o = this.options;
+        var o = this.options,newOps={};
         if(o.mobile){
            // o.headerText = o.headerText || 'Section Header';
             //o.contentText = o.contentText || 'Content';
+			o.content_theme=o.content_theme||"";
             this.element.addClass("an-collapsiblewidget");
-            var header = $('<a herf="javascript:;" class="an-collapsiblewidget-header"><span class="an-collapsiblewidget-icon an-collapsiblewidget-collapse-icon"></span><span>' + o.headerText + '</span></a>'),
-                content = $('<div class="an-collapsiblewidget-content">' + o.contentText + '</div>');
-            this.element.find('.content').append(header).append(content);
-            this.element.find('.an-collapsiblewidget-header').bind('click.collapsiblewidget', function(e){
-                $(this).find('.an-collapsiblewidget-icon')
-                    .toggleClass('an-collapsiblewidget-extend-icon');
-                $(this).next()
-                    .toggleClass('an-collapsiblewidget-content-extend');
-            });
+            var wrap = $('<div data-content-theme="'+o.content_theme+'"></div>'),
+				header = $('<h3>' + o.headerText + '</h3>');
+            this.contentDiv = $('<div></div>');
+			wrap.append(header).append(this.contentDiv);
+            this.element.find('.content').append(wrap);
+			if(o.collapsedIcon){
+				newOps.collapsedIcon=o.collapsedIcon;
+			}
+			if(o.expandedIcon){
+				newOps.expandedIcon=o.expandedIcon;
+			}
+			if(o.iconpos){
+				newOps.iconpos=o.iconpos;
+			}
+			if(o.theme){
+				newOps.theme=o.theme;
+			}
+			wrap.collapsible(o);
         }
 	},
-    _design: function(){
+	
+	_browser:function(){
+		var o = this.options;
+		this.option("contextmenu2", false);
+		this.content[0].contentEditable = false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
+			this.contentDiv.css("border","0 none");
+		}else{
+			this.contentDiv.append(o.contentText);
+		}
+	},
 
+	_edit:function(){
+		var o = this.options, link = o.link;
+		this.option("contextmenu2", false);
+		this.content[0].contentEditable = false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"edit"});
+			this.contentDiv.css("border","0 none");
+		}else{
+			this.contentDiv.append(o.contentText);
+		}
+	},
+
+    _design: function(){
+		var o = this.options;
+		this.option("contextmenu2", false);
+		this.content[0].contentEditable = false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
+		}else{
+			this.contentDiv.append(o.contentText);
+		}
     },
+
 	destroy: function() {
 		this.element.removeClass("an-collapsiblewidget");
         this.element.unbind('collapsiblewidget');
