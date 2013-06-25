@@ -52,13 +52,56 @@ $.widget( "an.selectfield", $.an.field, {
 	
 	_browser:function(){
 		var self = this, o = this.options;
-		this.select.detach();
-		$.each(o.selectItems, function(){
-			if(this.value == o.value){
-				self.content.html(this.label).show();
-				return false;
+		
+		if(o.mobile){
+			this.select.detach().val(this.options.value).appendTo(this.content.empty());
+			var  option = {};
+			option.icon = 'arrow-r';
+			if(o.corners){
+				option.conrners = false;
 			}
-		});
+			if(o.icon){
+				option.icon = o.icon;
+			}
+			if(o.iconpos){
+				option.iconpos = o.iconpos;
+			}
+			if(o.iconshadow){
+				option.iconshadow = false;
+			}
+			if(o.inline){
+				option.inline = true;
+			}
+			if(o.mini){
+				option.mini = true;
+			}
+			if(o.nativeMenu){
+				option.nativeMenu = false;
+			}
+			if(o.overlayTheme){
+				option.overlayTheme = o.overlayTheme;
+			}
+			if(o.preventFocusZoom){
+				option.preventFocusZoom = false;
+			}
+			if(o.shadow){
+				option.shadow = false;
+			}
+			if(o.theme){
+				option.theme = o.theme;
+			}
+			if($('select[name=' + o.id + ']').selectmenu){
+				$('select[name=' + o.id + ']').selectmenu(option);
+			}
+		}else{
+			this.select.detach();
+			$.each(o.selectItems, function(){
+				if(this.value == o.value){
+					self.content.html(this.label).show();
+					return false;
+				}
+			});
+		}
 	},
 	
 	_edit:function(){
@@ -143,6 +186,9 @@ $.widget( "an.selectfield", $.an.field, {
 			this.element.children("label").remove();
 			this._createLabel();
 		}else if(key == "selectItems"){
+			this.select.remove();
+			this._createControl();
+		}else if(this.options.mobile){
 			this.select.remove();
 			this._createControl();
 		}else{
