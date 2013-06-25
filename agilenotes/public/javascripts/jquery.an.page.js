@@ -47,7 +47,8 @@ $.widget( "an.page", {
 		    toggle:["5080143085ac60df09000001","51a565753bcccb5b0e0000ac"],
 		    navbar:["5080143085ac60df09000001", "51c02b6eac8f274167000120"],
 		    listview:["5080143085ac60df09000001","51ad5e1f21c7d6296100006c","51ad54a921c7d63144000144"],
-		    customhtml:["5080143085ac60df09000001","51c175e221c7d6118800023a"]
+		    customhtml:["5080143085ac60df09000001","51c175e221c7d6118800023a"],
+            swipe:["5080143085ac60df09000001","51ca58ebedad5734e8000023"]
 		}
 	},
 
@@ -265,7 +266,7 @@ $.widget( "an.page", {
 		$.each(eval("("+(o[this.widgetName].actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
-		
+
 		if(o.mobile)this._refreshMobileToolbar();
 		this._refreshWidgets();
 	},
@@ -276,7 +277,7 @@ $.widget( "an.page", {
 				o = $page.data( "mobile-page" ).options,
 				pageRole = $page.jqmData( "role" ),
 				pageTheme = o.theme;
-	
+
 			$( ":jqmData(role='header'), :jqmData(role='footer'), :jqmData(role='content')", $page ).jqmEnhanceable().each(function() {
 				var $this = $( this ),
 					role = $this.jqmData( "role" ),
@@ -287,7 +288,7 @@ $.widget( "an.page", {
 					rightbtn,
 					backBtn;
 				$this.addClass( "ui-" + role );
-	
+
 				//apply theming and markup modifications to page,header,content,footer
 				if ( role === "header" || role === "footer" ) {
 					var thisTheme = theme || ( role === "header" ? o.headerTheme : o.footerTheme ) || pageTheme;
@@ -317,9 +318,9 @@ $.widget( "an.page", {
 				}
 			});
 		}catch(e) {
-			
+
 		}
-	
+
 	},
 
 	_createRTE:function(stylesheet){
