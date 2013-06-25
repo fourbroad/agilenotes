@@ -97,7 +97,8 @@ $.widget( "an.swipewidget", $.an.widget, {
 
           function setActive(obj, posLeft, index){
             iconList.find('b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
-            obj.css({'left':posLeft+'px'});
+            //obj.css({'left':posLeft + 'px'});
+            obj.css({'left':-index*100+'%'});
           }
 
           o.autoRun = function(obj, posLeft, index){
