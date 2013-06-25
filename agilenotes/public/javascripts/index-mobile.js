@@ -26,6 +26,7 @@ document.write('\
 <link rel="stylesheet" href="stylesheets/rte/paddinginput.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.rte.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/base.css" type="text/css">\
+<link rel="stylesheet" href="stylesheets/mobiscroll.custom-2.6.0.min.css" type="text/css">\
 <script src="javascripts/lib/model.js"><\/script>\
 <script src="javascripts/lib/utils.js"><\/script>\
 <script src="javascripts/lib/objectid.js"><\/script>\
@@ -99,6 +100,7 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.listviewfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.customhtmlfield.js"><\/script>\
 <script src="javascripts/jquery.an.mobilelistview.js"><\/script>\
+<script src="javascripts/mobiscroll.custom-2.6.0.min.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
