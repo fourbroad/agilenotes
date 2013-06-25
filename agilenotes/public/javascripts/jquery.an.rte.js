@@ -1408,7 +1408,7 @@ $.widget( "an.rte", {
     	var o = this.options, sel = o.selection, n = sel.getStart(), $n = $(n);
     	if(!$n.is('.widget[type='+type+']')){
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
-    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime",
+    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime", "mobiledate",
     		                                          "textarea", "file","grid","jsrender","password","rte", "search",
     		                                          "toggle", "listview","customhtml"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);

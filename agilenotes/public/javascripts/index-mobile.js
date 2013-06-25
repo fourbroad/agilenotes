@@ -94,13 +94,14 @@ document.write('\
 <script src="javascripts/json2.js"><\/script>\
 <script src="javascripts/jsrender.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.sliderwidget.js"><\/script>\
-	<script src="javascripts/widgets/jquery.an.togglefield.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.togglefield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.collapsiblewidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.navbarwidget.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.listviewfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.customhtmlfield.js"><\/script>\
 <script src="javascripts/jquery.an.mobilelistview.js"><\/script>\
 <script src="javascripts/mobiscroll.custom-2.6.0.min.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.mobiledatefield.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
