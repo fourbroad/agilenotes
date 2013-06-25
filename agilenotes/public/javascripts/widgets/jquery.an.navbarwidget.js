@@ -24,6 +24,15 @@ $.widget( "an.navbarwidget",  $.an.widget, {
 
 	_makeResizable:function(){},
 	
+	_browser:function() {
+		var span = this.content.find(".an-navbarwidget");
+		$(span).each(function(k, v) {
+			$(v).remove();
+		});
+		
+		this.content.find(".c").removeClass("ui-grid-c");
+	},
+
 	_edit:function() {
 		var span = this.content.find(".an-navbarwidget");
 		$(span).each(function(k, v) {

@@ -42,7 +42,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 	},
 	
 	_browser:function(){
-		var o = this.options;
+		var o = this.options,link=o.link;
 		this.option("contextmenu2", false);
 		this.content[0].contentEditable = false;
 		if(link && link != "raw"){
@@ -54,7 +54,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 	},
 
 	_edit:function(){
-		var o = this.options, link = o.link;
+		var o = this.options,link=o.link;
 		this.option("contextmenu2", false);
 		this.content[0].contentEditable = false;
 		if(link && link != "raw"){
@@ -66,14 +66,16 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 	},
 
     _design: function(){
-		var o = this.options;
-		this.option("contextmenu2", false);
-		this.content[0].contentEditable = false;
+		var o = this.options,link=o.link;
+		this.option("contextmenu2", true);
+		var tag=false;
 		if(link && link != "raw"){
-			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"design"});
 		}else{
+			tag=true;
 			this.contentDiv.append(o.contentText);
 		}
+		this.content[0].contentEditable = tag;
     },
 
 	destroy: function() {
