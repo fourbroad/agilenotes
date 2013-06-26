@@ -44,8 +44,8 @@ $.widget( "an.swipewidget", $.an.widget, {
             contentList.find('li').width(o.width / contentList.find('li').length+'%');
 
 			wrap.append(contentList).append(iconList).appendTo(this.element.find('.content'));
-
-            var pos = self.pos = {};
+            self.pos = {};
+            var pos = self.pos;
             pos.t = null;
             pos.index = o.swipeindex;
             pos.itemLen = contentList.find('li').length;
@@ -104,9 +104,12 @@ $.widget( "an.swipewidget", $.an.widget, {
         }
 	},
     _setActive : function(obj, posLeft, index){
-        this.element.find('.iconList b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
+        var self = this;
         //obj.css({'left':posLeft + 'px'});
         obj.css({'left':-index*100+'%'});
+        setTimeout(function(){
+            self.element.find('.iconList b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
+        },100);  //after css3 transition complete
     },
     autoRun:function(obj, posLeft, index){
         var self = this, o = this.options, pos = this.pos;
