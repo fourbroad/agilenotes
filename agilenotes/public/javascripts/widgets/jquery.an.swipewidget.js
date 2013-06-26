@@ -12,16 +12,22 @@
 (function( $, undefined ) {
 
 $.widget( "an.swipewidget", $.an.widget, {
+
+    options:{
+        swipeContent : '<li>no content</li>',
+        swipeIcon : '<b class="swipe-icon-active"></b>',
+        swipeindex : 0,
+        swipeContent : '<li>no content</li>',
+        swipeduration : false,
+        swipeduration : 2000,
+        width : '100'
+    },
+
 	_create: function() {
         $.an.widget.prototype._create.apply(this, arguments);
         var o = this.options;
         if(o.mobile){
-            o.swipeContent = o.swipeContent || '<li>no content</li>';
-            o.swipeIcon = o.swipeIcon || '<b class="swipe-icon-active"></b>';
-            o.swipeindex = o.swipeindex || 0;
-            o.autoSwipe = o.autoSwipe || false;
-            o.swipeduration = o.swipeduration || 2000;
-            o.width = o.width || '100';
+            var self = this;
             this.element.addClass("an-swipewidget");
             var wrap = $('<div class="swipeBox"></div>'),
                 contentList = $('<ul class="swipeList c"></ul>'),
@@ -39,7 +45,8 @@ $.widget( "an.swipewidget", $.an.widget, {
 
 			wrap.append(contentList).append(iconList).appendTo(this.element.find('.content'));
 
-            var pos = {},t = null;
+            var pos = self.pos = {};
+            pos.t = null;
             pos.index = o.swipeindex;
             pos.itemLen = contentList.find('li').length;
             pos.itemWidth = contentList.find('li').eq(0).outerWidth(true);
@@ -55,8 +62,8 @@ $.widget( "an.swipewidget", $.an.widget, {
              pos.index = contentList.find('li').index($(pos.target));
              pos.itemWidth = $(pos.target).outerWidth(true);
 
-             clearTimeout(t);
-             t = null;
+             clearTimeout(pos.t);
+             pos.t = null;
           })
 
           this.element.bind('touchmove.swipewidget', function(e){
@@ -89,42 +96,40 @@ $.widget( "an.swipewidget", $.an.widget, {
                     posIndex = pos.index;
                 }
               }
-              setActive(contentList, posLeft, posIndex);
+              self._setActive(contentList, posLeft, posIndex);
               if(o.autoSwipe && o.mode != 'design'){
-                 t = setTimeout(function(){o.autoRun(contentList, posLeft, posIndex);},o.swipeduration);
+                 pos.t = setTimeout(function(){self.autoRun(contentList, posLeft, posIndex);},o.swipeduration);
               }
           })
-
-          function setActive(obj, posLeft, index){
-            iconList.find('b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
-            //obj.css({'left':posLeft + 'px'});
-            obj.css({'left':-index*100+'%'});
-          }
-
-          o.autoRun = function(obj, posLeft, index){
-            if(index <= 0 || index > (pos.itemLen - 1)){
-                index = 0;
-            }
-            posLeft = -pos.itemWidth*index;
-            setActive(obj, posLeft, index);
-            index ++;
-            pos.index++;
-            t = setTimeout(function(){o.autoRun(obj, posLeft, index);},o.swipeduration);
-          }
         }
 	},
-
+    _setActive : function(obj, posLeft, index){
+        this.element.find('.iconList b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
+        //obj.css({'left':posLeft + 'px'});
+        obj.css({'left':-index*100+'%'});
+    },
+    autoRun:function(obj, posLeft, index){
+        var self = this, o = this.options, pos = this.pos;
+        if(index <= 0 || index > (pos.itemLen - 1)){
+            index = 0;
+        }
+        posLeft = -pos.itemWidth*index;
+        self._setActive(obj, posLeft, index);
+        index ++;
+        pos.index++;
+        pos.t = setTimeout(function(){self.autoRun(obj, posLeft, index);},o.swipeduration);
+   },
 	_browser:function(){
 		var o = this.options;
         if(o.autoSwipe){
-           o.autoRun(this.element.find('.swipeList'), 0, 0);
+           this.autoRun(this.element.find('.swipeList'), 0, 0);
         }
 	},
 
 	_edit:function(){
 		var o = this.options;
         if(o.autoSwipe){
-           o.autoRun(this.element.find('.swipeList'), 0, 0);
+           this.autoRun(this.element.find('.swipeList'), 0, 0);
         }
 	},
 
