@@ -13,6 +13,10 @@
 
 $.widget( "an.selectfield", $.an.field, {
 
+	options:{
+		nativeMenu:true
+	},
+
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
 		this.element.addClass("an-selectfield");
@@ -27,20 +31,15 @@ $.widget( "an.selectfield", $.an.field, {
 		$.each(o.selectItems||[], function(){
 			$("<option/>").attr("value",this.value).html(this.label).appendTo(sel);
 		});
-
-		//console.log(o);
-		
-		
-			sel.bind("change.selectfield", function(e){
-				e.preventDefault();
-//				e.stopImmediatePropagation();
-				var value = sel.val(), oldValue = o.value;
-				if(value != oldValue){
-					o.value = value;
-					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
-				}
-			});
-		
+		sel.bind("change.selectfield", function(e){
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			var value = sel.val(), oldValue = o.value;
+			if(value != oldValue){
+				o.value = value;
+				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			}
+		});
 		
 		if(!$.isEmptyObject(o.validate)){
 			sel.addClass($.toJSON({validate:o.validate}));
@@ -106,7 +105,11 @@ $.widget( "an.selectfield", $.an.field, {
 	
 	_edit:function(){
 		var o = this.options;
+		if(o.mobile){
+			if(!o.value&&o.selectItems[0])o.value=o.selectItems[0].value;
+		}
 		this.select.detach().val(this.options.value).appendTo(this.content.empty());
+		this._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:"", isTransient:o.isTransient});
 		if(o.mobile){			
 			var  option = {};
 			option.icon = 'arrow-r';
@@ -143,9 +146,7 @@ $.widget( "an.selectfield", $.an.field, {
 			if(o.theme){
 				option.theme = o.theme;
 			}
-			if($('select[name=' + o.id + ']').selectmenu){
-				$('select[name=' + o.id + ']').selectmenu(option);
-			}
+			this.select.selectmenu(option);
 		}
 	},
 	
