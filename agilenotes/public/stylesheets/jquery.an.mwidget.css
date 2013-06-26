@@ -323,9 +323,12 @@ content:'.';
 
 
 /*swipe widget*/
+.an-swipewidget .content{
+    height:100%;
+}
 .an-swipewidget .swipeBox{
     width:100%;
-    height:200px;
+    height:100%;
     border:1px solid #ddd;
     overflow:hidden;
     position:relative;
