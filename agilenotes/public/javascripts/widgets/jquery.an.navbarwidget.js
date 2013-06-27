@@ -30,7 +30,7 @@ $.widget( "an.navbarwidget",  $.an.widget, {
 			$(v).remove();
 		});
 		
-		this.content.find(".c").removeClass("ui-grid-c");
+		this.content.find(".c li").css("clear", "none");
 	},
 
 	_edit:function() {
@@ -39,7 +39,7 @@ $.widget( "an.navbarwidget",  $.an.widget, {
 			$(v).remove();
 		});
 		
-		this.content.find(".c").removeClass("ui-grid-c");
+		this.content.find(".c li").css("clear", "none");
 	},
 	
 	_design:function() {
