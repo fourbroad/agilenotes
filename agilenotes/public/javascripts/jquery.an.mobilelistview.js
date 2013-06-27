@@ -55,6 +55,7 @@ $.widget( "an.mobilelistview", $.an.view, {
 	
 	_docsLoaded:function(){
 		this.refresh();
+		
 	},
 	
 	_design:function(){
@@ -63,6 +64,9 @@ $.widget( "an.mobilelistview", $.an.view, {
 	
 	_browser:function(){
 		this._showDocuments();
+		if($(this.options.templateSelector).listview){
+			$(this.options.templateSelector).listview('refresh');
+		}
 	},
 	
 	save:function(){
