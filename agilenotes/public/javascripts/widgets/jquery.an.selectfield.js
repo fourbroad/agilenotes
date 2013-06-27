@@ -33,7 +33,7 @@ $.widget( "an.selectfield", $.an.field, {
 		});
 		sel.bind("change.selectfield", function(e){
 			e.preventDefault();
-			e.stopImmediatePropagation();
+			//e.stopImmediatePropagation();
 			var value = sel.val(), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
@@ -45,6 +45,9 @@ $.widget( "an.selectfield", $.an.field, {
 			sel.addClass($.toJSON({validate:o.validate}));
 		}
 		
+		if(o.mobile){
+			if(!o.value&&o.selectItems[0])o.value=o.selectItems[0].value;
+		}
 	},
 	
 	_makeResizable:function(){},
@@ -105,9 +108,6 @@ $.widget( "an.selectfield", $.an.field, {
 	
 	_edit:function(){
 		var o = this.options;
-		if(o.mobile){
-			if(!o.value&&o.selectItems[0])o.value=o.selectItems[0].value;
-		}
 		this.select.detach().val(this.options.value).appendTo(this.content.empty());
 		this._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:"", isTransient:o.isTransient});
 		if(o.mobile){			
