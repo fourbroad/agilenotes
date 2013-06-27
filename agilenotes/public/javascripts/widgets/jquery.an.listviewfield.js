@@ -23,35 +23,27 @@ $.widget( "an.listviewfield", $.an.field, {
 		var self = this, o = this.options, el = this.element;
 		if (o.mobile) {
 			var cl = this.element.find(".content").eq(0);
-			var ul_element = $('<ul />').addClass('codiqa-control ui-listview').appendTo(cl);
-			if(!o.label_theme){
-				o.label_theme='b';
+			var ul_element = $('<ul name="' + o.id + '" data-role="listview" />').appendTo(cl);
+			if(o.label){
+				ul_element.html(' <li data-role="list-divider"><a>' + o.label + '</a></li>');
 			}
-			var label_li = $('<li />').addClass('ui-li ui-li-divider ui-bar-' + o.label_theme + ' ui-first-child').html(o.label).appendTo(ul_element);
 			$.each(o.selectItems||[], function(k,v){
-				button_li = $("<li class='ui-btn ui-btn-icon-right ui-li-has-arrow ui-li' />").appendTo(ul_element);				
-				$('<div class="ui-btn-inner ui-li" />').html('<div class="ui-btn-text"><a class="ui-link-inherit" >' + this.label + '</a></div><span class="ui-icon ui-icon-arrow-r ui-icon-shadow"> </span>')
-														.appendTo(button_li);
-														
-				if(k==o.selectItems.length-1){
-					button_li.addClass("ui-last-child");
-				}
-				
-				if (!o.data_theme) {
-					o.data_theme = 'c';
-				}
-				if (o.isInset) {
-					ul_element.addClass("ui-listview-inset ui-corner-all ui-shadow");
-				}
-				button_li.addClass("ui-btn-up-" + o.data_theme);
-				
-				
-				button_li.bind("click.listviewfield", function(e) {
-					$(this).parent().find('.ui-btn-active').removeClass('ui-btn-active');
-					$(this).addClass('ui-btn-active');
-				});
-				
-			});						
+				button_li = $("<li />").html('<a>'+this.label+'</a>').appendTo(ul_element);								
+			});	
+			
+			if(o.isInset){
+				ul_element.attr("data-inset","true");
+			}
+
+			if(o.label_theme){
+				ul_element.attr("data-divider-theme",o.label_theme);
+			}
+			if(o.data_theme){
+					ul_element.attr("data-theme",o.data_theme);		
+			}
+			if($('ul[name=' + o.id + ']').listview){
+				$('ul[name=' + o.id + ']').listview();
+			}
 		} 
 	},
 	
@@ -77,17 +69,32 @@ $.widget( "an.listviewfield", $.an.field, {
 
 	_design : function() {
 		//this.input.detach();
-		var self = this, o = this.options, c = this.content;
-		if (c.is(".ui-resizable")) c.resizable("destroy");
-		this.element.find('li').unbind();
-		/*c.html(o.value + "").css({ width : o.width, height : o.height, display : "" }).resizable(
-			{ stop : function(e, ui) {
-				o.width = c.width();
-				o.height = c.height();
-				$.extend(true, o.metadata[self.widgetName], { width : o.width, height : o.height });
-				self._updateMetadata();
-				self._trigger("resize", null, { size : ui.size, oldSize : ui.originalSize });
-			} });*/
+		var self = this, o = this.options, cl = this.content;
+
+		if (cl.is(".ui-resizable")) c.resizable("destroy");
+		cl.html('');
+			var ul_element = $('<ul />').addClass('codiqa-control ui-listview').appendTo(cl);
+			if(!o.label_theme){
+				o.label_theme='c';
+			}
+			var label_li = $('<li />').addClass('ui-li ui-li-divider ui-bar-' + o.label_theme + ' ui-first-child').html(o.label).appendTo(ul_element);
+			$.each(o.selectItems||[], function(k,v){
+				button_li = $("<li class='ui-btn ui-btn-icon-right ui-li-has-arrow ui-li' />").appendTo(ul_element);				
+				$('<div class="ui-btn-inner ui-li" />').html('<div class="ui-btn-text"><a class="ui-link-inherit" >' + this.label + '</a></div><span class="ui-icon ui-icon-arrow-r ui-icon-shadow"> </span>')
+														.appendTo(button_li);
+														
+				if(k==o.selectItems.length-1){
+					button_li.addClass("ui-last-child");
+				}
+				
+				if (o.isInset) {
+					ul_element.addClass("ui-listview-inset ui-corner-all ui-shadow");
+				}
+				button_li.addClass("ui-btn-up-" + o.data_theme);
+				
+				
+			});						
+		
 	},
 
 
