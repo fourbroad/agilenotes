@@ -34,6 +34,7 @@ $.widget( "an.togglefield", $.an.sliderfield, {
 						isTransient : o.isTransient });
 				}
 			});
+		self._trigger("optionchanged", null, { key : "value", value : "no", oldValue : "",isTransient : o.isTransient });
 	},
 	
 	_edit : function() {

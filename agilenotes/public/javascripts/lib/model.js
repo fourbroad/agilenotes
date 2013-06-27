@@ -271,8 +271,14 @@ var Model = {
 	    		});
 			}else{
 		    	if(page.type==Model.PAGE){
-					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
-					opts.opened && opts.opened(element.data("page"));
+					if(opts.mobile){
+						element.pageMobile($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+						opts.opened && opts.opened(element.data("pageMobile"));
+					}else{
+						element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+						opts.opened && opts.opened(element.data("page"));
+					}
+					
 		    	}else if(page.type == Model.FORM){
 					var doc = {};
 			    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
