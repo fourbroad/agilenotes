@@ -80,6 +80,10 @@ $.widget( "an.navbarwidget",  $.an.widget, {
 					linkClass += " ui-mini";
 					link.attr("data-mini", true);
 				}
+
+				if (v.href) {
+					link.attr("link", v.href);
+				}
 				
 				if (len <= 5) {
 					width = 100 / len;
