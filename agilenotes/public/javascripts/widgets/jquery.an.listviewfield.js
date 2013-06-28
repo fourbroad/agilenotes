@@ -12,7 +12,10 @@
 (function( $, undefined ) {
 
 $.widget( "an.listviewfield", $.an.field, {
-
+	options: {
+		mode: "browser",
+		value:[]
+	},
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
@@ -23,59 +26,101 @@ $.widget( "an.listviewfield", $.an.field, {
 		var self = this, o = this.options, el = this.element;
 		if (o.mobile) {
 			var cl = this.element.find(".content").eq(0);
-			var ul_element = $('<ul name="' + o.id + '" data-role="listview" />').appendTo(cl);
-			if(o.label){
-				ul_element.html(' <li data-role="list-divider"><a>' + o.label + '</a></li>');
-			}
-			$.each(o.selectItems||[], function(k,v){
-				button_li = $("<li />").html('<a>'+this.label+'</a>').appendTo(ul_element);								
-			});	
-			
+			this.ul_element = $('<ul name="' + o.id + '" data-role="listview" />').appendTo(cl);
 			if(o.isInset){
-				ul_element.attr("data-inset","true");
+				this.ul_element.attr("data-inset","true");
 			}
 
 			if(o.label_theme){
-				ul_element.attr("data-divider-theme",o.label_theme);
+				this.ul_element.attr("data-divider-theme",o.label_theme);
 			}
 			if(o.data_theme){
-					ul_element.attr("data-theme",o.data_theme);		
-			}
-			if($('ul[name=' + o.id + ']').listview){
-				$('ul[name=' + o.id + ']').listview();
+				this.ul_element.attr("data-theme",o.data_theme);		
 			}
 		} 
 	},
 	
 	_createLabel:function(){
-		//this.element.find('label').remove();
-		
 	},
 
 	_makeResizable : function() {
 	},
 
+	_notify:function(oldValue, value){
+		var o = this.options;
+		if(value != oldValue){
+			o.value = value;
+			this._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+		}
+	},
+	
+	appendValue:function(value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.push(value);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+
+	insertValue:function(index, value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.splice(index, 1, value);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+	
+	delValue:function(index) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.splice(index, 1);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+	
+	getValue:function(index) {
+		var o = this.options;
+		return o.value[index];
+	},
+	
+	replaceValue:function(index, value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value[index] = value;
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+
 	_browser : function() {
-		//this.element.find('label').remove();
-		//this.input.detach();
-		/*var c = this.content;
-		if (c.is(".ui-resizable")) c.resizable("destroy");
-		c.html(this.options.value + "").css("display", "");*/
+		var o = this.options,button_li="";
+		this.ul_element.empty();
+		$.each(o.selectItems||[], function(k,v){
+			o.value.push(o.selectItems[k].value);
+			button_li += "<li><a>"+this.label+"</a></li>";							
+		});
+		if(o.label){
+			this.ul_element.append('<li data-role="list-divider"><a>' + o.label + '</a></li>');
+		}
+		if(o.value.length>0){
+			this._notify([],o.value);
+		}
+		this.ul_element.append(button_li);
+		this.ul_element.listview();
+		this.ul_element.data("mobileListview").refresh();
 	},
 
 	_edit : function() {
-		//this.input.detach().val(this.options.value).appendTo(this.content.empty());
+		this._browser();
 	},
 
 	_design : function() {
 		//this.input.detach();
 		var self = this, o = this.options, cl = this.content;
-
+	
 		if (cl.is(".ui-resizable")) c.resizable("destroy");
 		cl.html('');
 			var ul_element = $('<ul />').addClass('codiqa-control ui-listview').appendTo(cl);
 			if(!o.label_theme){
 				o.label_theme='c';
+			}
+			if(o.label){
+				ul_element.html('<li data-role="list-divider"><a>' + o.label + '</a></li>');
 			}
 			var label_li = $('<li />').addClass('ui-li ui-li-divider ui-bar-' + o.label_theme + ' ui-first-child').html(o.label).appendTo(ul_element);
 			$.each(o.selectItems||[], function(k,v){

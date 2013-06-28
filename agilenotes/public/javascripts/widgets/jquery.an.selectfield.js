@@ -146,6 +146,9 @@ $.widget( "an.selectfield", $.an.field, {
 			if(o.theme){
 				option.theme = o.theme;
 			}
+			if(this.select.data("mobileSelectmenu")){
+				this.select.data("mobileSelectmenu").destroy();
+			}
 			this.select.selectmenu(option);
 		}
 	},
