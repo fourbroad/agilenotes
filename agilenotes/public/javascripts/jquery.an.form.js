@@ -87,6 +87,7 @@ $.widget( "an.form", $.an.page, {
 		$.an.page.prototype._createPage.apply(this, arguments);
 		this.validator = this.$page.validate($.extend({
 			meta:"validate",
+			ignore:"",
 			errorPlacement: function(error, el) {
 				error.insertAfter(el.closest("div.field"));
 			}
