@@ -272,8 +272,8 @@ var Model = {
 			}else{
 		    	if(page.type==Model.PAGE){
 					if(opts.mobile){
-						element.page($.extend(true, {title:title, dbId:dbId, page:page, mobile:true}, opts));
-						opts.opened && opts.opened(element.data("page"));
+						element.mpage($.extend(true, {title:title, dbId:dbId, page:page, mobile:true}, opts));
+						opts.opened && opts.opened(element.data("mpage"));
 					}else{
 						element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
 						opts.opened && opts.opened(element.data("page"));
