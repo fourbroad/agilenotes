@@ -11,9 +11,10 @@
 
 (function( $, undefined ) {
 
-$.widget( "an.pageMobile", $.an.page, {
+$.widget( "an.mpage", $.an.page, {
 	_create: function() {
-		if (this.widgetName == 'pageMobile') this.widgetName = 'page';
+		this.element.addClass("an-mpage");
+		if (this.widgetName == 'mpage') this.widgetName = 'page';
 		$.an.page.prototype._create.apply(this, arguments);
 	}
 });

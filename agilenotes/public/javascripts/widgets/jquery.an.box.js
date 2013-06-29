@@ -137,7 +137,31 @@ $.widget( "an.box", $.an.widget, {
 				}
 		    });
 		optsx.mode = optsx.mode != 'design' ? 'edit' : optsx.mode;
-		Model.newDocument(el, dbId, typeId, optsx);
+		optsx.mobile = opts.mobile;
+		if (opts.mobile && opts.mode == 'design') {
+			$.ans.getDoc(dbId, opts.parent, null, function(err, p) {
+				if(err){
+    				console.log("Get parent document "+ opts.parent + " error:"+err);
+    			}else{
+    				var rootId = Model.rootId(typeId), doc = $.extend(true, {}, opts["default"],{_id: opts.id || new ObjectId().toString(), type: typeId});
+    		    	if(doc._path){
+    		    		doc._path = doc._path.replace(/[^,]+,$/, doc._id+",");
+    		    	}else if(rootId){
+    		    		doc._path = rootId+","+doc._id+",";
+    		    	}
+    		    	
+    				if(p && p._path) doc._path = p._path+doc._id+",";
+    				if (doc.type == Model.FORM || doc.type == Model.PAGE) {
+    					el.page({mode:"design", mobile:true, page:doc});
+    				} else {
+    					Model.newDocument(el, dbId, typeId, optsx);
+    				}
+    			}
+			});
+		} else {
+			Model.newDocument(el, dbId, typeId, optsx);
+		}
+		
 		return this;
 	},
 
@@ -153,7 +177,14 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openDocument(el, dbId, docId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[docId],function(err, docs){
+				el.page({mode:"design", page:docs[0], mobile:true});
+			});
+		} else {
+			Model.openDocument(el, dbId, docId, optsx);
+		}
+		
 		return this;
 	},
 	
@@ -180,7 +211,13 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openPage(el, dbId, formId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[formId],function(err, forms){
+				el.page({mode:"design", page:forms[0], mobile:true});
+			});
+		} else {
+			Model.openPage(el, dbId, formId, optsx);
+		}
 		return this;
 	},
 
@@ -214,7 +251,14 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(page);
 	    		}
 	        });
-		Model.openPage(el, dbId, pageId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[pageId],function(err, pages){
+				el.page({mode:"design", page:pages[0], mobile:true});
+			});
+		} else {
+			Model.openPage(el, dbId, pageId, optsx);
+		}
+		
 		return this;
 	},
 	
@@ -247,8 +291,8 @@ $.widget( "an.box", $.an.widget, {
 				}
 			}
 			if(!hit){
-				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
-				if (o.mobile) opts.mode = o.mode;
+				var opts = {dbId:o.odbId||o.dbId, mobile:o.mobile}, id = o.targetId;
+				if (o.mobile && o.mode == 'design') opts.mode = o.mode;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -267,7 +311,7 @@ $.widget( "an.box", $.an.widget, {
 	},
 	
 	linkedWidget:function(){
-		var data = this.content.children(".an-view,.an-page,.an-editor").data(), 
+		var data = this.content.children(".an-view,.an-page,.an-editor,.an-mpage").data(), 
 		    widget = null;
 		if(data){
 			$.each(data,function(){

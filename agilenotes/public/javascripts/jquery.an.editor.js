@@ -41,10 +41,10 @@ $.widget( "an.editor", {
 			tabTemplate: "<li><a href='#{href}' hidefocus='true'>#{label}</a></li>",
 			show: function(event, ui) {
 				var $p = $(ui.panel), id = $p.attr("id"), d = forms[id], type = d.type;
-				if($p.is(".an-form,.an-page,.an-view")){
+				if($p.is(".an-form,.an-page,.an-view,.an-mpage")){
 					var data = $p.data();
 					for(var i in data){
-						if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1){
+						if($.inArray(i, ["form","page", "mpage","gridview","formview","customview","view","mobilelistview"]) != -1){
 							if(!o.design || !(/-design$/.test(id))) data[i].option("mode", o.mode);
 							data[i].option("mobile", o.mobile);
 							self._trigger("tabshow",event, data[i]);
@@ -143,10 +143,10 @@ $.widget( "an.editor", {
 				var docId = doc._id+"-design", dd= $.extend(true, {}, doc);
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
-					if($this.is(".an-form,.an-page,.an-view")){
+					if($this.is(".an-form,.an-page,.an-view,.an-mpage")){
 						var data = $this.data();
 						for(var i in data){
-							if($.inArray(i, ["form","page"]) != -1){
+							if($.inArray(i, ["form","page", "mpage"]) != -1){
 								$this[i]("option",i,dd);
 							}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 								$this[i]("option","view",dd);
@@ -180,10 +180,10 @@ $.widget( "an.editor", {
 					}
 					el.children("#"+id+".ui-tabs-panel").each(function(){
 						var $this = $(this);
-						if($this.is(".an-form,.an-page,.an-view")){
+						if($this.is(".an-form,.an-page,.an-view,.an-mpage")){
 							var data = $this.data();
 							for(var i in data){
-								if($.inArray(i, ["form","page"]) != -1){
+								if($.inArray(i, ["form","page", "mpage"]) != -1){
 									$this[i]("option",i,forms[id]);
 								}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 									$this[i]("option","view",forms[id]);
