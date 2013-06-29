@@ -28,6 +28,9 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.collapsedIcon){
 				newOps.collapsedIcon=o.collapsedIcon;
 			}
+			if(o.collapsed){
+				newOps.collapsed=false;
+			}
 			if(o.expandedIcon){
 				newOps.expandedIcon=o.expandedIcon;
 			}
@@ -37,7 +40,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.theme){
 				newOps.theme=o.theme;
 			}
-			wrap.collapsible(o);
+			wrap.collapsible(newOps);
         }
 	},
 	

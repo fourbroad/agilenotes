@@ -37,6 +37,10 @@ $.widget( "an.listviewfield", $.an.field, {
 			if(o.data_theme){
 				this.ul_element.attr("data-theme",o.data_theme);		
 			}
+			if(o.splitIcon){
+				this.ul_element.attr("data-split-icon",o.splitIcon);
+				this.ul_element.attr("data-split-theme","d");
+			}
 		} 
 	},
 	
@@ -90,6 +94,7 @@ $.widget( "an.listviewfield", $.an.field, {
 	_browser : function() {
 		var o = this.options,button_li="";
 		this.ul_element.empty();
+		o.value=[];
 		$.each(o.selectItems||[], function(k,v){
 			o.value.push(o.selectItems[k].value);
 			button_li += "<li><a>"+this.label+"</a></li>";							
@@ -97,16 +102,31 @@ $.widget( "an.listviewfield", $.an.field, {
 		if(o.label){
 			this.ul_element.append('<li data-role="list-divider"><a>' + o.label + '</a></li>');
 		}
-		if(o.value.length>0){
-			this._notify([],o.value);
-		}
 		this.ul_element.append(button_li);
 		this.ul_element.listview();
 		this.ul_element.data("mobileListview").refresh();
 	},
 
 	_edit : function() {
-		this._browser();
+		var o = this.options,button_li="";
+		this.ul_element.empty();
+		o.value=[];
+		$.each(o.selectItems||[], function(k,v){
+			o.value.push(o.selectItems[k].value);
+			if(o.splitIcon){
+				button_li += "<li><a>"+this.label+"</a><a href=\"javascript:;\">"+o.splitText+"</a></li>";
+			}else{
+				button_li += "<li><a>"+this.label+"</a></li>";	
+			}
+		});
+		if(o.value.length>0)this._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:[], isTransient:o.isTransient});
+		if(o.label){
+			this.ul_element.append('<li data-role="list-divider"><a>' + o.label + '</a></li>');
+		}
+		
+		this.ul_element.append(button_li);
+		this.ul_element.listview();
+		this.ul_element.data("mobileListview").refresh();
 	},
 
 	_design : function() {
