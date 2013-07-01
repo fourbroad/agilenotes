@@ -22,7 +22,7 @@ var Model = {
     GROUP: "000000000000000000000008",
     ROLE: "000000000000000000000009",
     SIDE_VIEW: "00000000000000000000000a",
-    ACTION: "00000000000000000000000b",
+//    ACTION: "00000000000000000000000b",
     VALIDATE_METHOD:"00000000000000000000000c",
     EXTENSION_POINT: "00000000000000000000000d",
     CATEGORY: "00000000000000000000000e",
@@ -28292,6 +28292,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	_createSwfUpload:function(placeElem,callback){
 		var settings = {
 			flash_url : "javascripts/swfupload/swfupload.swf",
+			button_window_mode : "transparent",
 			upload_url: "/tmp",
 			file_post_name:"file",
 			post_params: {"file" : ""},
@@ -28350,6 +28351,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 						self._createSwfUpload(li.children("img")[0],function(data,resp){
 							resp=$.parseJSON(resp);
 							resp._tmp = true;
+							if(!o.value)o.value=[];
 							var oldValue = [].concat(o.value);
 							o.value.push(resp);
 							if(self.files.children().size() >= o.maxCount){
@@ -35815,7 +35817,7 @@ $.widget( "an.workbench", {
 		});
 
 		// load actions of document.
-		this._loadActions(function(){
+		this._loadExtensions(function(){
 			self._initMainToolbar();
 			// load opened documents.
 			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
@@ -35852,9 +35854,9 @@ $.widget( "an.workbench", {
 			var hit = false;
 			$.each($.isArray(data)?data:[data], function(k,v){
 				self.centerTabs.find("a[href^=#"+v._id+"]").html(v.title);
-				if(v.type == Model.ACTION){ hit = true; }
+				if(v.extensionPoint){ hit = true; }
 			});
-			if(hit) self._loadActions(function(){ self._initMainToolbar(); });
+			if(hit) self._loadExtensions(function(){ self._initMainToolbar(); });
 		}).bind("documentDeleted.workbench",function(e,data){
 			$.each($.isArray(data)?data:[data], function(k,v){
 				self.centerTabs.find("a[href^=#"+v._id+"]").each(function(){
@@ -35864,7 +35866,7 @@ $.widget( "an.workbench", {
 					}
 				});
 			});
-			self._loadActions(function(){ self._initMainToolbar(); });
+			self._loadExtensions(function(){ self._initMainToolbar(); });
 		});
 
 		window.workbench = this;
@@ -35906,7 +35908,7 @@ $.widget( "an.workbench", {
 	    }
 	},
 	
-	_loadActions:function(afterLoad){
+	_loadExtensions:function(afterLoad){
 		var self = this, o = this.options, eps=[];
 		$.each(o.extensionPoints,function(k,v){ eps.push(v);});
 		Model.loadExtensions(o.dbId, eps, function(err, exts){
@@ -43004,3 +43006,47 @@ function queueComplete(numFilesUploaded) {
 	var status = document.getElementById("divStatus");
 	status.innerHTML = numFilesUploaded + " file" + (numFilesUploaded === 1 ? "" : "s") + " uploaded.";
 }
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.loading", {
+	options:{
+		trans:'0.6',
+		msg:''
+	},
+	
+	_create: function(){
+		var o = this.options,self=this;
+		this.wrap=$('<div class="loading" style="width:100%;height:100%;position:absolute;left:0;top:0;z-index:9997;vertical-align:middle;"><div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9998;background:#fff;"></div></div>');
+		this.wrap.css('opacity',o.trans);
+		this.wrap.append($('<span style="background:url(images/large-loading.gif) no-repeat;width:32px;height:32px;position:absolute;left:49%;top:49%;z-index:9999;padding-top:32px;">'+o.msg+'</span>'));
+		this.oldPos=this.element.css("postion");
+		this.element.css("postion","relatvie").append(this.wrap);;
+	},
+	
+	open:function(){
+		this.wrap && this.wrap.show();
+	},
+
+	close:function(){
+		this.destroy();
+	},
+	
+	destroy: function() {
+		this.element.css("postion",this.oldPos);
+		this.wrap && this.wrap.remove();
+		delete this.pager;
+		$.Widget.prototype.destroy.apply(this,arguments);
+	}
+});
+})( jQuery );
