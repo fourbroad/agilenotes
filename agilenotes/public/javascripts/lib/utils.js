@@ -8,7 +8,45 @@
  *
  * http://agilemore.com/agilenotes
  */
-
+Date.prototype.format = function(fmt){  //args:yyyy-mm-dd hh:MM:ss
+  var o = {   
+    "m+" : this.getMonth()+1,                 //月份   
+    "d+" : this.getDate(),                    //日   
+    "h+" : this.getHours(),                   //小时   
+    "M+" : this.getMinutes(),                 //分   
+    "s+" : this.getSeconds(),                 //秒   
+    "q+" : Math.floor((this.getMonth()+3)/3), //季度   
+    "S"  : this.getMilliseconds()             //毫秒   
+  };   
+  if(/(y+)/.test(fmt))   
+    fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));   
+  for(var k in o)   
+    if(new RegExp("("+ k +")").test(fmt))   
+  fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));   
+  return fmt;   
+} 
+Date.prototype.add=function(obj){
+	var y=this.getFullYear(),m=this.getMonth()+1,days=this.getDate(),d=0;
+	if(typeof obj !='object'){return this;}
+	for(var q in obj){
+		if(q=='year'){
+			y += obj[q];
+		}else if(q=='month'){
+			m += obj[q];
+                        if(m>12){
+                               y += parseInt(m/12);
+                               m=m%12;
+                        }
+                        if(m<1){
+                               y += parseInt(m/12)-1;
+                               m=12+m%12;
+                        }
+		}else if(q=='day'){
+			d += obj[q];
+		}
+	}
+	return new Date(new Date(y+"/"+m+"/"+days).getTime()+d*24*60*60*1000);
+}
 function emptyEqual(a1,a2){  
 	if(a1 === null && a2 === null)  
 		return 1;  
