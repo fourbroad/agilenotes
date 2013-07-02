@@ -29,6 +29,7 @@
 ..\javascripts\widgets\jquery.an.jsrenderfield.js
 ..\javascripts\widgets\jquery.an.buttonwidget.js
 ..\javascripts\widgets\jquery.an.tabsxwidget.js
+..\javascripts\widgets\jquery.an.searchfield.js
 ..\javascripts\jquery.an.tree.js
 ..\javascripts\jquery.cookie.js
 ..\javascripts\jquery.hotkeys.js
@@ -38,6 +39,7 @@
 ..\javascripts\jquery.an.tabsx.js
 ..\javascripts\jquery.an.explorer.js
 ..\javascripts\jquery.an.page.js
+..\javascripts\jquery.an.mpage.js
 ..\javascripts\jquery.an.form.js
 ..\javascripts\jquery.an.agilegrid.js
 ..\javascripts\jquery.an.toolbar.js
@@ -62,8 +64,14 @@
 ..\javascripts\lib\rte\w3cRange.js
 ..\javascripts\json2.js
 ..\javascripts\jsrender.js
-..\javascripts\swfupload\swfupload.js
-..\javascripts\swfupload\swfupload.queue.js
-..\javascripts\swfupload\fileprogress.js
-..\javascripts\swfupload\handlers.js
+..\javascripts\widgets\jquery.an.sliderfield.js
+..\javascripts\widgets\jquery.an.togglefield.js
+..\javascripts\widgets\jquery.an.collapsiblewidget.js
+..\javascripts\widgets\jquery.an.navbarwidget.js
+..\javascripts\widgets\jquery.an.listviewfield.js
+..\javascripts\widgets\jquery.an.customhtmlfield.js
+..\javascripts\jquery.an.mobilelistview.js
+..\javascripts\mobiscroll.custom-2.6.0.min.js
+..\javascripts\widgets\jquery.an.mobiledatefield.js
+..\javascripts\widgets\jquery.an.swipewidget.js
 ..\javascripts\jquery.an.loading.js
