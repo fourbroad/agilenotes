@@ -216,6 +216,7 @@ var Model = {
 					if(err){
 						console.log("Load forms "+type.forms+" error: "+err);
 					}else{
+						optsx.mobile = doc.mobile;
 						optsx.forms = forms;
 						element.editor(optsx);
 						opts.opened && opts.opened(element.data("editor"));
@@ -270,8 +271,14 @@ var Model = {
 	    		});
 			}else{
 		    	if(page.type==Model.PAGE){
-					element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
-					opts.opened && opts.opened(element.data("page"));
+					if(opts.mobile){
+						element.mpage($.extend(true, {title:title, dbId:dbId, page:page, mobile:true}, opts));
+						opts.opened && opts.opened(element.data("mpage"));
+					}else{
+						element.page($.extend(true, {title:title, dbId:dbId, page:page}, opts));
+						opts.opened && opts.opened(element.data("page"));
+					}
+					
 		    	}else if(page.type == Model.FORM){
 					var doc = {};
 			    	if(opts.isNew) $.extend(true, doc, eval("("+type.defaultValues+")"||"{}"));
@@ -299,6 +306,7 @@ var Model = {
     	opts = opts || {};
     	var self = this;
     	if(this.pages[pageId]){
+    		opts.mobile = this.pages[pageId].mobile;
     		this._doOpenPage(element, dbId, this.pages[pageId], opts);
     	}else{
     		$.ans.getDoc(dbId, pageId, null, function(err, page){
@@ -306,6 +314,7 @@ var Model = {
     				console.log("Load page "+ pageId+" error: "+err);
     			}else{
     				self.pages[pageId] = page;
+    				opts.mobile = page.mobile;
     				self._doOpenPage(element, dbId, page, opts);
     			}
     		});
@@ -489,7 +498,45 @@ function DocWrapper(doc, parseDot){
  *
  * http://agilemore.com/agilenotes
  */
-
+Date.prototype.format = function(fmt){  //args:yyyy-mm-dd hh:MM:ss
+  var o = {   
+    "m+" : this.getMonth()+1,                 //月份   
+    "d+" : this.getDate(),                    //日   
+    "h+" : this.getHours(),                   //小时   
+    "M+" : this.getMinutes(),                 //分   
+    "s+" : this.getSeconds(),                 //秒   
+    "q+" : Math.floor((this.getMonth()+3)/3), //季度   
+    "S"  : this.getMilliseconds()             //毫秒   
+  };   
+  if(/(y+)/.test(fmt))   
+    fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));   
+  for(var k in o)   
+    if(new RegExp("("+ k +")").test(fmt))   
+  fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));   
+  return fmt;   
+} 
+Date.prototype.add=function(obj){
+	var y=this.getFullYear(),m=this.getMonth()+1,days=this.getDate(),d=0;
+	if(typeof obj !='object'){return this;}
+	for(var q in obj){
+		if(q=='year'){
+			y += obj[q];
+		}else if(q=='month'){
+			m += obj[q];
+                        if(m>12){
+                               y += parseInt(m/12);
+                               m=m%12;
+                        }
+                        if(m<1){
+                               y += parseInt(m/12)-1;
+                               m=12+m%12;
+                        }
+		}else if(q=='day'){
+			d += obj[q];
+		}
+	}
+	return new Date(new Date(y+"/"+m+"/"+days).getTime()+d*24*60*60*1000);
+}
 function emptyEqual(a1,a2){  
 	if(a1 === null && a2 === null)  
 		return 1;  
@@ -27231,7 +27278,32 @@ $.widget( "an.box", $.an.widget, {
 					opts.opened && opts.opened(editor);
 				}
 		    });
-		Model.newDocument(el, dbId, typeId, optsx);
+		optsx.mode = optsx.mode != 'design' ? 'edit' : optsx.mode;
+		optsx.mobile = opts.mobile;
+		if (opts.mobile && opts.mode == 'design') {
+			$.ans.getDoc(dbId, opts.parent, null, function(err, p) {
+				if(err){
+    				console.log("Get parent document "+ opts.parent + " error:"+err);
+    			}else{
+    				var rootId = Model.rootId(typeId), doc = $.extend(true, {}, opts["default"],{_id: opts.id || new ObjectId().toString(), type: typeId});
+    		    	if(doc._path){
+    		    		doc._path = doc._path.replace(/[^,]+,$/, doc._id+",");
+    		    	}else if(rootId){
+    		    		doc._path = rootId+","+doc._id+",";
+    		    	}
+    		    	
+    				if(p && p._path) doc._path = p._path+doc._id+",";
+    				if (doc.type == Model.FORM || doc.type == Model.PAGE) {
+    					el.page({mode:"design", mobile:true, page:doc});
+    				} else {
+    					Model.newDocument(el, dbId, typeId, optsx);
+    				}
+    			}
+			});
+		} else {
+			Model.newDocument(el, dbId, typeId, optsx);
+		}
+		
 		return this;
 	},
 
@@ -27247,7 +27319,14 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openDocument(el, dbId, docId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[docId],function(err, docs){
+				el.page({mode:"design", page:docs[0], mobile:true});
+			});
+		} else {
+			Model.openDocument(el, dbId, docId, optsx);
+		}
+		
 		return this;
 	},
 	
@@ -27266,7 +27345,7 @@ $.widget( "an.box", $.an.widget, {
 
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
-	        optsx = $.extend(true, {mode:"edit"}, opts, {
+	        optsx = $.extend(true, {mode: opts.mode != 'design' ? "edit" : opts.mode}, opts, {
 	        	opened: function(editor){
 	    			var form = editor.option("currentForm"), title = opts.title || form.title || form._id;
 	    			self._showFootButtons(opts.footAreaButtons||[]);
@@ -27274,7 +27353,13 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(editor);
 	    		}
 	        });
-		Model.openPage(el, dbId, formId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[formId],function(err, forms){
+				el.page({mode:"design", page:forms[0], mobile:true});
+			});
+		} else {
+			Model.openPage(el, dbId, formId, optsx);
+		}
 		return this;
 	},
 
@@ -27300,7 +27385,7 @@ $.widget( "an.box", $.an.widget, {
 		
 		var self = this, o = this.options, dbId = opts.dbId || o.dbId,
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
-	        optsx = $.extend(true, {mode:"edit"}, opts,{
+	        optsx = $.extend(true, {mode:opts.mode != 'design' ? "edit" : opts.mode}, opts,{
 	        	opened: function(page){
 	    			var p = page.option("page"), title = opts.title || p.title || p._id;
 	    			self._showFootButtons(opts.footAreaButtons||[]);
@@ -27308,7 +27393,14 @@ $.widget( "an.box", $.an.widget, {
 	    			opts.opened && opts.opened(page);
 	    		}
 	        });
-		Model.openPage(el, dbId, pageId, optsx);
+		if (o.mobile && o.mode == 'design') {
+			Model.getPages(dbId,[pageId],function(err, pages){
+				el.page({mode:"design", page:pages[0], mobile:true});
+			});
+		} else {
+			Model.openPage(el, dbId, pageId, optsx);
+		}
+		
 		return this;
 	},
 	
@@ -27335,13 +27427,14 @@ $.widget( "an.box", $.an.widget, {
 		if(link && link != "raw"){
 			var target = this.content.children(".target"), data = target.data(), hit = false;
 			for(var i in data){
-				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer"]) != -1){
+				if($.inArray(i, ["editor","gridview", "formview", "customview","customizedview","page", "sideview","explorer","mobilelistview"]) != -1){
 					data[i].option("mode", "browser");
 					hit = true;
 				}
 			}
 			if(!hit){
-				var opts = {dbId:o.odbId||o.dbId}, id = o.targetId;
+				var opts = {dbId:o.odbId||o.dbId, mobile:o.mobile}, id = o.targetId;
+				if (o.mobile && o.mode == 'design') opts.mode = o.mode;
 				if(link == "documentType"){
 					this.newDocument(id, opts);
 				}else if(link == "document"){
@@ -27360,11 +27453,11 @@ $.widget( "an.box", $.an.widget, {
 	},
 	
 	linkedWidget:function(){
-		var data = this.content.children(".an-view,.an-page,.an-editor").data(), 
+		var data = this.content.children(".an-view,.an-page,.an-editor,.an-mpage").data(), 
 		    widget = null;
 		if(data){
 			$.each(data,function(){
-				if($.inArray(this.widgetName,["editor","gridview","formview","customview","view","page"]) != -1){
+				if($.inArray(this.widgetName,["editor","gridview","formview","customview","view","page","mobilelistview"]) != -1){
 					widget = this;
 					return false;
 				}
@@ -27410,6 +27503,7 @@ $.widget( "an.box", $.an.widget, {
 	
 	_design:function(){
 		var o = this.options, link = o.link;
+		if (o.mobile) o.mode = "design";
 		this._browser();
 		this.option("contextmenu2", true);
 		if(link == "raw"){
@@ -27445,89 +27539,128 @@ $.widget( "an.box", $.an.widget, {
  * Agile Notes 1.0
  *
  * Copyright 2013, Sihong Zhu and other contributors
-* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
-* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
-* This software is not distributed under version 3 or later of the GPL.
+ * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+ * and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+ * This software is not distributed under version 3 or later of the GPL.
  *
  * http://agilemore.com/agilenotes
  */
 
-(function( $, undefined ) {
+(function($, undefined) {
 
-$.widget( "an.inputfield", $.an.field, {
+	$.widget("an.inputfield", $.an.field, {
+		_create : function() {
+			$.an.field.prototype._create.apply(this, arguments);
+			this.element.addClass("an-inputfield");
+		},
 
-	_create: function() {
-		$.an.field.prototype._create.apply(this, arguments);
-		this.element.addClass("an-inputfield");
-	},
-	
-	_createControl:function(){
-		var self = this, o = this.options;
-		this.input = $("<input type='"+o.type+"'/>").attr({name:o.id})
-		    .addClass("ui-widget-content ui-corner-all").bind("change.inputfield keyup.inputfield",function(e){
-			var value = self.input.val(), oldValue = o.value;
-			if(value != oldValue){
-				o.value = value;
-				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+		_createControl : function() {
+			var self = this, o = this.options;
+			if (o.mobile) {
+				var el = this.element.find(".content").eq(0);
+				el.addClass("ui-shadow-inset ui-corner-all ui-btn-shadow ui-body-c ui-input-text");
+				
+				this.input = $("<input type='" + o.type + "'/>").attr({ name : o.id }).addClass("ui-body-c ui-input-text").bind(
+					"change.inputfield keyup.inputfield",
+					function(e) {
+						var value = self.input.val(), oldValue = o.value;
+						if (value != oldValue) {
+							o.value = value;
+							self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+								isTransient : o.isTransient });
+						}
+					}).bind("dblclick.inputfield", function(e) {
+					e.stopImmediatePropagation();
+				}).bind("focus.inputfield", function(e) {
+					el.addClass("ui-focus");
+				}).bind("blur.inputfield", function(e) {
+					el.removeClass("ui-focus");
+				}).bind("keyup.inputfield", function(e) {
+					
+				});
+
+				if (o.placeholder) {
+					this.input.attr("placeholder", o.placeholder);
+				}
+
+				if (o.value) {
+					this.input.attr("value", o.value);
+				}
+
+				if (o.data_mini) {
+					this.input.attr("data-mini", o.data_mini);
+				}
+			} else {
+				this.input = $("<input type='" + o.type + "'/>").attr({ name : o.id }).addClass(
+					"ui-widget-content ui-corner-all").bind(
+					"change.inputfield keyup.inputfield",
+					function(e) {
+						var value = self.input.val(), oldValue = o.value;
+						if (value != oldValue) {
+							o.value = value;
+							self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+								isTransient : o.isTransient });
+						}
+					}).bind("dblclick.inputfield", function(e) {
+					e.stopImmediatePropagation();
+				});
 			}
-		}).bind("dblclick.inputfield",function(e){e.stopImmediatePropagation();});
-		
-		if(!$.isEmptyObject(o.validate)){
-			this.input.addClass($.toJSON({validate:o.validate}));
-		}
-		this.input.css({width:o.width, height:o.height});
-	},
-	
-	_makeResizable:function(){},
-	
-	_browser:function(){
-		this.input.detach();
-		var c = this.content;
-		if(c.is(".ui-resizable")) c.resizable("destroy");
-		c.html(this.options.value+"").css("display","");
-	},
-	
-	_edit:function(){
-		this.input.detach().val(this.options.value).appendTo(this.content.empty());
-	},
-	
-	_design:function(){
-		this.input.detach();
-		var self = this, o = this.options, c = this.content;
-		if(c.is(".ui-resizable")) c.resizable("destroy");
-		c.html(o.value+"").css({width:o.width, height:o.height, display:""}).resizable({
-			stop:function(e,ui){
-				o.width = c.width();
-				o.height = c.height();
-				$.extend(true,o.metadata[self.widgetName],{width:o.width,height:o.height});
-				self._updateMetadata();
-				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
-			}
-		});
-	},
-	
-	_handleChange:function(key, value, oldValue){
-		if(key === "label"){
-			this.input && this.input.remove();
-			this.element.children("label").remove();
-			this._createControl();
-			this._createLabel();
-		}else {
-			$.an.field.prototype._handleChange.apply(this, arguments);
-		}
-	},
 
-	highlight: function(highlight){
-		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover",highlight);
-	},
-	
-	destroy: function() {
-		this.input&&this.input.unbind(".inputfield").remove();
-		this.element.removeClass("an-inputfield");
-		return $.an.field.prototype.destroy.apply(this, arguments);
-	}
-});
-})( jQuery );
+			if (!$.isEmptyObject(o.validate)) {
+				this.input.addClass($.toJSON({ validate : o.validate }));
+			}
+			this.input.css({ width : o.width, height : o.height });
+		},
+
+		_makeResizable : function() {
+		},
+
+		_browser : function() {
+			this.input.detach();
+			var c = this.content;
+			if (c.is(".ui-resizable")) c.resizable("destroy");
+			c.html(this.options.value + "").css("display", "");
+		},
+
+		_edit : function() {
+			this.input.detach().val(this.options.value).appendTo(this.content.empty());
+		},
+
+		_design : function() {
+			this.input.detach();
+			var self = this, o = this.options, c = this.content;
+			if (c.is(".ui-resizable")) c.resizable("destroy");
+			c.html(o.value + "").css({ width : o.width, height : o.height, display : "" }).resizable(
+				{ stop : function(e, ui) {
+					o.width = c.width();
+					o.height = c.height();
+					$.extend(true, o.metadata[self.widgetName], { width : o.width, height : o.height });
+					self._updateMetadata();
+					self._trigger("resize", null, { size : ui.size, oldSize : ui.originalSize });
+				} });
+		},
+
+		_handleChange : function(key, value, oldValue) {
+			if (key === "label") {
+				this.input && this.input.remove();
+				this.element.children("label").remove();
+				this._createControl();
+				this._createLabel();
+			} else {
+				$.an.field.prototype._handleChange.apply(this, arguments);
+			}
+		},
+
+		highlight : function(highlight) {
+			(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover", highlight);
+		},
+
+		destroy : function() {
+			this.input && this.input.unbind(".inputfield").remove();
+			this.element.removeClass("an-inputfield");
+			return $.an.field.prototype.destroy.apply(this, arguments);
+		} });
+})(jQuery);
 /*!
  * Agile Notes 1.0
  *
@@ -27707,14 +27840,56 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 
 	_createControl:function(){
-		var self = this, o = this.options, el = this.element;
-		$.each(o.selectItems||[], function(k,v){
-			$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
-			    .addClass("ui-widget-content ui-corner-all").appendTo(el);
-			$("<div class='content'/>").hide().appendTo(el);
-			$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
-			if(o.orientation == "vertical") el.append("<br>");
-		});
+		var self = this, o = this.options, el = this.element;	
+		if (o.mobile) {
+			var radio_group = $("<div class='ui-controlgroup-controls' />");
+			radio_group.append($("<label />").attr("for", o.id).html(o.label).css("display", "block"));
+			$.each(o.selectItems||[], function(k,v){
+				var radio_elem = $("<div class='ui-radio' />");
+				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content").appendTo(radio_elem);
+				$("<div class='content'/>").hide().appendTo(el);
+				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
+					<span class="ui-icon ui-icon-radio-on ui-icon-shadow"> </span>\
+					</span>';
+				// ui-btn-up-a
+				var label_elem = $("<label class='ui-radio-off ui-btn ui-btn-up-c ui-fullsize ui-btn-icon-left' style='margin:0'  />").attr("for",o.id+k);
+				if (!o.data_theme) {
+					o.data_theme = 'c';
+				}
+				
+				if (k == 0) {
+					label_elem.addClass("ui-first-child");
+				}
+				
+				if (k == (o.selectItems.length - 1)) {
+					label_elem.addClass("ui-last-child");
+				}
+				label_elem.addClass("ui-btn-up-" + o.data_theme);
+				label_elem.html(label).appendTo(radio_elem);
+				radio_elem.appendTo(radio_group);
+				
+				radio_elem.bind("click.radiofield", function(e) {
+					$(this).find('input[type="radio"]').attr('checked','checked');
+					if (o.orientation == "vertical") {
+						$(this).removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
+					} else {
+						$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
+					}
+				});
+			});
+			
+			radio_group.appendTo($("<div border='1' class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+		} else {
+			$.each(o.selectItems||[], function(k,v){
+				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content ui-corner-all").appendTo(el);
+				$("<div class='content'/>").hide().appendTo(el);
+				$("<label/>").attr("for",o.id+k).html(this.label).appendTo(el);
+				if(o.orientation == "vertical") el.append("<br>");
+			});
+			
+		}
 		
 		this.inputs = el.children("input");
 		this.contents = el.children(".content");
@@ -27766,8 +27941,10 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 
 	_design:function(){
-		this.inputs.hide();
-		this.contents.css("display","");
+		if (!this.options.mobile) {
+			this.inputs.hide();
+			this.contents.css("display","");
+		}
 	},
 
 	highlight: function(highlight){
@@ -27775,6 +27952,9 @@ $.widget( "an.radiofield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		if (this.options.mobile) {
+			this.element.children(".ui-controlgroup").unbind(".radiofield").remove();
+		}
 		this.inputs.unbind(".radiofield").remove();
 		this.contents.remove();
 		this.element.removeClass("an-radiofield" ).children("br").remove();
@@ -27800,23 +27980,145 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 		$.an.inputfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-checkboxfield");
 		this.content.hide();
+
+		
 	},
 
 	_createControl:function(){
-		var self = this, o = this.options;
-		this.input = $("<input type='checkbox'/>").attr({name:o.id})
-		    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
+		var self = this, o = this.options, el = this.element;
+		if(o.mobile){
+			var checkbox_group = $("<div class='ui-controlgroup-controls' />");
+			checkbox_group.append($("<label />").attr("for", o.id).html(o.label));
+			$.each(o.selectItems||[], function(k,v){
+				var checkbox_elem = $("<div class='ui-checkbox incheck' />");
+				$("<input type='checkbox'/>").attr({id:o.id+k, name:o.id, value:this.value})
+				    .addClass("ui-widget-content").appendTo(checkbox_elem);
+				$("<div class='content'/>").hide().appendTo(el);
+				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
+					<span class="ui-icon ui-icon-checkbox-off ui-icon-shadow"> </span>\
+					</span>';
+				var label_elem = $("<label class=' ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left' />").attr("for",o.id+k);
+				// ui-btn-up-a
+				if(k==0){
+					label_elem.addClass("ui-first-child");
+				}
+				if(k==o.selectItems.length-1){
+					label_elem.addClass("ui-last-child");
+				}
+				
+				if (!o.data_theme) {
+					o.data_theme = 'c';
+				}
+				if (o.isMini) {
+					label_elem.addClass("ui-mini");
+				}
+				label_elem.addClass("ui-btn-up-" + o.data_theme);
+				label_elem.html(label).appendTo(checkbox_elem);
+				checkbox_elem.appendTo(checkbox_group);
+				
+			});
+			
+			checkbox_group.appendTo($("<div class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+			
+			el.find(".incheck").bind("mousedown.checkboxfield",function(e){
+				$(this).find("label").addClass("ui-btn-down-" + o.data_theme);				  
+			  }).bind("mouseup.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-down-" + o.data_theme);
+			  }).bind("mousemove.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-up-" + o.data_theme).addClass("ui-btn-hover-" + o.data_theme);
+			  }).bind("mouseout.checkboxfield",function(e){
+				  $(this).find("label").removeClass("ui-btn-hover-" + o.data_theme).addClass("ui-btn-up-" + o.data_theme);
+			  }).bind("click.checkboxfield",function(e){
+				  e.stopPropagation();
+				  var $input=$(this).find('input');
+				  if( $input.attr("checked")){
+					  $input.removeAttr("checked");
+					  if (o.orientation == "vertical") {
+						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-on").addClass("ui-icon-checkbox-off");
+						} else {
+							$(this).find(">label").removeClass('ui-btn-active');
+						}
+					  
+				  }else{
+					  $input.attr("checked","checked");
+					  if (o.orientation == "vertical") {
+						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-off").addClass("ui-icon-checkbox-on");
+						} else {
+							$(this).find(">label").addClass('ui-btn-active');
+						}
+					  
+				  }
+				  return ;
+			  });;
+			
+			/*$(".ui-checkbox").bind('click.checkboxfield',function(e){
+				var name=o.id;
+				$(this).find('input[type="checkbox"][name="'+name+'"]').attr('checked','checked');
+				if (o.orientation == "vertical") {
+					$(this).removeClass("ui-icon-checkbox-off").addClass('ui-checkbox-on').siblings().removeClass('ui-checkbox-on');
+				} else {
+					$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
+				}
+			});*/
+			
+			this.input = el.children(".ui-controlgroup");
+					
+				
+			
+			/*this.input = $("<input type='checkbox'/>").attr({name:o.id})
+		    .addClass("codiqa-control").bind("change.checkboxfield",function(e){
 			var value = self.input.prop("checked"), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 			}
-		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
-		
-		if(!$.isEmptyObject(o.validate)){
-			this.input.addClass($.toJSON({validate:o.validate}));
+		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});*/
+			this.contents = el.children(".content");
+			if(!$.isEmptyObject(o.validate)){
+				this.input.addClass($.toJSON({validate:o.validate}));
+			}
+			this.input.filter("[value="+o.value+"]").prop("checked",true);
+			
+			this.input.bind("change.checkboxfield",function(e){
+				var value = $(e.target).attr("value"), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+		}else{
+			this.input = $("<input type='checkbox'/>").attr({name:o.id})
+			    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
+				var value = self.input.prop("checked"), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+			if(!$.isEmptyObject(o.validate)){
+				this.input.addClass($.toJSON({validate:o.validate}));
+			}
+			this.input.appendTo(this.element);
+		}				
+	},
+	
+	_handleChange:function(key, value, oldValue){
+		var o = this.options;
+		if(key == "value"){
+			this.input.filter("[value="+o.value+"]").prop("checked",true);
+		}else if(key == "selectItems"){
+			this.input.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else if(key == "orientation"){
+			this.input.remove();
+			this.contents.remove();
+			this.element.children("label,br").remove();
+			this._createControl();
+		}else{
+			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
-		this.input.appendTo(this.element);
 	},
 	
 	_makeResizable:function(){},
@@ -27824,7 +28126,10 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	_createLabel:function(){
 		var o = this.options, el = this.element;
 		if(o.label){
-		    $("<label/>").attr("for",o.id).html(o.label).appendTo(el);
+			if(!o.mobile){
+				$("<label/>").attr("for",o.id).html(o.label).appendTo(el);
+			}
+		    
 		}
 	},
 	
@@ -27837,8 +28142,12 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	_design:function(){
-		this.input.hide();
-		this.content.css("display","");
+		if (this.options.mobile) {
+			this.input.find(".incheck").unbind();
+		} else {
+			this.input.hide();
+			this.content.css("display","");
+		}
 	},
 	
 	highlight: function(highlight){
@@ -27846,6 +28155,10 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
+		if(this.options.mobile){
+			this.input.unbind(".checkboxfield").remove();
+			this.contents.remove();
+		}
 		this.input.unbind(".checkboxfield");
 		this.element.removeClass( "an-checkboxfield" );
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
@@ -27976,25 +28289,45 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 	
 	_createControl:function(){
-		var self = this, o = this.options;
-		this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
-		    .addClass("ui-widget-content ui-corner-all");
-
-		if(o.resizable) this.content.resizable();
+		var self = this, o = this.options, el = this.element;
+		if (o.mobile) {
+			el.find(".content").addClass("codiqa-control");
+			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
+			    .addClass("ui-input-text ui-body-c ui-corner-all ui-shadow-inset");
+			this.textarea.bind("change.textareafield keyup.textareafield",function(e){
+				e.preventDefault();
+	//			e.stopImmediatePropagation();
+				var value = self.textarea.val(), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();
+			}).bind("focus.textareafield", function(e) {
+				$(this).addClass("ui-focus");
+			}).bind("blur.textareafield", function(e) {
+				$(this).removeClass("ui-focus");
+			});
+		} else {
+			this.textarea = $("<textarea type='"+o.type+"'/>").attr("name",o.id)
+			    .addClass("ui-widget-content ui-corner-all");
+			this.textarea.bind("change.textareafield keyup.textareafield",function(e){
+				e.preventDefault();
+	//			e.stopImmediatePropagation();
+				var value = self.textarea.val(), oldValue = o.value;
+				if(value != oldValue){
+					o.value = value;
+					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+				}
+			}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
+		}
 		
+		
+		
+		if(o.resizable) this.content.resizable();		
 		if(!$.isEmptyObject(o.validate)){
 			this.textarea.addClass($.toJSON({validate:o.validate}));
 		}
-
-		this.textarea.bind("change.textareafield keyup.textareafield",function(e){
-			e.preventDefault();
-//			e.stopImmediatePropagation();
-			var value = self.textarea.val(), oldValue = o.value;
-			if(value != oldValue){
-				o.value = value;
-				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
-			}
-		}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
 	},
 	
 	_makeResizable:function(){},
@@ -28012,6 +28345,7 @@ $.widget( "an.textareafield", $.an.field, {
 	},
 
 	_design:function(){
+		
 		this.textarea.detach();
 
 		var self = this, o = this.options, c = this.content;
@@ -28133,6 +28467,10 @@ $.widget( "an.rtefield",  $.an.field, {
 
 $.widget( "an.selectfield", $.an.field, {
 
+	options:{
+		nativeMenu:true
+	},
+
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
 		this.element.addClass("an-selectfield");
@@ -28141,48 +28479,147 @@ $.widget( "an.selectfield", $.an.field, {
 	_createControl:function(){
 		var self = this, o = this.options;
 		var sel = this.select = $("<select />").attr("name",o.id);
-		$("<option/>").attr("value","").html("").appendTo(sel);
+		if(!o.mobile){			
+			$("<option/>").attr("value","").html("").appendTo(sel);
+		}
 		$.each(o.selectItems||[], function(){
 			$("<option/>").attr("value",this.value).html(this.label).appendTo(sel);
 		});
-		
-		if(!$.isEmptyObject(o.validate)){
-			sel.addClass($.toJSON({validate:o.validate}));
-		}
-
 		sel.bind("change.selectfield", function(e){
 			e.preventDefault();
-//			e.stopImmediatePropagation();
+			//e.stopImmediatePropagation();
 			var value = sel.val(), oldValue = o.value;
 			if(value != oldValue){
 				o.value = value;
 				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
 			}
 		});
+		
+		if(!$.isEmptyObject(o.validate)){
+			sel.addClass($.toJSON({validate:o.validate}));
+		}
+		
+		if(o.mobile){
+			if(!o.value&&o.selectItems[0])o.value=o.selectItems[0].value;
+		}
 	},
 	
 	_makeResizable:function(){},
 	
 	_browser:function(){
 		var self = this, o = this.options;
-		this.select.detach();
-		$.each(o.selectItems, function(){
-			if(this.value == o.value){
-				self.content.html(this.label).show();
-				return false;
+		
+		if(o.mobile){
+			this.select.detach().val(this.options.value).appendTo(this.content.empty());
+			var  option = {};
+			option.icon = 'arrow-r';
+			if(o.corners){
+				option.conrners = false;
 			}
-		});
+			if(o.icon){
+				option.icon = o.icon;
+			}
+			if(o.iconpos){
+				option.iconpos = o.iconpos;
+			}
+			if(o.iconshadow){
+				option.iconshadow = false;
+			}
+			if(o.inline){
+				option.inline = true;
+			}
+			if(o.mini){
+				option.mini = true;
+			}
+			if(o.nativeMenu){
+				option.nativeMenu = false;
+			}
+			if(o.overlayTheme){
+				option.overlayTheme = o.overlayTheme;
+			}
+			if(o.preventFocusZoom){
+				option.preventFocusZoom = false;
+			}
+			if(o.shadow){
+				option.shadow = false;
+			}
+			if(o.theme){
+				option.theme = o.theme;
+			}
+			if($('select[name=' + o.id + ']').selectmenu){
+				$('select[name=' + o.id + ']').selectmenu(option);
+			}
+		}else{
+			this.select.detach();
+			$.each(o.selectItems, function(){
+				if(this.value == o.value){
+					self.content.html(this.label).show();
+					return false;
+				}
+			});
+		}
 	},
 	
 	_edit:function(){
+		var o = this.options;
 		this.select.detach().val(this.options.value).appendTo(this.content.empty());
-
+		this._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:"", isTransient:o.isTransient});
+		if(o.mobile){			
+			var  option = {};
+			option.icon = 'arrow-r';
+			if(o.corners){
+				option.conrners = false;
+			}
+			if(o.icon){
+				option.icon = o.icon;
+			}
+			if(o.iconpos){
+				option.iconpos = o.iconpos;
+			}
+			if(o.iconshadow){
+				option.iconshadow = false;
+			}
+			if(o.inline){
+				option.inline = true;
+			}
+			if(o.mini){
+				option.mini = true;
+			}
+			if(o.nativeMenu){
+				option.nativeMenu = false;
+			}
+			if(o.overlayTheme){
+				option.overlayTheme = o.overlayTheme;
+			}
+			if(o.preventFocusZoom){
+				option.preventFocusZoom = false;
+			}
+			if(o.shadow){
+				option.shadow = false;
+			}
+			if(o.theme){
+				option.theme = o.theme;
+			}
+			if(this.select.data("mobileSelectmenu")){
+				this.select.data("mobileSelectmenu").destroy();
+			}
+			this.select.selectmenu(option);
+		}
 	},
 	
 	_design:function(){
 		this.select.detach();
 
 		var self = this, o = this.options, c = this.content;
+		if(o.mobile){
+			c.html('<div class="ui-select">\
+					<a class="ui-btn ui-shadow ui-btn-corner-all ui-btn-icon-right ui-btn-up-c">\
+					<span class="ui-btn-inner">\
+					<span class="ui-btn-text"><span>' + o.selectItems[0].label + '</span></span><span class="ui-icon ui-icon-arrow-d ui-icon-shadow">&nbsp;</span></span></a>\
+					<select>\
+					  </select>\
+					    </div>');
+		}else{
 		if(c.is(".ui-resizable")) c.resizable("destroy");
 		$.each(o.selectItems, function(){
 			if(this.value == o.value){
@@ -28199,6 +28636,7 @@ $.widget( "an.selectfield", $.an.field, {
 				self._trigger("resize",null, {size:ui.size, oldSize:ui.originalSize});
 			}
 		});
+		}
 	},
 	
 	_handleChange:function(key, value, oldValue){
@@ -28206,6 +28644,9 @@ $.widget( "an.selectfield", $.an.field, {
 			this.element.children("label").remove();
 			this._createLabel();
 		}else if(key == "selectItems"){
+			this.select.remove();
+			this._createControl();
+		}else if(this.options.mobile){
 			this.select.remove();
 			this._createControl();
 		}else{
@@ -28259,7 +28700,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 				$("<img class='button' width='24' height='24' src='stylesheets/images/delete.png' />").appendTo(this)
 				    .position({of: $(this), my: "right top", at: "right top"});
 			}else if(e.type == "mouseleave"){
-				$(this).find("img.button").remove();	
+				$(this).find("img.button").remove();
 			}
        }).delegate("img.button", "hover.filefield", function(e){
 			if(e.type == "mouseenter"){
@@ -28288,7 +28729,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 		this.input = $("<input type='file'/>").hide().appendTo(this.element);
 		this.element.append($('<input id="btnCancel" type="button" value="Cancel" disabled="disabled" style="display:none;" />'));
 	},
-	
+
 	_createSwfUpload:function(placeElem,callback){
 		var settings = {
 			flash_url : "javascripts/swfupload/swfupload.swf",
@@ -28370,9 +28811,9 @@ $.widget( "an.filefield", $.an.inputfield, {
 			}
 		}
 	},
-	
+
 	_addIcon:function(file){
-		var o = this.options, li = $("<li/>").attr("data-id", file._id), 
+		var o = this.options, li = $("<li/>").attr("data-id", file._id),
 		    imgsrc = "stylesheets/images/file.png", href = "";
 		var imgFormat="jpg,jpeg,png,gif";
 		if(file._tmp){
@@ -28388,7 +28829,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 				imgsrc += "#" + href;
 			}
 		}
-		
+
 	    var img = $("<img/>").css({width:o.itemWidth, height:o.itemHeight}).attr("src", imgsrc);
 	    if(o.downloadable){
 	    	img.wrap("<a target='_blank'/>").parent().attr("href", href).appendTo(li);
@@ -28400,7 +28841,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 	    if(o.showFileSize) $("<span/>").text(file.length).appendTo(li);
 	    li.prependTo(this.files);
 	},
-	
+
 	_addUploadButton: function(target){
 		var o = this.options;
 		if((target.size() >= o.maxCount)||(target.size()>=1 && o.maxCount==1)) return target;
@@ -28409,7 +28850,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 //	    $("<strong/>").text("Upload...").appendTo(li);
 	    return target.add(li.get());
 	},
-	
+
 	_delUploadButton:function(){
 		this.files.find("li#uploadButton").remove();
 	},
@@ -28421,7 +28862,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 		}else{
 			data = this.data.find("li");
 		}
-		
+
 		function sorted(data, customOptions) {
 			var options = {
 				reversed : false,
@@ -28443,7 +28884,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 			});
 			return $(arr);
 		};
-		
+
 		if (by == 'size') {
 			data = sorted(data, {
 				by : function(v) {
@@ -28462,14 +28903,14 @@ $.widget( "an.filefield", $.an.inputfield, {
 			data = this._addUploadButton(data);
 		}
 
-		this.files.quicksand(data, { 
-			duration : 800, 
-			easing : 'easeInOutQuad', 
+		this.files.quicksand(data, {
+			duration : 800,
+			easing : 'easeInOutQuad',
 //			adjustHeight : "dynamic",
 			useScaling : true
 		}, function(){});
 	},
-	
+
 	_handleChange:function(key, value, oldValue){
 		if(key === "sortBy"){
 			var o = this.options;
@@ -28481,7 +28922,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 			$.an.inputfield.prototype._handleChange.apply(this, arguments );
 		}
 	},
-	
+
 	refresh:function(){
 		var self = this, o = this.options, c = this.content;
 		if(c.is(".ui-resizable")) c.resizable("destroy");
@@ -28500,7 +28941,7 @@ $.widget( "an.filefield", $.an.inputfield, {
 
 		this.loadIcons();
 	},
-	
+
 	destroy: function() {
 		this.swfUpload&&this.swfUpload.destroy();
 		this.content.undelegate(".filefield");
@@ -28858,9 +29299,43 @@ $.widget( "an.jsrenderfield", $.an.field, {
 $.widget( "an.buttonwidget",  $.an.widget, {
 
 	_create: function() {
+		var o = this.options;
 		$.an.widget.prototype._create.apply(this, arguments);
 		this.element.addClass("an-buttonwidget");
-		this.content.button({label:this.options.label});
+		var opts = {label:this.options.label};
+		if (o.mobile) {
+			// opts = {corners:true, icon:"star", iconpos: "right" , iconshadow: false, inline: true, mini: true, shadow: false, theme: "a"};
+			opts.corners = true;
+			opts.iconshadow = false;
+			if (o.data_transition) {
+				opts.transition = o.data_transition;
+			}
+			
+			if (o.data_icon) {
+				opts.icon = o.data_icon;
+			}
+			
+			if (o.data_iconpos) {
+				opts.iconpos = o.data_iconpos;
+			}
+			
+			if (o.data_theme) {
+				opts.theme = o.data_theme;
+			}
+			
+			if (o.data_inline) {
+				opts.inline = o.data_inline;
+			}
+			
+			if (o.isMini) {
+				opts.mini = true;
+			}
+			
+			var t = this.content.button(opts);
+			$($($($(t).parent()).find(">span")).find(">span").eq(0)).html(this.options.label);
+		} else {
+			this.content.button(opts);
+		}
 	},
 
 	_makeResizable:function(){},
@@ -28870,6 +29345,47 @@ $.widget( "an.buttonwidget",  $.an.widget, {
 			this.content.button("option","label",value);
 		}else {
 			$.an.widget.prototype._handleChange.apply(this, arguments);
+		}
+	},
+	
+	_design:function() {
+		var o = this.options;
+		if (o.mobile) {
+			var dat = '<div data-corners="true" data-shadow="true" data-iconshadow="false"\
+				data-wrapperels="span"  data-disabled="true" data-label="' + o.label + '"\
+				aria-disabled="false">\
+				<span class="ui-btn-inner">\
+					<span class="ui-btn-text">' + o.label + '</span>';
+			if (o.data_icon) {
+				dat += '<span class="ui-icon ui-icon-arrow-d">&nbsp;</span>';
+			}
+				dat += '</span>\
+				<div class="content ui-btn-hidden" data-disabled="false"></div>\
+			</div>';
+			var html = $(dat);
+			
+			if (o.data_icon) {
+				html.addClass("ui-btn-icon-" + o.data_icon);
+			}
+			
+			if (o.data_iconpos) {
+				html.addClass('ui-btn-icon-' + o.data_iconpos);
+			}
+			
+			if (o.data_theme) {
+				html.addClass("ui-btn-up-" + o.data_theme);
+			}
+			
+			if (o.data_inline) {
+				html.addClass("ui-btn-inline");
+			}
+			
+			if (o.isMini) {
+				html.addClass('ui-mini');
+			}
+			
+			html.addClass("ui-btn ui-shadow ui-btn-corner-all");
+			this.content.html(html);
 		}
 	},
 	
@@ -29039,6 +29555,82 @@ $.widget( "an.tabsxwidget", $.an.widget, {
 	}
 });
 })( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+ * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+ * and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+ * This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function($, undefined) {
+
+	$.widget("an.searchfield", $.an.inputfield, {
+		_create : function() {
+			$.an.inputfield.prototype._create.apply(this, arguments);
+			this.element.addClass("an-searchfield");
+		},
+
+		_createControl : function() {
+			$.an.inputfield.prototype._createControl.apply(this, arguments);
+			if (this.options.mobile) {
+				this.input.attr('data-type', "search");
+				var el = this.element.find(".content").eq(0);
+				el.removeClass("ui-input-text");
+				el.addClass("ui-input-search ui-icon-search ui-icon-searchfield");
+			}
+		},
+
+		_makeResizable : function() {
+		},
+
+		_browser : function() {
+			$.an.inputfield.prototype._browser.apply(this, arguments);
+		},
+
+		_edit : function() {
+			this.input.detach().val(this.options.value).appendTo(this.content.empty(), arguments);
+			if (this.options.mobile) {
+				var self = this;
+				var delButton = '<a style="position: absolute;right: 20px; top: 17px;display:none;" class="ui-input-clear ui-btn ui-shadow ui-btn-corner-all ui-fullsize ui-btn-icon-notext ui-btn-up-c" href="#" data-corners="true" data-shadow="true" data-iconshadow="true" data-wrapperels="span" data-icon="delete" data-iconpos="notext" data-theme="c" data-mini="false">\
+					<span class="ui-btn-inner">\
+					<span class="ui-btn-text">clear text</span>\
+					<span class="ui-icon ui-icon-delete ui-icon-shadow">&nbsp;</span>\
+					</span></a>';
+				$(delButton).bind("click", function(e) {
+					self.input.val('');
+					$(this).hide();
+				}).appendTo(this.content);
+				
+				this.input.bind("keyup.inputfield", function(e) {
+					$($(e.target).siblings()).show();
+				}).bind("keydown.inputfield", function(e) {
+					$($(e.target).siblings()).show();
+				});
+			}
+		},
+
+		_design : function() {
+			$.an.inputfield.prototype._design.apply(this, arguments);
+		},
+
+		_handleChange : function(key, value, oldValue) {
+			$.an.inputfield.prototype._handleChange.apply(this, arguments);
+		},
+
+		highlight : function(highlight) {
+			(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover", highlight);
+		},
+
+		destroy : function() {
+			this.input && this.input.unbind(".inputfield").remove();
+			this.element.removeClass("an-inputfield");
+			return $.an.field.prototype.destroy.apply(this, arguments);
+		} });
+})(jQuery);
 /*!
  * Agile Notes 1.0
  *
@@ -30516,6 +31108,17 @@ $.widget( "an.rte", {
 					doc.execCommand('styleWithCSS', false, o.styleWithCSS);
 				}catch(e){}
 			}
+			
+			if (o.mobile) {
+				var iself = this;
+				this.width = "100%";
+				setTimeout(function() {
+					var bHeight = iself.contentWindow.document.body.scrollHeight;
+					var dHeight = iself.contentWindow.document.documentElement.scrollHeight;
+					var height = Math.max(bHeight, dHeight);
+					iself.height = height; 
+				}, 500);
+			}
 
 			self.$body = $(body);
 			if(o.cssClass) self.$body.addClass(o.cssClass);
@@ -30534,6 +31137,11 @@ $.widget( "an.rte", {
 		$.each(o.jsFiles,function(){
 			html +="<script type='text/javascript' language='javascript' src='"+this+"'></script>";
 		});
+		
+		/*if (o.mobile && o.modelType === 'page') {
+			html += '<script src="javascripts/jquery.mobile-1.3.1.js"></script>\
+				<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">';
+		}*/
 		html += '<style id="stylesheet" type="text/css">'+(o.stylesheet||"")+'</style>';
 
 		doc.open();
@@ -31833,8 +32441,9 @@ $.widget( "an.rte", {
     	var o = this.options, sel = o.selection, n = sel.getStart(), $n = $(n);
     	if(!$n.is('.widget[type='+type+']')){
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
-    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime",
-    		                                          "textarea", "file","grid","jsrender","password","rte"])!=-1);
+    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime", "mobiledate",
+    		                                          "textarea", "file","grid","jsrender","password","rte", "search",
+    		                                          "toggle", "listview","customhtml"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
     		n = $n.get(0);
     	}
@@ -31862,6 +32471,9 @@ $.widget( "an.rte", {
 			}else if($n.is(".box") && attrs[type+"box"]){
 				md[type+"box"] = attrs[type+"box"];
 				delete attrs[type+"box"];
+			}else if($n.is(".widget") && attrs[type+"widget"]){
+				md[type+"widget"] = attrs[type+"widget"];
+				delete attrs[type+"widget"];
 			}
 			if(!equals(md, oldmd)){
 				$n.setMetadata(md);
@@ -33185,10 +33797,39 @@ $.widget( "an.page", {
 		mode:'browser',
 		actionSets: [],
 		wrapper:"<div/>",
+		modelType:'page',
 		formIds:{
 			button:["5080143085ac60df09000001","50de596da092007b11000001"],
 		    tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"]
+		},
+		mFormIds:{
+			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
+
+			text:["5080143085ac60df09000001","519095a03bcccb65f400008b"],
+			search:["5080143085ac60df09000001","51932b05ac8f2725e1000048"],
+			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
+			checkbox:["5080143085ac60df09000001","519dbd9c3bcccb444800008c", "51a2ffeeac8f275c2700013b"],
+			button:["5080143085ac60df09000001","51933105ac8f2712ab000069"],
+			slider:["5080143085ac60df09000001","51a5a62dac8f2755d2000069"],
+			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
+			textarea:["5080143085ac60df09000001","50af2ca66cec663c0a000008"],
+			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
+			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
+			grid:["5080143085ac60df09000001","5089e21f2b2255080a000005"],
+			jsrender:["5080143085ac60df09000001","514d0a46caa05a669e0005c8","514d0e9dcaa05a26e30001af","514d0825caa05a669e0002ae","514d5ef3ac8f27413200014e"],
+			radio:["5080143085ac60df09000001","51a2b48dac8f2770b7000001","51850c1ca092003b12000024"],
+			select:["5080143085ac60df09000001","51af125321c7d61a65000024","508259700b27990c0a000003"],
+			box:["5080143085ac60df09000001","50de56d0a092007b11000000","50ea38efa0920073870000ef"],
+		    rte:["5080143085ac60df09000001"],
+            collapsible:["5080143085ac60df09000001","51a8639ebd94293c2f000081"],
+			mobiledate:["5080143085ac60df09000001","51c967a3ba4682122900004a"],
+		    toggle:["5080143085ac60df09000001","51a565753bcccb5b0e0000ac"],
+		    navbar:["5080143085ac60df09000001", "51c17808caa05a042500004a", "51c02b6eac8f274167000120"],
+		    listview:["5080143085ac60df09000001","51ad5e1f21c7d6296100006c","51ad54a921c7d63144000144"],
+		    customhtml:["5080143085ac60df09000001","51c175e221c7d6118800023a"],
+            swipe:["5080143085ac60df09000001","51ca58ebedad5734e8000023"]
 		}
 	},
 
@@ -33196,13 +33837,15 @@ $.widget( "an.page", {
 		this.element.addClass("an-page");
 		var o = this.options, page = o[this.widgetName];
 		$.extend(this, eval("try{("+(page.methods||"{}")+")}catch(e){}"));
-		
+
 		o.cssFiles = o.cssFiles || [];
 		o.jsFiles = o.jsFiles || [];
 		if(o.mobile){
-			o.cssFiles = [""].concat(o.cssFiles);
+			o.cssFiles = ["stylesheets/jquery.mobile-1.3.1.min.css",
+			              "stylesheets/jquery.an.mwidget.css"].concat(o.cssFiles);
 			o.jsFiles = ["javascripts/jquery-1.8.2.js",
 			             "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
+			o.formIds = o.mFormIds;
 		}else{
 			o.cssFiles = ["stylesheets/rte/rte-design.css",
 			          "stylesheets/jquery-ui-1.8.24.custom.css",
@@ -33228,16 +33871,16 @@ $.widget( "an.page", {
 			          "stylesheets/jquery.an.rte.css",
 			          "stylesheets/base.css"].concat(o.cssFiles);
 	        o.jsFiles = ["javascripts/jquery-1.8.2.js",
-	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);	
+	                     "javascripts/jquery.scrollto.js"].concat(o.jsFiles);
 		}
-		
+
 		this._initPage();
 	},
-	
+
 	_initPage:function(){
 		this.refresh();
 	},
-	
+
 	_createOutline:function(){
 		var self = this, page = this.options[this.widgetName], root = this._getPage();
 		return {
@@ -33269,11 +33912,11 @@ $.widget( "an.page", {
 			getId: function(node){ return node.id ? node.id : null; }
 		};
 	},
-	
+
 	_isContainer:function(el){
 		return el.is("[type=tabsx], [type=box]");
 	},
-	
+
 	_getWidgetObj:function(el){
 		var widget = null, type = el.attr("type");
 		if(el.is(".box")){
@@ -33283,7 +33926,7 @@ $.widget( "an.page", {
 		}
 		return widget;
 	},
-	
+
 	option: function(key, value) {
 		var o = this.options;
 		if(key === "actionSets" && value === undefined){
@@ -33294,7 +33937,7 @@ $.widget( "an.page", {
 			if(o.isDirty) this._syncPageContent();
 			return o[this.widgetName].content;
 		}
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
+		var ret = $.Widget.prototype.option.apply(this, arguments );
 		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
 	},
 
@@ -33305,9 +33948,9 @@ $.widget( "an.page", {
 			this._handleChange(key,value,oldValue);
 			this._trigger("optionchanged",null,{key:key, value:value, oldValue:oldValue});
 		}
-		return this; 
+		return this;
 	},
-	
+
 	_handleChange:function(key, value, oldValue){
 		var o = this.options;
 		if(key === "mode"){
@@ -33329,7 +33972,7 @@ $.widget( "an.page", {
 		var o = this.options;
 		this["_"+o.mode] && this["_"+o.mode]();
 	},
-	
+
 	_browser:function(){
 		this.rte && this.rte.hide();
 		if(!this.$page){
@@ -33385,7 +34028,7 @@ $.widget( "an.page", {
 			w && w.widget().show();
 		});
 	},
-	
+
 	hideWidget:function(){
 		var self = this;
 		$.each(arguments,function(){
@@ -33393,7 +34036,7 @@ $.widget( "an.page", {
 			w && w.widget().hide();
 		});
 	},
-	
+
 	_createPage:function(){
 		var o = this.options, page = o[this.widgetName], el = this.element;
 		$('<style type="text/css">'+(page.stylesheet||"")+'</style>').appendTo(el);
@@ -33404,8 +34047,61 @@ $.widget( "an.page", {
 		$.each(eval("("+(o[this.widgetName].actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
-		
+
+		if(o.mobile)this._refreshMobileToolbar();
 		this._refreshWidgets();
+	},
+
+	_refreshMobileToolbar:function(){
+		try{
+			var $page = this.element.parents(".ui-page-active"),
+				o = $page.data( "mobile-page" ).options,
+				pageRole = $page.jqmData( "role" ),
+				pageTheme = o.theme;
+
+			$( ":jqmData(role='header'), :jqmData(role='footer'), :jqmData(role='content')", $page ).jqmEnhanceable().each(function() {
+				var $this = $( this ),
+					role = $this.jqmData( "role" ),
+					theme = $this.jqmData( "theme" ),
+					contentTheme = theme || o.contentTheme || ( pageRole === "dialog" && pageTheme ),
+					$headeranchors,
+					leftbtn,
+					rightbtn,
+					backBtn;
+				$this.addClass( "ui-" + role );
+
+				//apply theming and markup modifications to page,header,content,footer
+				if ( role === "header" || role === "footer" ) {
+					var thisTheme = theme || ( role === "header" ? o.headerTheme : o.footerTheme ) || pageTheme;
+					$this.addClass( "ui-bar-" + thisTheme ).attr( "role", role === "header" ? "banner" : "contentinfo" );
+					if ( role === "header") {
+						$headeranchors	= $this.children( "a, button" );
+						leftbtn	= $headeranchors.hasClass( "ui-btn-left" );
+						rightbtn = $headeranchors.hasClass( "ui-btn-right" );
+						leftbtn = leftbtn || $headeranchors.eq( 0 ).not( ".ui-btn-right" ).addClass( "ui-btn-left" ).length;
+						rightbtn = rightbtn || $headeranchors.eq( 1 ).addClass( "ui-btn-right" ).length;
+					}
+					// Auto-add back btn on pages beyond first view
+					if ( o.addBackBtn &&
+						role === "header" &&
+						$( ".ui-page" ).length > 1 &&
+						$page.jqmData( "url" ) !== $.mobile.path.stripHash( location.hash ) &&!leftbtn ) {
+						backBtn = $( "<a href='javascript:void(0);' class='ui-btn-left' data-"+ $.mobile.ns +"rel='back' data-"+ $.mobile.ns +"icon='arrow-l'>"+ o.backBtnText +"</a>" ).attr( "data-"+ $.mobile.ns +"theme", o.backBtnTheme || thisTheme ).prependTo( $this );
+					}
+					// Page title
+					$this.children( "h1, h2, h3, h4, h5, h6" ).addClass( "ui-title" ).attr({"role": "heading","aria-level": "1"});
+				} else if ( role === "content" ) {
+					if ( contentTheme ) {
+						$this.addClass( "ui-body-" + ( contentTheme ) );
+					}
+					// Add ARIA role
+					$this.attr( "role", "main" );
+				}
+			});
+		}catch(e) {
+
+		}
+
 	},
 
 	_createRTE:function(stylesheet){
@@ -33415,6 +34111,8 @@ $.widget( "an.page", {
 			cssFiles:o.cssFiles,
 			jsFiles:o.jsFiles,
 			dbId:o.dbId,
+			mobile:o.mobile,
+			modelType:o.modelType,
 			stylesheet:stylesheet,
 			cssClass:page.name,
 			restore:function(page){self._refreshWidgets(page); },
@@ -33423,10 +34121,10 @@ $.widget( "an.page", {
 					var $this = $(this),wid;
 					wid = self._getWidgetObj($this);
 					wid&&wid.destroy();
-				});	
+				});
 			},
 			onload:function(){
-				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc")); 
+				var sel = self.rte.rte("option","selection"), $doc = $(self.rte.rte("option","doc"));
 				$doc.bind("paste.page",function(e){
 					setTimeout(function(){
 						self._refreshWidgets();
@@ -33437,7 +34135,7 @@ $.widget( "an.page", {
 					$doc.find(".widget.selected").removeClass("selected");
 					if(e.type == "widgetclick" || e.type == "widgetdblclick"){
 						if(widget.selectable(e.originalEvent)){
-							var el = widget.widget(); 
+							var el = widget.widget();
 							el.addClass("selected");
 							!$.browser.chrome&&sel.select(el[0]);
 							self._trigger("widgetselect",null, widget);
@@ -33445,7 +34143,7 @@ $.widget( "an.page", {
 						self.rte.rte("updatePath");
 						if(e.type=="widgetdblclick"){
 							var type = widget.option("type");
-							if(self.rteWidgetActive(type)) self.rteWidget(type);	
+							if(self.rteWidgetActive(type)) self.rteWidget(type);
 						}
 					}
 					self.rte.trigger(e, widget);
@@ -33469,7 +34167,7 @@ $.widget( "an.page", {
 	_getPage:function(){
 		return this.options.mode=="design" ? $(this.rte.rte("option","doc")): this.$page;
 	},
-	
+
 	_refreshWidgets: function(page){
 		var self = this;
 		(page || this._getPage()).find(".widget").each(function(){
@@ -33477,7 +34175,7 @@ $.widget( "an.page", {
 		});
 		return this;
 	},
-	
+
 	_refreshWidget: function(el){
 		var self = this, o = this.options, type = el.attr("type");
 		if(el.is(".box")){
@@ -33492,6 +34190,7 @@ $.widget( "an.page", {
 					parent:function(){return self;},
 					mode:o.mode,
 					dbId:o.dbId,
+					mobile:o.mobile,
 					toolbarActions:actions,
 					optionchanged:function(e,data){
 						if(data.key == "metadata" || data.key == "attributes"){
@@ -33507,8 +34206,9 @@ $.widget( "an.page", {
 			}else{
 				el[type+"widget"]({
 					parent:function(){return self;},
-					mode:o.mode, 
+					mode:o.mode,
 					dbId:o.dbId,
+					mobile:o.mobile,
 					optionchanged:function(e,data){
 						if(data.key == "metadata" || data.key == "attributes"){
 							self.option("isDirty",true);
@@ -33519,7 +34219,7 @@ $.widget( "an.page", {
 			}
 		}
 	},
-	
+
 	_createActionSets:function(){
 		if(this.options.mode == "design"){
 			return [this._controlActionSet(),this._formatActionSet(), this._tableActionSet()];
@@ -33530,7 +34230,7 @@ $.widget( "an.page", {
 		var actions = this.rte.rte("option","actions");
 		return this._createActionSet(["properties","cleanFormat"],actions);
 	},
-	
+
 	_formatActionSet:function(){
 		var actions = this.rte.rte("option","actions");
 		return this._createActionSet(["bold","italic","underline","strikethrough","subscript",
@@ -33539,10 +34239,10 @@ $.widget( "an.page", {
 		        "indent","orderedList","unorderedList","link","deleteLink","horizontalRule",
 		        "blockQuote","blockElement","stopFloat","image"],actions);
 	},
-	
+
 	_tableActionSet:function(){
 		var actions = this.rte.rte("option","actions");
-		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow", 
+		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow",
 		"columnBefore","columnAfter","deleteColumn", "cellProps","mergeCells",
 		"splitCells"],actions);
 	},
@@ -33565,7 +34265,7 @@ $.widget( "an.page", {
 		this.rte && this.rte.rte("rteWidget", type, this.options.formIds[type], opts);
 		return this;
 	},
-	
+
 	rteWidgetActive: function(type){
 		return this.rte && this.rte.rte("rteWidgetActive", type);
 	},
@@ -33577,24 +34277,24 @@ $.widget( "an.page", {
 	sourceCode:function(){
 		if(this.rte){
 			var mode = this.rte.rte("option", "mode");
-			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");	
+			this.rte.rte("option", "mode", mode =="sourcecode"?"design":"sourcecode");
 		}
 	},
-	
+
 	sourceCodeActive:function(){
-		return this.rte && this.rte.rte("option", "mode") == "sourcecode"; 
+		return this.rte && this.rte.rte("option", "mode") == "sourcecode";
 	},
-	
+
 	// TODO: optimize following code.
 	handler: function(){self.option("mode",o.mode =="sourcecode"?"design":"sourcecode");},
 	checked: function(){return o.mode =="sourcecode";},
-	
+
 	highlightWidget: function(id, highlight){
-		var w = this.getWidget(id); 
+		var w = this.getWidget(id);
 		w&&w.highlight(highlight);
 		return this;
 	},
-	
+
 	scrollTo: function(id, opts){
 		var o = this.options;
 		if(o.mode == "design"){
@@ -33604,7 +34304,7 @@ $.widget( "an.page", {
 			this.$page.find("#"+id).scrollTo(opts);
 		}
 	},
-	
+
 	save: function(){
 		var self =this, o = this.options, page = o[this.widgetName];
 		if(o.isDirty){
@@ -33615,18 +34315,39 @@ $.widget( "an.page", {
 		}
 		return this;
 	},
-	
-	print: function(){ 
-		var o = this.options, loc = window.location, 
+
+	print: function(){
+		var o = this.options, loc = window.location,
 		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&pageid="+o[this.widgetName]._id;
 		print(url);
 		return this;
 	},
-	
+
 	destroy: function() {
 		$(this.options.document).unbind(".page");
 		this.element.unbind(".page").removeClass("an-page").children("style").remove();
 		return $.Widget.prototype.destroy.apply( this, arguments );
+	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.mpage", $.an.page, {
+	_create: function() {
+		this.element.addClass("an-mpage");
+		if (this.widgetName == 'mpage') this.widgetName = 'page';
+		$.an.page.prototype._create.apply(this, arguments);
 	}
 });
 })( jQuery );/*!
@@ -33651,6 +34372,7 @@ $.widget( "an.form", $.an.page, {
 			password:["5080143085ac60df09000001","5185ac02a092006ca6000048"],
 			checkbox:["5080143085ac60df09000001","50af2d266cec663c0a000009"],
 			datetime:["5080143085ac60df09000001","50af2da26cec663c0a00000b"],
+			mobiledate:["5080143085ac60df09000001","51c967a3ba4682122900004a"],
 			textarea:["5080143085ac60df09000001","50af2ca66cec663c0a000008"],
 			tabsx:["5080143085ac60df09000001","51306faad58d1c129f000000"],
 			file:["5080143085ac60df09000001","50ceb75ba092004120000000"],
@@ -33717,6 +34439,7 @@ $.widget( "an.form", $.an.page, {
 		$.an.page.prototype._createPage.apply(this, arguments);
 		this.validator = this.$page.validate($.extend({
 			meta:"validate",
+			ignore:"",
 			errorPlacement: function(error, el) {
 				error.insertAfter(el.closest("div.field"));
 			}
@@ -33739,12 +34462,13 @@ $.widget( "an.form", $.an.page, {
 					value:value,
 					url:o.url,
 					mode:o.mode,
+					mobile:o.mobile,
 					optionchanged:function(e,data){
-						if(data.key == "value"){
+						if(data.key == "value" && doc.prop){
 							var id = $(e.target).attr("id");
 							id = id&&id.replace(/-/g,".");
 							var curValue = doc.prop(id);
-							if(curValue != data.value){
+							if(curValue != data.value ){
 								doc.prop(id,data.value,data["transient"]);
 							}
 						}else if(data.key == "metadata" || data.key == "attributes"){
@@ -34737,7 +35461,7 @@ $.widget( "an.view", {
 		mode: "browser",
 		actionSets:[]
 	},
-	
+
 	_create: function(){
 		var o = this.options, el = this.element;
 		el.addClass("an-view").addClass(o.view.name).empty();
@@ -34748,15 +35472,15 @@ $.widget( "an.view", {
 		o.total = o.total||parseInt(o.view.total)||0;
 		o.filter = o.filter||o.view.filter;
 		o.showPager = o.showPager||o.view.showPager;
-		
+
 		try{$.extend(this, eval("("+(o.view.methods||"{}")+")"));}catch(e){console.log(e);};
-		
+
 		var data = {};
 		data[this.widgetName] = this;
 		$.each(eval("("+(o.view.actions||"[]")+")"), function(k,action){
 			el.bind(action.events, data, action.handler);
 		});
-		
+
 		o.showPager&&this._createPager();
 
 		this.docs = [];
@@ -34764,7 +35488,7 @@ $.widget( "an.view", {
 	},
 
 	option: function(key, value) {
-		var ret = $.Widget.prototype.option.apply(this, arguments ); 
+		var ret = $.Widget.prototype.option.apply(this, arguments );
 		return ret === undefined ? null : ret; // return null not undefined, avoid to return this dom element.
 	},
 
@@ -34777,13 +35501,13 @@ $.widget( "an.view", {
 		}
 		return this;
 	},
-	
+
 	_handleChange:function(key,value,oldValue){
 		if(key === "mode" || key === "view"){
 			this.refresh();
 		}
 	},
-	
+
 	_createPager:function(){
 		var o = this.options,self=this;
 		this.pager = $("<div style='display:none;' class='pager'/>").css({
@@ -34820,33 +35544,33 @@ $.widget( "an.view", {
 
 		this.pager.append("<div class='info'>");
 	},
-	
-	firstpage:function(e,data){ 
-		this.options.skip = 0; 
+
+	firstpage:function(e,data){
+		this.options.skip = 0;
 		this._loadDocs();
 	},
-	
+
 	prevpage:function(){
 		var o = this.options;
 		o.skip = o.skip - o.limit;
-		this._loadDocs(); 
+		this._loadDocs();
 	},
-	
+
 	gotopage:function(page){
 		var o = this.options;
 		o.skip = (page-1)*o.limit;
 		this._loadDocs();
 	},
-	
+
 	nextpage:function(){
 		var o = this.options;
 		o.skip = o.skip + o.limit;
 		this._loadDocs();
 	},
-	
+
 	lastpage:function(){
 		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		o.skip = Math.floor(o.total/o.limit)*o.limit;
 		this._loadDocs();
 	},
 
@@ -34883,17 +35607,32 @@ $.widget( "an.view", {
 			this.pager.find(".info").html(info);
 		}
 	},
-	
+
 	reload: function(){
 		this._loadDocs();
 	},
 
 	_loadDocs:function(){
-		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
+		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr, taskUrl = o.view.taskUrl;
 
 		if($.type(o.view.sort)=="string"){
 			opts.sort=eval("("+o.view.sort+")");
 		}
+
+        if($.type(taskUrl) == 'string' && taskUrl.replace(/(^\s*)|(\s*$)/g,'') != ''){
+            var param = {};
+            param.filter = typeof filter == 'string' ? eval("("+filter+")") : filter;
+            param.skip = o.skip;
+            param.limit = o.limit;
+            param.sort = o.view.sort;
+            $.get(taskUrl,param,function(data){
+                self.docs = data.docs;
+				try{self._docsLoaded && self._docsLoaded();}catch(e){};
+				self._trigger("documentloaded",null,data);
+            })
+            return;
+        }
+
 		if($.type(sel)=="string"){
 			sel = eval("("+sel+")");
 			if($.type(filter)=="string"){
@@ -34913,25 +35652,25 @@ $.widget( "an.view", {
 			});
 		}
 	},
-	
+
 	_getRow: function(row){
 		return this.docs[row-this.options.skip];
 	},
-	
+
 	_delRow: function(row){
 		var self = this, o = this.options;
 		Model.deleteDocument(o.dbId, this.docs[row-o.skip]._id,null, function(err,result){
 			self._loadDocs();
 		});
 	},
-	
+
 	save:function(){
 		var self = this, o = this.options, view = o.view;
 		Model.updateDocument(o.dbId, view._id, view, null, function(err,result){
 			self.option("isDirty",false);
 		});
 	},
-	
+
 	destroy: function() {
 		this.element.children("style").remove();
 		this.element.unbind(".view").empty();
@@ -35175,7 +35914,7 @@ $.widget( "an.customview", $.an.view, {
 		if (o.templateTemp) {
 			var html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
-		}
+		}		
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
 			$.views.converters(o.templateConverts);
@@ -35251,15 +35990,16 @@ $.widget( "an.editor", {
 			forms[v._id] = v; 
 		});
 
-		el.append("<ul/>").tabsx({
+		el.append("<ul />").tabsx({
 			tabTemplate: "<li><a href='#{href}' hidefocus='true'>#{label}</a></li>",
 			show: function(event, ui) {
 				var $p = $(ui.panel), id = $p.attr("id"), d = forms[id], type = d.type;
-				if($p.is(".an-form,.an-page,.an-view")){
+				if($p.is(".an-form,.an-page,.an-view,.an-mpage")){
 					var data = $p.data();
 					for(var i in data){
-						if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){
+						if($.inArray(i, ["form","page", "mpage","gridview","formview","customview","view","mobilelistview"]) != -1){
 							if(!o.design || !(/-design$/.test(id))) data[i].option("mode", o.mode);
+							data[i].option("mobile", o.mobile);
 							self._trigger("tabshow",event, data[i]);
 							break;
 						}
@@ -35272,6 +36012,7 @@ $.widget( "an.editor", {
 							change:function(){ 
 								o.change&&o.change();
 							},
+							mobile:o.mobile,
 							readOnly:o.readOnly,
 							widgetselect: o.widgetselect,
 							optionchanged:function(e,data){
@@ -35283,7 +36024,7 @@ $.widget( "an.editor", {
 										el.tabsx("option","panels").each(function(){
 											var data = $(this).data();
 											for(var i in data){
-												if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1){ 
+												if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1){ 
 													isFormDirty = data[i].option("isDirty");
 													if(isFormDirty) break;
 												}
@@ -35319,7 +36060,7 @@ $.widget( "an.editor", {
 							    view: d,
 							    create:function(){ self._trigger("tabcreated",event, $(this).data(vt)); }
 						    };
-						if(vt == "formview"||vt == "customview") optsx.form = o.form;
+						if(vt == "formview"||vt == "customview"||vt == "mobilelistview") optsx.form = o.form;
 						$p[vt]($.extend(true,optsx,opt));
 					}
 				}
@@ -35355,12 +36096,12 @@ $.widget( "an.editor", {
 				var docId = doc._id+"-design", dd= $.extend(true, {}, doc);
 				el.children("#"+docId+".ui-tabs-panel").each(function(){
 					var $this = $(this);
-					if($this.is(".an-form,.an-page,.an-view")){
+					if($this.is(".an-form,.an-page,.an-view,.an-mpage")){
 						var data = $this.data();
 						for(var i in data){
-							if($.inArray(i, ["form","page"]) != -1){
+							if($.inArray(i, ["form","page", "mpage"]) != -1){
 								$this[i]("option",i,dd);
-							}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+							}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 								$this[i]("option","view",dd);
 							}
 						}
@@ -35392,12 +36133,12 @@ $.widget( "an.editor", {
 					}
 					el.children("#"+id+".ui-tabs-panel").each(function(){
 						var $this = $(this);
-						if($this.is(".an-form,.an-page,.an-view")){
+						if($this.is(".an-form,.an-page,.an-view,.an-mpage")){
 							var data = $this.data();
 							for(var i in data){
-								if($.inArray(i, ["form","page"]) != -1){
+								if($.inArray(i, ["form","page", "mpage"]) != -1){
 									$this[i]("option",i,forms[id]);
-								}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+								}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 									$this[i]("option","view",forms[id]);
 								}
 							}
@@ -35462,7 +36203,7 @@ $.widget( "an.editor", {
 							self.element.tabsx("select", form.option("form")._id);
 						}
 					}
-				}else if($.inArray(i, ["gridview","formview","customview","view"]) != -1){
+				}else if($.inArray(i, ["gridview","formview","customview","view","mobilelistview"]) != -1){
 					if(data[i].option("isDirty")){
 						if(data[i].option("view")._id == o.document._id){
 							o.document.options = $.extend(true,o.document.options, data[i].option("viewOptions"));
@@ -35601,7 +36342,7 @@ $.widget( "an.editor", {
 		if(o.design && (id == o.document._id)) id = id+"-design";
 		var data = this.element.tabsx("panel", id).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -35609,7 +36350,7 @@ $.widget( "an.editor", {
 	_currentForm:function(){
 		var data = $(this.element.tabsx("option","selectedPanel")).data();
 		for(var i in data){
-			if($.inArray(i, ["form","page","gridview","formview","customview","view"]) != -1) return data[i]; 
+			if($.inArray(i, ["form","page","gridview","formview","customview","view","mobilelistview"]) != -1) return data[i]; 
 		}
 		return null;
 	},
@@ -35731,7 +36472,7 @@ $.widget( "an.workbench", {
 				add: function(e, ui ) { if(v == "center") node.tabsx('select', '#' + ui.panel.id); },
 				show: function(e, ui) {
 					var panel = $(ui.panel), editor;
-					$.each(["editor","gridview", "formview", "customview","view","page"], function(k,v){
+					$.each(["editor","gridview", "formview", "customview","view","page","mobilelistview"], function(k,v){
 						editor = panel.data(v); 
 						if(editor) {
 							var title = editor.option('title');
@@ -35820,7 +36561,7 @@ $.widget( "an.workbench", {
 		this._loadExtensions(function(){
 			self._initMainToolbar();
 			// load opened documents.
-			$.each(o.openedDocuments||[], function(){self[this.method](this.id, this.options);});
+			$.each(o.openedDocuments||[], function(){if (typeof(this.method) != 'undefined')	self[this.method](this.id, this.options);});
 			// load side views.
 			$.each(o.sideViews, function(){ self.showSideView(this.id, this.anchor, this.options); });
 		});
@@ -36107,7 +36848,7 @@ $.widget( "an.workbench", {
 	currentEditor:function(){
 		var panel = $(this.centerTabs.tabsx("option","selectedPanel")), data = panel.data(), editor = null;
 		$.each(data||{}, function(k,v){
-			if($.inArray(k,["editor","gridview","formview","customview","view","page"]) != -1){
+			if($.inArray(k,["editor","gridview","formview","customview","view","page","mobilelistview"]) != -1){
 				editor = v;
 				return false;
 			}
@@ -36544,7 +37285,7 @@ $.widget( "an.workbench", {
 		    pid = viewId+"-view", el = tabs.tabsx("panel", pid), eps = o.extensionPoints; 
 		if(el.size() > 0){
 			tabs.tabsx("select", pid);
-			$.each(["editor","gridview", "formview", "customview","view"], function(k,v){
+			$.each(["editor","gridview", "formview", "customview","view","mobilelistview"], function(k,v){
 				editor = el.data(v); 
 				if(editor && ((v == "editor" && opts.mode != "design")||(v != "editor" && opts.mode == "design"))) {
 					editor.destroy();
@@ -41550,1462 +42291,994 @@ if (typeof JSON !== 'object') {
 	//========================== Define default delimiters ==========================
 	$viewsDelimiters();
 
-})(this, this.jQuery);/**
- * SWFUpload: http://www.swfupload.org, http://swfupload.googlecode.com
+})(this, this.jQuery);/*!
+ * Agile Notes 1.0
  *
- * mmSWFUpload 1.0: Flash upload dialog - http://profandesign.se/swfupload/,  http://www.vinterwebb.se/
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
  *
- * SWFUpload is (c) 2006-2007 Lars Huring, Olov Nilz閚 and Mammon Media and is released under the MIT License:
- * http://www.opensource.org/licenses/mit-license.php
- *
- * SWFUpload 2 is (c) 2007-2008 Jake Roberts and is released under the MIT License:
- * http://www.opensource.org/licenses/mit-license.php
- *
+ * http://agilemore.com/agilenotes
  */
 
+(function( $, undefined ) {
 
-/* ******************* */
-/* Constructor & Init  */
-/* ******************* */
-var SWFUpload;
-
-if (SWFUpload == undefined) {
-	SWFUpload = function (settings) {
-		this.initSWFUpload(settings);
-	};
-}
-
-SWFUpload.prototype.initSWFUpload = function (settings) {
-	try {
-		this.customSettings = {};	// A container where developers can place their own settings associated with this instance.
-		this.settings = settings;
-		this.eventQueue = [];
-		this.movieName = "SWFUpload_" + SWFUpload.movieCount++;
-		this.movieElement = null;
-
-
-		// Setup global control tracking
-		SWFUpload.instances[this.movieName] = this;
-
-		// Load the settings.  Load the Flash movie.
-		this.initSettings();
-		this.loadFlash();
-		this.displayDebugInfo();
-	} catch (ex) {
-		delete SWFUpload.instances[this.movieName];
-		throw ex;
-	}
-};
-
-/* *************** */
-/* Static Members  */
-/* *************** */
-SWFUpload.instances = {};
-SWFUpload.movieCount = 0;
-SWFUpload.version = "2.2.0 2009-03-25";
-SWFUpload.QUEUE_ERROR = {
-	QUEUE_LIMIT_EXCEEDED	  		: -100,
-	FILE_EXCEEDS_SIZE_LIMIT  		: -110,
-	ZERO_BYTE_FILE			  		: -120,
-	INVALID_FILETYPE		  		: -130
-};
-SWFUpload.UPLOAD_ERROR = {
-	HTTP_ERROR				  		: -200,
-	MISSING_UPLOAD_URL	      		: -210,
-	IO_ERROR				  		: -220,
-	SECURITY_ERROR			  		: -230,
-	UPLOAD_LIMIT_EXCEEDED	  		: -240,
-	UPLOAD_FAILED			  		: -250,
-	SPECIFIED_FILE_ID_NOT_FOUND		: -260,
-	FILE_VALIDATION_FAILED	  		: -270,
-	FILE_CANCELLED			  		: -280,
-	UPLOAD_STOPPED					: -290
-};
-SWFUpload.FILE_STATUS = {
-	QUEUED		 : -1,
-	IN_PROGRESS	 : -2,
-	ERROR		 : -3,
-	COMPLETE	 : -4,
-	CANCELLED	 : -5
-};
-SWFUpload.BUTTON_ACTION = {
-	SELECT_FILE  : -100,
-	SELECT_FILES : -110,
-	START_UPLOAD : -120
-};
-SWFUpload.CURSOR = {
-	ARROW : -1,
-	HAND : -2
-};
-SWFUpload.WINDOW_MODE = {
-	WINDOW : "window",
-	TRANSPARENT : "transparent",
-	OPAQUE : "opaque"
-};
-
-// Private: takes a URL, determines if it is relative and converts to an absolute URL
-// using the current site. Only processes the URL if it can, otherwise returns the URL untouched
-SWFUpload.completeURL = function(url) {
-	if (typeof(url) !== "string" || url.match(/^https?:\/\//i) || url.match(/^\//)) {
-		return url;
-	}
+$.widget( "an.sliderfield",  $.an.inputfield, {
+	_create: function() {
+		$.an.inputfield.prototype._create.apply(this, arguments);
+		this.element.addClass("an-sliderfield");
+	},
 	
-	var currentURL = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "");
-	
-	var indexSlash = window.location.pathname.lastIndexOf("/");
-	if (indexSlash <= 0) {
-		path = "/";
-	} else {
-		path = window.location.pathname.substr(0, indexSlash) + "/";
-	}
-	
-	return /*currentURL +*/ path + url;
-	
-};
-
-
-/* ******************** */
-/* Instance Members  */
-/* ******************** */
-
-// Private: initSettings ensures that all the
-// settings are set, getting a default value if one was not assigned.
-SWFUpload.prototype.initSettings = function () {
-	this.ensureDefault = function (settingName, defaultValue) {
-		this.settings[settingName] = (this.settings[settingName] == undefined) ? defaultValue : this.settings[settingName];
-	};
-	
-	// Upload backend settings
-	this.ensureDefault("upload_url", "");
-	this.ensureDefault("preserve_relative_urls", false);
-	this.ensureDefault("file_post_name", "Filedata");
-	this.ensureDefault("post_params", {});
-	this.ensureDefault("use_query_string", false);
-	this.ensureDefault("requeue_on_error", false);
-	this.ensureDefault("http_success", []);
-	this.ensureDefault("assume_success_timeout", 0);
-	
-	// File Settings
-	this.ensureDefault("file_types", "*.*");
-	this.ensureDefault("file_types_description", "All Files");
-	this.ensureDefault("file_size_limit", 0);	// Default zero means "unlimited"
-	this.ensureDefault("file_upload_limit", 0);
-	this.ensureDefault("file_queue_limit", 0);
-
-	// Flash Settings
-	this.ensureDefault("flash_url", "swfupload.swf");
-	this.ensureDefault("prevent_swf_caching", true);
-	
-	// Button Settings
-	this.ensureDefault("button_image_url", "");
-	this.ensureDefault("button_width", 1);
-	this.ensureDefault("button_height", 1);
-	this.ensureDefault("button_text", "");
-	this.ensureDefault("button_text_style", "color: #000000; font-size: 16pt;");
-	this.ensureDefault("button_text_top_padding", 0);
-	this.ensureDefault("button_text_left_padding", 0);
-	this.ensureDefault("button_action", SWFUpload.BUTTON_ACTION.SELECT_FILES);
-	this.ensureDefault("button_disabled", false);
-	this.ensureDefault("button_placeholder_id", "");
-	this.ensureDefault("button_placeholder", null);
-	this.ensureDefault("button_cursor", SWFUpload.CURSOR.ARROW);
-	this.ensureDefault("button_window_mode", SWFUpload.WINDOW_MODE.WINDOW);
-	
-	// Debug Settings
-	this.ensureDefault("debug", false);
-	this.settings.debug_enabled = this.settings.debug;	// Here to maintain v2 API
-	
-	// Event Handlers
-	this.settings.return_upload_start_handler = this.returnUploadStart;
-	this.ensureDefault("swfupload_loaded_handler", null);
-	this.ensureDefault("file_dialog_start_handler", null);
-	this.ensureDefault("file_queued_handler", null);
-	this.ensureDefault("file_queue_error_handler", null);
-	this.ensureDefault("file_dialog_complete_handler", null);
-	
-	this.ensureDefault("upload_start_handler", null);
-	this.ensureDefault("upload_progress_handler", null);
-	this.ensureDefault("upload_error_handler", null);
-	this.ensureDefault("upload_success_handler", null);
-	this.ensureDefault("upload_complete_handler", null);
-	
-	this.ensureDefault("debug_handler", this.debugMessage);
-
-	this.ensureDefault("custom_settings", {});
-
-	// Other settings
-	this.customSettings = this.settings.custom_settings;
-	
-	// Update the flash url if needed
-	if (!!this.settings.prevent_swf_caching) {
-		this.settings.flash_url = this.settings.flash_url + (this.settings.flash_url.indexOf("?") < 0 ? "?" : "&") + "preventswfcaching=" + new Date().getTime();
-	}
-	
-	if (!this.settings.preserve_relative_urls) {
-		//this.settings.flash_url = SWFUpload.completeURL(this.settings.flash_url);	// Don't need to do this one since flash doesn't look at it
-		this.settings.upload_url = SWFUpload.completeURL(this.settings.upload_url);
-		this.settings.button_image_url = SWFUpload.completeURL(this.settings.button_image_url);
-	}
-	
-	delete this.ensureDefault;
-};
-
-// Private: loadFlash replaces the button_placeholder element with the flash movie.
-SWFUpload.prototype.loadFlash = function () {
-	var targetElement, tempParent;
-
-	// Make sure an element with the ID we are going to use doesn't already exist
-	if (document.getElementById(this.movieName) !== null) {
-		throw "ID " + this.movieName + " is already in use. The Flash Object could not be added";
-	}
-
-	// Get the element where we will be placing the flash movie
-	targetElement = document.getElementById(this.settings.button_placeholder_id) || this.settings.button_placeholder;
-
-	if (targetElement == undefined) {
-		throw "Could not find the placeholder element: " + this.settings.button_placeholder_id;
-	}
-
-	// Append the container and load the flash
-	tempParent = document.createElement("div");
-	tempParent.innerHTML = this.getFlashHTML();	// Using innerHTML is non-standard but the only sensible way to dynamically add Flash in IE (and maybe other browsers)
-	targetElement.parentNode.replaceChild(tempParent.firstChild, targetElement);
-
-	// Fix IE Flash/Form bug
-	if (window[this.movieName] == undefined) {
-		window[this.movieName] = this.getMovieElement();
-	}
-	
-};
-
-// Private: getFlashHTML generates the object tag needed to embed the flash in to the document
-SWFUpload.prototype.getFlashHTML = function () {
-	// Flash Satay object syntax: http://www.alistapart.com/articles/flashsatay
-	return ['<object id="', this.movieName, '" type="application/x-shockwave-flash" data="', this.settings.flash_url, '" width="', this.settings.button_width, '" height="', this.settings.button_height, '" class="swfupload">',
-				'<param name="wmode" value="', this.settings.button_window_mode, '" />',
-				'<param name="movie" value="', this.settings.flash_url, '" />',
-				'<param name="quality" value="high" />',
-				'<param name="menu" value="false" />',
-				'<param name="allowScriptAccess" value="always" />',
-				'<param name="flashvars" value="' + this.getFlashVars() + '" />',
-				'</object>'].join("");
-};
-
-// Private: getFlashVars builds the parameter string that will be passed
-// to flash in the flashvars param.
-SWFUpload.prototype.getFlashVars = function () {
-	// Build a string from the post param object
-	var paramString = this.buildParamString();
-	var httpSuccessString = this.settings.http_success.join(",");
-	
-	// Build the parameter string
-	return ["movieName=", encodeURIComponent(this.movieName),
-			"&amp;uploadURL=", encodeURIComponent(this.settings.upload_url),
-			"&amp;useQueryString=", encodeURIComponent(this.settings.use_query_string),
-			"&amp;requeueOnError=", encodeURIComponent(this.settings.requeue_on_error),
-			"&amp;httpSuccess=", encodeURIComponent(httpSuccessString),
-			"&amp;assumeSuccessTimeout=", encodeURIComponent(this.settings.assume_success_timeout),
-			"&amp;params=", encodeURIComponent(paramString),
-			"&amp;filePostName=", encodeURIComponent(this.settings.file_post_name),
-			"&amp;fileTypes=", encodeURIComponent(this.settings.file_types),
-			"&amp;fileTypesDescription=", encodeURIComponent(this.settings.file_types_description),
-			"&amp;fileSizeLimit=", encodeURIComponent(this.settings.file_size_limit),
-			"&amp;fileUploadLimit=", encodeURIComponent(this.settings.file_upload_limit),
-			"&amp;fileQueueLimit=", encodeURIComponent(this.settings.file_queue_limit),
-			"&amp;debugEnabled=", encodeURIComponent(this.settings.debug_enabled),
-			"&amp;buttonImageURL=", encodeURIComponent(this.settings.button_image_url),
-			"&amp;buttonWidth=", encodeURIComponent(this.settings.button_width),
-			"&amp;buttonHeight=", encodeURIComponent(this.settings.button_height),
-			"&amp;buttonText=", encodeURIComponent(this.settings.button_text),
-			"&amp;buttonTextTopPadding=", encodeURIComponent(this.settings.button_text_top_padding),
-			"&amp;buttonTextLeftPadding=", encodeURIComponent(this.settings.button_text_left_padding),
-			"&amp;buttonTextStyle=", encodeURIComponent(this.settings.button_text_style),
-			"&amp;buttonAction=", encodeURIComponent(this.settings.button_action),
-			"&amp;buttonDisabled=", encodeURIComponent(this.settings.button_disabled),
-			"&amp;buttonCursor=", encodeURIComponent(this.settings.button_cursor)
-		].join("");
-};
-
-// Public: getMovieElement retrieves the DOM reference to the Flash element added by SWFUpload
-// The element is cached after the first lookup
-SWFUpload.prototype.getMovieElement = function () {
-	if (this.movieElement == undefined) {
-		this.movieElement = document.getElementById(this.movieName);
-	}
-
-	if (this.movieElement === null) {
-		throw "Could not find Flash element";
-	}
-	
-	return this.movieElement;
-};
-
-// Private: buildParamString takes the name/value pairs in the post_params setting object
-// and joins them up in to a string formatted "name=value&amp;name=value"
-SWFUpload.prototype.buildParamString = function () {
-	var postParams = this.settings.post_params; 
-	var paramStringPairs = [];
-
-	if (typeof(postParams) === "object") {
-		for (var name in postParams) {
-			if (postParams.hasOwnProperty(name)) {
-				paramStringPairs.push(encodeURIComponent(name.toString()) + "=" + encodeURIComponent(postParams[name].toString()));
-			}
-		}
-	}
-
-	return paramStringPairs.join("&amp;");
-};
-
-// Public: Used to remove a SWFUpload instance from the page. This method strives to remove
-// all references to the SWF, and other objects so memory is properly freed.
-// Returns true if everything was destroyed. Returns a false if a failure occurs leaving SWFUpload in an inconsistant state.
-// Credits: Major improvements provided by steffen
-SWFUpload.prototype.destroy = function () {
-	try {
-		// Make sure Flash is done before we try to remove it
-		this.cancelUpload(null, false);
-		
-
-		// Remove the SWFUpload DOM nodes
-		var movieElement = null;
-		movieElement = this.getMovieElement();
-		
-		if (movieElement && typeof(movieElement.CallFunction) === "unknown") { // We only want to do this in IE
-			// Loop through all the movie's properties and remove all function references (DOM/JS IE 6/7 memory leak workaround)
-			for (var i in movieElement) {
-				try {
-					if (typeof(movieElement[i]) === "function") {
-						movieElement[i] = null;
-					}
-				} catch (ex1) {}
-			}
-
-			// Remove the Movie Element from the page
-			try {
-				movieElement.parentNode.removeChild(movieElement);
-			} catch (ex) {}
+	_createControl : function() {
+		var o = this.options, self = this;
+		if (!o.min) {
+			o.min = 1;
 		}
 		
-		// Remove IE form fix reference
-		window[this.movieName] = null;
-
-		// Destroy other references
-		SWFUpload.instances[this.movieName] = null;
-		delete SWFUpload.instances[this.movieName];
-
-		this.movieElement = null;
-		this.settings = null;
-		this.customSettings = null;
-		this.eventQueue = null;
-		this.movieName = null;
+		if (!o.max) {
+			o.max = 100;
+		}
 		
-		
-		return true;
-	} catch (ex2) {
-		return false;
-	}
-};
-
-
-// Public: displayDebugInfo prints out settings and configuration
-// information about this SWFUpload instance.
-// This function (and any references to it) can be deleted when placing
-// SWFUpload in production.
-SWFUpload.prototype.displayDebugInfo = function () {
-	this.debug(
-		[
-			"---SWFUpload Instance Info---\n",
-			"Version: ", SWFUpload.version, "\n",
-			"Movie Name: ", this.movieName, "\n",
-			"Settings:\n",
-			"\t", "upload_url:               ", this.settings.upload_url, "\n",
-			"\t", "flash_url:                ", this.settings.flash_url, "\n",
-			"\t", "use_query_string:         ", this.settings.use_query_string.toString(), "\n",
-			"\t", "requeue_on_error:         ", this.settings.requeue_on_error.toString(), "\n",
-			"\t", "http_success:             ", this.settings.http_success.join(", "), "\n",
-			"\t", "assume_success_timeout:   ", this.settings.assume_success_timeout, "\n",
-			"\t", "file_post_name:           ", this.settings.file_post_name, "\n",
-			"\t", "post_params:              ", this.settings.post_params.toString(), "\n",
-			"\t", "file_types:               ", this.settings.file_types, "\n",
-			"\t", "file_types_description:   ", this.settings.file_types_description, "\n",
-			"\t", "file_size_limit:          ", this.settings.file_size_limit, "\n",
-			"\t", "file_upload_limit:        ", this.settings.file_upload_limit, "\n",
-			"\t", "file_queue_limit:         ", this.settings.file_queue_limit, "\n",
-			"\t", "debug:                    ", this.settings.debug.toString(), "\n",
-
-			"\t", "prevent_swf_caching:      ", this.settings.prevent_swf_caching.toString(), "\n",
-
-			"\t", "button_placeholder_id:    ", this.settings.button_placeholder_id.toString(), "\n",
-			"\t", "button_placeholder:       ", (this.settings.button_placeholder ? "Set" : "Not Set"), "\n",
-			"\t", "button_image_url:         ", this.settings.button_image_url.toString(), "\n",
-			"\t", "button_width:             ", this.settings.button_width.toString(), "\n",
-			"\t", "button_height:            ", this.settings.button_height.toString(), "\n",
-			"\t", "button_text:              ", this.settings.button_text.toString(), "\n",
-			"\t", "button_text_style:        ", this.settings.button_text_style.toString(), "\n",
-			"\t", "button_text_top_padding:  ", this.settings.button_text_top_padding.toString(), "\n",
-			"\t", "button_text_left_padding: ", this.settings.button_text_left_padding.toString(), "\n",
-			"\t", "button_action:            ", this.settings.button_action.toString(), "\n",
-			"\t", "button_disabled:          ", this.settings.button_disabled.toString(), "\n",
-
-			"\t", "custom_settings:          ", this.settings.custom_settings.toString(), "\n",
-			"Event Handlers:\n",
-			"\t", "swfupload_loaded_handler assigned:  ", (typeof this.settings.swfupload_loaded_handler === "function").toString(), "\n",
-			"\t", "file_dialog_start_handler assigned: ", (typeof this.settings.file_dialog_start_handler === "function").toString(), "\n",
-			"\t", "file_queued_handler assigned:       ", (typeof this.settings.file_queued_handler === "function").toString(), "\n",
-			"\t", "file_queue_error_handler assigned:  ", (typeof this.settings.file_queue_error_handler === "function").toString(), "\n",
-			"\t", "upload_start_handler assigned:      ", (typeof this.settings.upload_start_handler === "function").toString(), "\n",
-			"\t", "upload_progress_handler assigned:   ", (typeof this.settings.upload_progress_handler === "function").toString(), "\n",
-			"\t", "upload_error_handler assigned:      ", (typeof this.settings.upload_error_handler === "function").toString(), "\n",
-			"\t", "upload_success_handler assigned:    ", (typeof this.settings.upload_success_handler === "function").toString(), "\n",
-			"\t", "upload_complete_handler assigned:   ", (typeof this.settings.upload_complete_handler === "function").toString(), "\n",
-			"\t", "debug_handler assigned:             ", (typeof this.settings.debug_handler === "function").toString(), "\n"
-		].join("")
-	);
-};
-
-/* Note: addSetting and getSetting are no longer used by SWFUpload but are included
-	the maintain v2 API compatibility
-*/
-// Public: (Deprecated) addSetting adds a setting value. If the value given is undefined or null then the default_value is used.
-SWFUpload.prototype.addSetting = function (name, value, default_value) {
-    if (value == undefined) {
-        return (this.settings[name] = default_value);
-    } else {
-        return (this.settings[name] = value);
-	}
-};
-
-// Public: (Deprecated) getSetting gets a setting. Returns an empty string if the setting was not found.
-SWFUpload.prototype.getSetting = function (name) {
-    if (this.settings[name] != undefined) {
-        return this.settings[name];
-	}
-
-    return "";
-};
-
-
-
-// Private: callFlash handles function calls made to the Flash element.
-// Calls are made with a setTimeout for some functions to work around
-// bugs in the ExternalInterface library.
-SWFUpload.prototype.callFlash = function (functionName, argumentArray) {
-	argumentArray = argumentArray || [];
+		this.input = $("<input type='text'/>").attr({ name : o.id }).attr({min:o.min, max:o.max}).bind(
+			"change.inputfield keyup.inputfield",
+			function(e) {
+				var value = self.input.val(), oldValue = o.value;
+				if (value != oldValue) {
+					o.value = value;
+					self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
+						isTransient : o.isTransient });
+				}
+			}).addClass("content ui-shadow-inset ui-corner-all ui-btn-shadow ui-body-c ui-input-text");
+	},
 	
-	var movieElement = this.getMovieElement();
-	var returnValue, returnString;
-
-	// Flash's method if calling ExternalInterface methods (code adapted from MooTools).
-	try {
-		returnString = movieElement.CallFunction('<invoke name="' + functionName + '" returntype="javascript">' + __flash__argumentsToXML(argumentArray, 0) + '</invoke>');
-		returnValue = eval(returnString);
-	} catch (ex) {
-		throw "Call to " + functionName + " failed";
+	_edit : function() {
+		this.input.appendTo(this.content).slider(this.options);
+	},
+	
+	_makeResizable:function(){},
+	
+	_design:function() {
+		if(!this.linkStr){
+			this.linkStr= $('<input type="text" disabled="disabled" class="content ui-shadow-inset ui-corner-all ui-btn-shadow ui-body-c ui-input-text ui-slider-input"><div role="application" class="ui-slider-track ui-btn-down-c ui-btn-corner-all">\
+			<a href="#"\
+			class="ui-slider-handle ui-btn ui-shadow ui-btn-corner-all ui-btn-up-c"\
+			data-corners="true" data-shadow="true" data-iconshadow="true"\
+			data-wrapperels="span" data-theme="c" role="slider" aria-valuemin="0"\
+			aria-valuemax="100" aria-valuenow="0" aria-valuetext="0" title="0"\
+			aria-labelledby="slider1-label" style="left: 50%;">\
+			<span class="ui-btn-inner">\
+				<span class="ui-btn-text"></span>\
+			</span>\
+		</a>\
+	</div>');
+			this.linkStr.appendTo(this.content.removeClass("content"));
+			}
+	},
+	
+	destroy: function() {
+		return $.an.inputfield.prototype.destroy.apply(this, arguments);
 	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.togglefield", $.an.sliderfield, {
+	_create: function() {
+		$.an.sliderfield.prototype._create.apply(this, arguments);
+		this.element.addClass("an-togglefield");
+		this.element.unbind("change.widget");
+	},
 	
-	// Unescape file post param values
-	if (returnValue != undefined && typeof returnValue.post === "object") {
-		returnValue = this.unescapeFilePostParams(returnValue);
+	_createControl : function() {
+		var o = this.options, self = this;
+		var el=this.element;
+		o.ontext = o.ontext || "On";
+		o.offtext = o.offtext || "Off";
+		this.input = $('<select >\
+		    <option value="no">' + o.ontext + '</option>\
+		    <option value="yes">' + o.offtext + '</option>\
+		  </select>').attr({ name : o.id });
+		o.stop=function(e, ui){
+			var value = self.input.val(), oldValue = o.value;
+			if (value != oldValue) {
+				o.value = value;
+				self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,isTransient : o.isTransient });
+			}
+			if($(e.target).closest(".widget")[0] == self.element[0]){
+				setTimeout(function(){el.trigger($.Event(e,{type:"widgetchange"}), self);},20);
+			}
+		}
+		self._trigger("optionchanged", null, { key : "value", value : "no", oldValue : "",isTransient : o.isTransient });
+	},
+	
+	_edit : function() {
+		var o = this.options, self = this;
+		this.input.appendTo(this.content).slider(this.options);
+	},
+	
+	_makeResizable:function(){},
+	
+	_design:function() {
+		if(!this.select){
+			var o = this.options;
+			if (o.mobile) {
+				var cl = this.element.find(".content").eq(0);
+				cl.addClass("codiqa-control ui-field-contain ui-body ui-br");
+				this.select = $('<select />').attr({id:o.id, name:o.id, value:this.value})
+			    .addClass("ui-slider-switch").appendTo(cl);
+				var toggle_content = $('<div />').addClass('ui-slider ui-slider-switch ui-btn-down-c ui-btn-corner-all').appendTo(cl);
+				toggle_content.html('<span class="ui-slider-label ui-slider-label-a ui-btn-active ui-btn-corner-all" role="img" style="width: 0%;">On</span><span class="ui-slider-label ui-slider-label-b ui-btn-down-c ui-btn-corner-all" role="img" style="width: 100%;">Off</span>');
+				var toggle_a_content = $('<div />').addClass("ui-slider-inneroffset").appendTo(toggle_content);
+				$('<a />').addClass('ui-slider-handle ui-slider-handle-snapping ui-btn ui-btn-up-c ui-shadow ui-btn-corner-all')
+										.html('<span class="ui-btn-inner"><span class="ui-btn-text"></span></span>').appendTo(toggle_a_content);
+				this.content.removeClass("content");
+			}
+			}
+	},
+	
+	destroy: function() {
+		return $.an.sliderfield.prototype.destroy.apply(this, arguments);
 	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
 
-	return returnValue;
-};
+(function( $, undefined ) {
 
-/* *****************************
-	-- Flash control methods --
-	Your UI should use these
-	to operate SWFUpload
-   ***************************** */
+$.widget( "an.collapsiblewidget", $.an.widget, {
+	_create: function() {
+        $.an.widget.prototype._create.apply(this, arguments);
+        var o = this.options,newOps={};
+        if(o.mobile){
+           // o.headerText = o.headerText || 'Section Header';
+            //o.contentText = o.contentText || 'Content';
+			o.content_theme=o.content_theme||"";
+            this.element.addClass("an-collapsiblewidget");
+            var wrap = $('<div data-content-theme="'+o.content_theme+'"></div>'),
+				header = $('<h3>' + o.headerText + '</h3>');
+            this.contentDiv = $('<div></div>');
+			wrap.append(header).append(this.contentDiv);
+            this.element.find('.content').append(wrap);
+			if(o.collapsedIcon){
+				newOps.collapsedIcon=o.collapsedIcon;
+			}
+			if(o.collapsed){
+				newOps.collapsed=false;
+			}
+			if(o.expandedIcon){
+				newOps.expandedIcon=o.expandedIcon;
+			}
+			if(o.iconpos){
+				newOps.iconpos=o.iconpos;
+			}
+			if(o.theme){
+				newOps.theme=o.theme;
+			}
+			wrap.collapsible(newOps);
+        }
+	},
+	
+	_browser:function(){
+		var o = this.options,link=o.link;
+		this.option("contextmenu2", false);
+		this.content[0].contentEditable = false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
+			this.contentDiv.css("border","0 none");
+		}else{
+			this.contentDiv.append(o.contentText);
+		}
+	},
 
-// WARNING: this function does not work in Flash Player 10
-// Public: selectFile causes a File Selection Dialog window to appear.  This
-// dialog only allows 1 file to be selected.
-SWFUpload.prototype.selectFile = function () {
-	this.callFlash("SelectFile");
-};
+	_edit:function(){
+		var o = this.options,link=o.link;
+		this.option("contextmenu2", false);
+		this.content[0].contentEditable = false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"edit"});
+			this.contentDiv.css("border","0 none");
+		}else{
+			this.contentDiv.append(o.contentText);
+		}
+	},
 
-// WARNING: this function does not work in Flash Player 10
-// Public: selectFiles causes a File Selection Dialog window to appear/ This
-// dialog allows the user to select any number of files
-// Flash Bug Warning: Flash limits the number of selectable files based on the combined length of the file names.
-// If the selection name length is too long the dialog will fail in an unpredictable manner.  There is no work-around
-// for this bug.
-SWFUpload.prototype.selectFiles = function () {
-	this.callFlash("SelectFiles");
-};
+    _design: function(){
+		var o = this.options,link=o.link;
+		this.option("contextmenu2", true);
+		var tag=false;
+		if(link && link != "raw"){
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"design"});
+		}else{
+			tag=true;
+			this.contentDiv.append(o.contentText);
+		}
+		this.content[0].contentEditable = tag;
+    },
 
-
-// Public: startUpload starts uploading the first file in the queue unless
-// the optional parameter 'fileID' specifies the ID 
-SWFUpload.prototype.startUpload = function (fileID) {
-	this.callFlash("StartUpload", [fileID]);
-};
-
-// Public: cancelUpload cancels any queued file.  The fileID parameter may be the file ID or index.
-// If you do not specify a fileID the current uploading file or first file in the queue is cancelled.
-// If you do not want the uploadError event to trigger you can specify false for the triggerErrorEvent parameter.
-SWFUpload.prototype.cancelUpload = function (fileID, triggerErrorEvent) {
-	if (triggerErrorEvent !== false) {
-		triggerErrorEvent = true;
+	destroy: function() {
+		this.element.removeClass("an-collapsiblewidget");
+        this.element.unbind('collapsiblewidget');
+        this.content.remove();
+		return $.an.widget.prototype.destroy.apply( this, arguments );
 	}
-	this.callFlash("CancelUpload", [fileID, triggerErrorEvent]);
-};
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
 
-// Public: stopUpload stops the current upload and requeues the file at the beginning of the queue.
-// If nothing is currently uploading then nothing happens.
-SWFUpload.prototype.stopUpload = function () {
-	this.callFlash("StopUpload");
-};
+(function( $, undefined ) {
 
-/* ************************
- * Settings methods
- *   These methods change the SWFUpload settings.
- *   SWFUpload settings should not be changed directly on the settings object
- *   since many of the settings need to be passed to Flash in order to take
- *   effect.
- * *********************** */
+$.widget( "an.navbarwidget",  $.an.widget, {
 
-// Public: getStats gets the file statistics object.
-SWFUpload.prototype.getStats = function () {
-	return this.callFlash("GetStats");
-};
+	_create: function() {
+		var o = this.options;
+		$.an.widget.prototype._create.apply(this, arguments);
+		// this.element.addClass("an-navbarwidget");
+		if (o.mobile) {
+			try {this.content.navbar({iconpos:o.iconpos}); }catch(e) {}
+		}
+	},
 
-// Public: setStats changes the SWFUpload statistics.  You shouldn't need to 
-// change the statistics but you can.  Changing the statistics does not
-// affect SWFUpload accept for the successful_uploads count which is used
-// by the upload_limit setting to determine how many files the user may upload.
-SWFUpload.prototype.setStats = function (statsObject) {
-	this.callFlash("SetStats", [statsObject]);
-};
-
-// Public: getFile retrieves a File object by ID or Index.  If the file is
-// not found then 'null' is returned.
-SWFUpload.prototype.getFile = function (fileID) {
-	if (typeof(fileID) === "number") {
-		return this.callFlash("GetFileByIndex", [fileID]);
-	} else {
-		return this.callFlash("GetFile", [fileID]);
-	}
-};
-
-// Public: addFileParam sets a name/value pair that will be posted with the
-// file specified by the Files ID.  If the name already exists then the
-// exiting value will be overwritten.
-SWFUpload.prototype.addFileParam = function (fileID, name, value) {
-	return this.callFlash("AddFileParam", [fileID, name, value]);
-};
-
-// Public: removeFileParam removes a previously set (by addFileParam) name/value
-// pair from the specified file.
-SWFUpload.prototype.removeFileParam = function (fileID, name) {
-	this.callFlash("RemoveFileParam", [fileID, name]);
-};
-
-// Public: setUploadUrl changes the upload_url setting.
-SWFUpload.prototype.setUploadURL = function (url) {
-	this.settings.upload_url = url.toString();
-	this.callFlash("SetUploadURL", [url]);
-};
-
-// Public: setPostParams changes the post_params setting
-SWFUpload.prototype.setPostParams = function (paramsObject) {
-	this.settings.post_params = paramsObject;
-	this.callFlash("SetPostParams", [paramsObject]);
-};
-
-// Public: addPostParam adds post name/value pair.  Each name can have only one value.
-SWFUpload.prototype.addPostParam = function (name, value) {
-	this.settings.post_params[name] = value;
-	this.callFlash("SetPostParams", [this.settings.post_params]);
-};
-
-// Public: removePostParam deletes post name/value pair.
-SWFUpload.prototype.removePostParam = function (name) {
-	delete this.settings.post_params[name];
-	this.callFlash("SetPostParams", [this.settings.post_params]);
-};
-
-// Public: setFileTypes changes the file_types setting and the file_types_description setting
-SWFUpload.prototype.setFileTypes = function (types, description) {
-	this.settings.file_types = types;
-	this.settings.file_types_description = description;
-	this.callFlash("SetFileTypes", [types, description]);
-};
-
-// Public: setFileSizeLimit changes the file_size_limit setting
-SWFUpload.prototype.setFileSizeLimit = function (fileSizeLimit) {
-	this.settings.file_size_limit = fileSizeLimit;
-	this.callFlash("SetFileSizeLimit", [fileSizeLimit]);
-};
-
-// Public: setFileUploadLimit changes the file_upload_limit setting
-SWFUpload.prototype.setFileUploadLimit = function (fileUploadLimit) {
-	this.settings.file_upload_limit = fileUploadLimit;
-	this.callFlash("SetFileUploadLimit", [fileUploadLimit]);
-};
-
-// Public: setFileQueueLimit changes the file_queue_limit setting
-SWFUpload.prototype.setFileQueueLimit = function (fileQueueLimit) {
-	this.settings.file_queue_limit = fileQueueLimit;
-	this.callFlash("SetFileQueueLimit", [fileQueueLimit]);
-};
-
-// Public: setFilePostName changes the file_post_name setting
-SWFUpload.prototype.setFilePostName = function (filePostName) {
-	this.settings.file_post_name = filePostName;
-	this.callFlash("SetFilePostName", [filePostName]);
-};
-
-// Public: setUseQueryString changes the use_query_string setting
-SWFUpload.prototype.setUseQueryString = function (useQueryString) {
-	this.settings.use_query_string = useQueryString;
-	this.callFlash("SetUseQueryString", [useQueryString]);
-};
-
-// Public: setRequeueOnError changes the requeue_on_error setting
-SWFUpload.prototype.setRequeueOnError = function (requeueOnError) {
-	this.settings.requeue_on_error = requeueOnError;
-	this.callFlash("SetRequeueOnError", [requeueOnError]);
-};
-
-// Public: setHTTPSuccess changes the http_success setting
-SWFUpload.prototype.setHTTPSuccess = function (http_status_codes) {
-	if (typeof http_status_codes === "string") {
-		http_status_codes = http_status_codes.replace(" ", "").split(",");
-	}
+	_makeResizable:function(){},
 	
-	this.settings.http_success = http_status_codes;
-	this.callFlash("SetHTTPSuccess", [http_status_codes]);
-};
-
-// Public: setHTTPSuccess changes the http_success setting
-SWFUpload.prototype.setAssumeSuccessTimeout = function (timeout_seconds) {
-	this.settings.assume_success_timeout = timeout_seconds;
-	this.callFlash("SetAssumeSuccessTimeout", [timeout_seconds]);
-};
-
-// Public: setDebugEnabled changes the debug_enabled setting
-SWFUpload.prototype.setDebugEnabled = function (debugEnabled) {
-	this.settings.debug_enabled = debugEnabled;
-	this.callFlash("SetDebugEnabled", [debugEnabled]);
-};
-
-// Public: setButtonImageURL loads a button image sprite
-SWFUpload.prototype.setButtonImageURL = function (buttonImageURL) {
-	if (buttonImageURL == undefined) {
-		buttonImageURL = "";
-	}
-	
-	this.settings.button_image_url = buttonImageURL;
-	this.callFlash("SetButtonImageURL", [buttonImageURL]);
-};
-
-// Public: setButtonDimensions resizes the Flash Movie and button
-SWFUpload.prototype.setButtonDimensions = function (width, height) {
-	this.settings.button_width = width;
-	this.settings.button_height = height;
-	
-	var movie = this.getMovieElement();
-	if (movie != undefined) {
-		movie.style.width = width + "px";
-		movie.style.height = height + "px";
-	}
-	
-	this.callFlash("SetButtonDimensions", [width, height]);
-};
-// Public: setButtonText Changes the text overlaid on the button
-SWFUpload.prototype.setButtonText = function (html) {
-	this.settings.button_text = html;
-	this.callFlash("SetButtonText", [html]);
-};
-// Public: setButtonTextPadding changes the top and left padding of the text overlay
-SWFUpload.prototype.setButtonTextPadding = function (left, top) {
-	this.settings.button_text_top_padding = top;
-	this.settings.button_text_left_padding = left;
-	this.callFlash("SetButtonTextPadding", [left, top]);
-};
-
-// Public: setButtonTextStyle changes the CSS used to style the HTML/Text overlaid on the button
-SWFUpload.prototype.setButtonTextStyle = function (css) {
-	this.settings.button_text_style = css;
-	this.callFlash("SetButtonTextStyle", [css]);
-};
-// Public: setButtonDisabled disables/enables the button
-SWFUpload.prototype.setButtonDisabled = function (isDisabled) {
-	this.settings.button_disabled = isDisabled;
-	this.callFlash("SetButtonDisabled", [isDisabled]);
-};
-// Public: setButtonAction sets the action that occurs when the button is clicked
-SWFUpload.prototype.setButtonAction = function (buttonAction) {
-	this.settings.button_action = buttonAction;
-	this.callFlash("SetButtonAction", [buttonAction]);
-};
-
-// Public: setButtonCursor changes the mouse cursor displayed when hovering over the button
-SWFUpload.prototype.setButtonCursor = function (cursor) {
-	this.settings.button_cursor = cursor;
-	this.callFlash("SetButtonCursor", [cursor]);
-};
-
-/* *******************************
-	Flash Event Interfaces
-	These functions are used by Flash to trigger the various
-	events.
-	
-	All these functions a Private.
-	
-	Because the ExternalInterface library is buggy the event calls
-	are added to a queue and the queue then executed by a setTimeout.
-	This ensures that events are executed in a determinate order and that
-	the ExternalInterface bugs are avoided.
-******************************* */
-
-SWFUpload.prototype.queueEvent = function (handlerName, argumentArray) {
-	// Warning: Don't call this.debug inside here or you'll create an infinite loop
-	
-	if (argumentArray == undefined) {
-		argumentArray = [];
-	} else if (!(argumentArray instanceof Array)) {
-		argumentArray = [argumentArray];
-	}
-	
-	var self = this;
-	if (typeof this.settings[handlerName] === "function") {
-		// Queue the event
-		this.eventQueue.push(function () {
-			this.settings[handlerName].apply(this, argumentArray);
+	_browser:function() {
+		var span = this.content.find(".an-navbarwidget");
+		$(span).each(function(k, v) {
+			$(v).remove();
 		});
 		
-		// Execute the next queued event
-		setTimeout(function () {
-			self.executeNextEvent();
-		}, 0);
+		this.content.find(".c li").css("clear", "none");
+	},
+
+	_edit:function() {
+		var span = this.content.find(".an-navbarwidget");
+		$(span).each(function(k, v) {
+			$(v).remove();
+		});
 		
-	} else if (this.settings[handlerName] !== null) {
-		throw "Event handler " + handlerName + " is unknown or is not a function";
-	}
-};
-
-// Private: Causes the next event in the queue to be executed.  Since events are queued using a setTimeout
-// we must queue them in order to garentee that they are executed in order.
-SWFUpload.prototype.executeNextEvent = function () {
-	// Warning: Don't call this.debug inside here or you'll create an infinite loop
-
-	var  f = this.eventQueue ? this.eventQueue.shift() : null;
-	if (typeof(f) === "function") {
-		f.apply(this);
-	}
-};
-
-// Private: unescapeFileParams is part of a workaround for a flash bug where objects passed through ExternalInterface cannot have
-// properties that contain characters that are not valid for JavaScript identifiers. To work around this
-// the Flash Component escapes the parameter names and we must unescape again before passing them along.
-SWFUpload.prototype.unescapeFilePostParams = function (file) {
-	var reg = /[$]([0-9a-f]{4})/i;
-	var unescapedPost = {};
-	var uk;
-
-	if (file != undefined) {
-		for (var k in file.post) {
-			if (file.post.hasOwnProperty(k)) {
-				uk = k;
-				var match;
-				while ((match = reg.exec(uk)) !== null) {
-					uk = uk.replace(match[0], String.fromCharCode(parseInt("0x" + match[1], 16)));
+		this.content.find(".c li").css("clear", "none");
+	},
+	
+	_design:function() {
+		var o = this.options;
+		if (o.mobile) {
+			var content = $("<div data-role='navbar'/>").attr("id", o.id);
+			var ul = $("<ul class='c' />"), width;
+			var len = o.selectItems.length;
+			$(o.selectItems).each(function(k, v) {
+				var link = $("<a/>"), linkClass = 'ui-btn ';
+				var subspan = $("<span style='display:none;' class='an-navbarwidget' />");
+				subspan.addClass(o.iconpos || "");
+				if (v.data_transition) {
+					link.attr("data-transition", v.data_transition);
 				}
-				unescapedPost[uk] = file.post[k];
-			}
-		}
-
-		file.post = unescapedPost;
-	}
-
-	return file;
-};
-
-// Private: Called by Flash to see if JS can call in to Flash (test if External Interface is working)
-SWFUpload.prototype.testExternalInterface = function () {
-	try {
-		return this.callFlash("TestExternalInterface");
-	} catch (ex) {
-		return false;
-	}
-};
-
-// Private: This event is called by Flash when it has finished loading. Don't modify this.
-// Use the swfupload_loaded_handler event setting to execute custom code when SWFUpload has loaded.
-SWFUpload.prototype.flashReady = function () {
-	// Check that the movie element is loaded correctly with its ExternalInterface methods defined
-	var movieElement = this.getMovieElement();
-
-	if (!movieElement) {
-		this.debug("Flash called back ready but the flash movie can't be found.");
-		return;
-	}
-
-	this.cleanUp(movieElement);
-	
-	this.queueEvent("swfupload_loaded_handler");
-};
-
-// Private: removes Flash added fuctions to the DOM node to prevent memory leaks in IE.
-// This function is called by Flash each time the ExternalInterface functions are created.
-SWFUpload.prototype.cleanUp = function (movieElement) {
-	// Pro-actively unhook all the Flash functions
-	try {
-		if (this.movieElement && typeof(movieElement.CallFunction) === "unknown") { // We only want to do this in IE
-			this.debug("Removing Flash functions hooks (this should only run in IE and should prevent memory leaks)");
-			for (var key in movieElement) {
-				try {
-					if (typeof(movieElement[key]) === "function") {
-						movieElement[key] = null;
-					}
-				} catch (ex) {
+				
+				if (v.data_icon) {
+					subspan.addClass("ui-icon ui-icon-" + v.data_icon);
+					subspan.css('display', 'block');
+					link.attr("data-icon", v.data_icon);
 				}
-			}
-		}
-	} catch (ex1) {
-	
-	}
-
-	// Fix Flashes own cleanup code so if the SWFMovie was removed from the page
-	// it doesn't display errors.
-	window["__flash__removeCallback"] = function (instance, name) {
-		try {
-			if (instance) {
-				instance[name] = null;
-			}
-		} catch (flashEx) {
-		
-		}
-	};
-
-};
-
-
-/* This is a chance to do something before the browse window opens */
-SWFUpload.prototype.fileDialogStart = function () {
-	this.queueEvent("file_dialog_start_handler");
-};
-
-
-/* Called when a file is successfully added to the queue. */
-SWFUpload.prototype.fileQueued = function (file) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("file_queued_handler", file);
-};
-
-
-/* Handle errors that occur when an attempt to queue a file fails. */
-SWFUpload.prototype.fileQueueError = function (file, errorCode, message) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("file_queue_error_handler", [file, errorCode, message]);
-};
-
-/* Called after the file dialog has closed and the selected files have been queued.
-	You could call startUpload here if you want the queued files to begin uploading immediately. */
-SWFUpload.prototype.fileDialogComplete = function (numFilesSelected, numFilesQueued, numFilesInQueue) {
-	this.queueEvent("file_dialog_complete_handler", [numFilesSelected, numFilesQueued, numFilesInQueue]);
-};
-
-SWFUpload.prototype.uploadStart = function (file) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("return_upload_start_handler", file);
-};
-
-SWFUpload.prototype.returnUploadStart = function (file) {
-	var returnValue;
-	if (typeof this.settings.upload_start_handler === "function") {
-		file = this.unescapeFilePostParams(file);
-		returnValue = this.settings.upload_start_handler.call(this, file);
-	} else if (this.settings.upload_start_handler != undefined) {
-		throw "upload_start_handler must be a function";
-	}
-
-	// Convert undefined to true so if nothing is returned from the upload_start_handler it is
-	// interpretted as 'true'.
-	if (returnValue === undefined) {
-		returnValue = true;
-	}
-	
-	returnValue = !!returnValue;
-	
-	this.callFlash("ReturnUploadStart", [returnValue]);
-};
-
-
-
-SWFUpload.prototype.uploadProgress = function (file, bytesComplete, bytesTotal) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("upload_progress_handler", [file, bytesComplete, bytesTotal]);
-};
-
-SWFUpload.prototype.uploadError = function (file, errorCode, message) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("upload_error_handler", [file, errorCode, message]);
-};
-
-SWFUpload.prototype.uploadSuccess = function (file, serverData, responseReceived) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("upload_success_handler", [file, serverData, responseReceived]);
-};
-
-SWFUpload.prototype.uploadComplete = function (file) {
-	file = this.unescapeFilePostParams(file);
-	this.queueEvent("upload_complete_handler", file);
-};
-
-/* Called by SWFUpload JavaScript and Flash functions when debug is enabled. By default it writes messages to the
-   internal debug console.  You can override this event and have messages written where you want. */
-SWFUpload.prototype.debug = function (message) {
-	this.queueEvent("debug_handler", message);
-};
-
-
-/* **********************************
-	Debug Console
-	The debug console is a self contained, in page location
-	for debug message to be sent.  The Debug Console adds
-	itself to the body if necessary.
-
-	The console is automatically scrolled as messages appear.
-	
-	If you are using your own debug handler or when you deploy to production and
-	have debug disabled you can remove these functions to reduce the file size
-	and complexity.
-********************************** */
-   
-// Private: debugMessage is the default debug_handler.  If you want to print debug messages
-// call the debug() function.  When overriding the function your own function should
-// check to see if the debug setting is true before outputting debug information.
-SWFUpload.prototype.debugMessage = function (message) {
-	if (this.settings.debug) {
-		var exceptionMessage, exceptionValues = [];
-
-		// Check for an exception object and print it nicely
-		if (typeof message === "object" && typeof message.name === "string" && typeof message.message === "string") {
-			for (var key in message) {
-				if (message.hasOwnProperty(key)) {
-					exceptionValues.push(key + ": " + message[key]);
+				
+				if (o.iconpos) {
+					subspan.addClass("ui-btn-icon-" + o.iconpos);
 				}
-			}
-			exceptionMessage = exceptionValues.join("\n") || "";
-			exceptionValues = exceptionMessage.split("\n");
-			exceptionMessage = "EXCEPTION: " + exceptionValues.join("\nEXCEPTION: ");
-			SWFUpload.Console.writeLine(exceptionMessage);
-		} else {
-			SWFUpload.Console.writeLine(message);
-		}
-	}
-};
+				
+				if (v.data_theme) {
+					linkClass += " ui-btn-up-" + v.data_theme;
+					link.attr("data-theme", v.data_theme);
+				}
+				
+				if (v.data_inline) {
+					linkClass += " ui-btn-inline";
+					link.attr("data-inline", true);
+				}
+				
+				if (v.isMini) {
+					linkClass += " ui-mini";
+					link.attr("data-mini", true);
+				}
 
-SWFUpload.Console = {};
-SWFUpload.Console.writeLine = function (message) {
-	var console, documentForm;
-
-	try {
-		console = document.getElementById("SWFUpload_Console");
-
-		if (!console) {
-			documentForm = document.createElement("form");
-			document.getElementsByTagName("body")[0].appendChild(documentForm);
-
-			console = document.createElement("textarea");
-			console.id = "SWFUpload_Console";
-			console.style.fontFamily = "monospace";
-			console.setAttribute("wrap", "off");
-			console.wrap = "off";
-			console.style.overflow = "auto";
-			console.style.width = "700px";
-			console.style.height = "350px";
-			console.style.margin = "5px";
-			documentForm.appendChild(console);
-		}
-
-		console.value += message + "\n";
-
-		console.scrollTop = console.scrollHeight - console.clientHeight;
-	} catch (ex) {
-		alert("Exception: " + ex.name + " Message: " + ex.message);
-	}
-};
-/*
-	Queue Plug-in
-	
-	Features:
-		*Adds a cancelQueue() method for cancelling the entire queue.
-		*All queued files are uploaded when startUpload() is called.
-		*If false is returned from uploadComplete then the queue upload is stopped.
-		 If false is not returned (strict comparison) then the queue upload is continued.
-		*Adds a QueueComplete event that is fired when all the queued files have finished uploading.
-		 Set the event handler with the queue_complete_handler setting.
-		
-	*/
-
-var SWFUpload;
-if (typeof(SWFUpload) === "function") {
-	SWFUpload.queue = {};
-	
-	SWFUpload.prototype.initSettings = (function (oldInitSettings) {
-		return function () {
-			if (typeof(oldInitSettings) === "function") {
-				oldInitSettings.call(this);
-			}
+				if (v.href) {
+					link.attr("link", v.href);
+				}
+				
+				if (len <= 5) {
+					width = 100 / len;
+				} else {
+					width = "33.33";
+				}
+				if (o.iconpos && o.iconpos != 'bottom') {
+					link.append(subspan).addClass(linkClass);
+				}
+				link.append(v.label || "Button");
+				if (o.iconpos && o.iconpos == 'bottom') {
+					link.append(subspan).addClass(linkClass);
+				}
+				ul.append($("<li style='width:" + width + "%;'/>").addClass("ui-block-a").append(link));
+			});
 			
-			this.queueSettings = {};
+			content.append(ul);
+			this.content.html(content.html());
+		}
+	},
+	
+	destroy: function() {
+		return $.an.widget.prototype.destroy.apply(this, arguments);
+	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.listviewfield", $.an.field, {
+	options: {
+		mode: "browser",
+		value:[]
+	},
+
+	_create: function() {
+		$.an.field.prototype._create.apply(this, arguments);
+		this.element.addClass("an-listviewfield");
+	},	
+
+	_createControl : function() {
+		var self = this, o = this.options, el = this.element;
+		if (o.mobile) {
+			var cl = this.element.find(".content").eq(0);
+			this.ul_element = $('<ul name="' + o.id + '" data-role="listview" />').appendTo(cl);
+			if(o.isInset){
+				this.ul_element.attr("data-inset","true");
+			}
+
+			if(o.label_theme){
+				this.ul_element.attr("data-divider-theme",o.label_theme);
+			}
+			if(o.data_theme){
+				this.ul_element.attr("data-theme",o.data_theme);		
+			}
+			if(o.splitIcon){
+				this.ul_element.attr("data-split-icon",o.splitIcon);
+				this.ul_element.attr("data-split-theme","d");
+			}
+		} 
+	},
+	
+	_createLabel:function(){
+	},
+
+	_makeResizable : function() {
+	},
+
+	_notify:function(oldValue, value){
+		var o = this.options;
+		if(value != oldValue){
+			o.value = value;
+			this._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+		}
+	},
+	
+	appendValue:function(value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.push(value);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+
+	insertValue:function(index, value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.splice(index, 1, value);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+	
+	delValue:function(index) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value.splice(index, 1);
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+	
+	getValue:function(index) {
+		var o = this.options;
+		return o.value[index];
+	},
+	
+	replaceValue:function(index, value) {
+		var o = this.options, oldValue = [].concat(o.value);
+		o.value[index] = value;
+		this.refresh();
+		this._notify(oldValue, o.value);
+	},
+
+	_browser : function() {
+		var o = this.options,button_li="";
+		this.ul_element.empty();
+		o.value=[];
+		$.each(o.selectItems||[], function(k,v){
+			o.value.push(o.selectItems[k].value);
+			button_li += "<li><a>"+this.label+"</a></li>";							
+		});
+		if(o.label){
+			this.ul_element.append('<li data-role="list-divider"><a>' + o.label + '</a></li>');
+		}
+		this.ul_element.append(button_li);
+		this.ul_element.listview();
+		this.ul_element.data("mobileListview").refresh();
+	},
+
+	_edit : function() {
+		var o = this.options,button_li="";
+		this.ul_element.empty();
+		o.value=[];
+		$.each(o.selectItems||[], function(k,v){
+			o.value.push(o.selectItems[k].value);
+			if(o.splitIcon){
+				button_li += "<li><a>"+this.label+"</a><a href=\"javascript:;\">"+o.splitText+"</a></li>";
+			}else{
+				button_li += "<li><a>"+this.label+"</a></li>";	
+			}
+		});
+		if(o.value.length>0)this._trigger("optionchanged",null,{key:"value", value:o.value, oldValue:[], isTransient:o.isTransient});
+		if(o.label){
+			this.ul_element.append('<li data-role="list-divider"><a>' + o.label + '</a></li>');
+		}
+		
+		this.ul_element.append(button_li);
+		this.ul_element.listview();
+		this.ul_element.data("mobileListview").refresh();
+	},
+
+	_design : function() {
+		//this.input.detach();
+		var self = this, o = this.options, cl = this.content;
+	
+		if (cl.is(".ui-resizable")) c.resizable("destroy");
+		cl.html('');
+			var ul_element = $('<ul />').addClass('codiqa-control ui-listview').appendTo(cl);
+			if(!o.label_theme){
+				o.label_theme='c';
+			}
+			if(o.label){
+				ul_element.html('<li data-role="list-divider"><a>' + o.label + '</a></li>');
+			}
+			var label_li = $('<li />').addClass('ui-li ui-li-divider ui-bar-' + o.label_theme + ' ui-first-child').html(o.label).appendTo(ul_element);
+			$.each(o.selectItems||[], function(k,v){
+				button_li = $("<li class='ui-btn ui-btn-icon-right ui-li-has-arrow ui-li' />").appendTo(ul_element);				
+				$('<div class="ui-btn-inner ui-li" />').html('<div class="ui-btn-text"><a class="ui-link-inherit" >' + this.label + '</a></div><span class="ui-icon ui-icon-arrow-r ui-icon-shadow"> </span>')
+														.appendTo(button_li);
+														
+				if(k==o.selectItems.length-1){
+					button_li.addClass("ui-last-child");
+				}
+				
+				if (o.isInset) {
+					ul_element.addClass("ui-listview-inset ui-corner-all ui-shadow");
+				}
+				button_li.addClass("ui-btn-up-" + o.data_theme);
+				
+				
+			});						
+		
+	},
+
+
+
+	/*highlight : function(highlight) {
+		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover", highlight);
+	},*/
+
+	destroy : function() {
+		//this.element.unbind(".listviewfield").remove();
+		this.element.removeClass("an-listviewfield");
+		return $.an.field.prototype.destroy.apply(this, arguments);
+	} });
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.customhtmlfield", $.an.field, {
+
+
+	_create: function() {
+		$.an.field.prototype._create.apply(this, arguments);
+		this.element.addClass("an-customhtmlfield");
+	},	
+
+	_createControl : function() {
+		var self = this, o = this.options, el = this.element;
+		if (o.mobile) {
+			try{
+			var cl = this.element.find(".content").eq(0);
+			var customhtml = '';
+			customhtml += o.customhtml; 
 			
-			this.queueSettings.queue_cancelled_flag = false;
-			this.queueSettings.queue_upload_count = 0;
-			
-			this.queueSettings.user_upload_complete_handler = this.settings.upload_complete_handler;
-			this.queueSettings.user_upload_start_handler = this.settings.upload_start_handler;
-			this.settings.upload_complete_handler = SWFUpload.queue.uploadCompleteHandler;
-			this.settings.upload_start_handler = SWFUpload.queue.uploadStartHandler;
-			
-			this.settings.queue_complete_handler = this.settings.queue_complete_handler || null;
-		};
-	})(SWFUpload.prototype.initSettings);
-
-	SWFUpload.prototype.startUpload = function (fileID) {
-		this.queueSettings.queue_cancelled_flag = false;
-		this.callFlash("StartUpload", [fileID]);
-	};
-
-	SWFUpload.prototype.cancelQueue = function () {
-		this.queueSettings.queue_cancelled_flag = true;
-		this.stopUpload();
-		
-		var stats = this.getStats();
-		while (stats.files_queued > 0) {
-			this.cancelUpload();
-			stats = this.getStats();
-		}
-	};
-	
-	SWFUpload.queue.uploadStartHandler = function (file) {
-		var returnValue;
-		if (typeof(this.queueSettings.user_upload_start_handler) === "function") {
-			returnValue = this.queueSettings.user_upload_start_handler.call(this, file);
-		}
-		
-		// To prevent upload a real "FALSE" value must be returned, otherwise default to a real "TRUE" value.
-		returnValue = (returnValue === false) ? false : true;
-		
-		this.queueSettings.queue_cancelled_flag = !returnValue;
-
-		return returnValue;
-	};
-	
-	SWFUpload.queue.uploadCompleteHandler = function (file) {
-		var user_upload_complete_handler = this.queueSettings.user_upload_complete_handler;
-		var continueUpload;
-		
-		if (file.filestatus === SWFUpload.FILE_STATUS.COMPLETE) {
-			this.queueSettings.queue_upload_count++;
-		}
-
-		if (typeof(user_upload_complete_handler) === "function") {
-			continueUpload = (user_upload_complete_handler.call(this, file) === false) ? false : true;
-		} else if (file.filestatus === SWFUpload.FILE_STATUS.QUEUED) {
-			// If the file was stopped and re-queued don't restart the upload
-			continueUpload = false;
-		} else {
-			continueUpload = true;
-		}
-		
-		if (continueUpload) {
-			var stats = this.getStats();
-			if (stats.files_queued > 0 && this.queueSettings.queue_cancelled_flag === false) {
-				this.startUpload();
-			} else if (this.queueSettings.queue_cancelled_flag === false) {
-				this.queueEvent("queue_complete_handler", [this.queueSettings.queue_upload_count]);
-				this.queueSettings.queue_upload_count = 0;
-			} else {
-				this.queueSettings.queue_cancelled_flag = false;
-				this.queueSettings.queue_upload_count = 0;
+			cl.html(customhtml);
+			this.element.context.lastElementChild.lastElementChild.className = 'customhtml';
+			if($('.customhtml').listview){
+				$('.customhtml').listview();
 			}
-		}
-	};
-}/*
-	A simple class for displaying file information and progress
-	Note: This is a demonstration only and not part of SWFUpload.
-	Note: Some have had problems adapting this class in IE7. It may not be suitable for your application.
-*/
-
-// Constructor
-// file is a SWFUpload file object
-// targetID is the HTML element id attribute that the FileProgress HTML structure will be added to.
-// Instantiating a new FileProgress object with an existing file will reuse/update the existing DOM elements
-function FileProgress(file, targetID) {
-	this.fileProgressID = file.id;
-
-	this.opacity = 100;
-	this.height = 0;
-	
-
-	this.fileProgressWrapper = document.getElementById(this.fileProgressID);
-	if (!this.fileProgressWrapper) {
-		this.fileProgressWrapper = document.createElement("div");
-		this.fileProgressWrapper.className = "progressWrapper";
-		this.fileProgressWrapper.id = this.fileProgressID;
-
-		this.fileProgressElement = document.createElement("div");
-		this.fileProgressElement.className = "progressContainer";
-
-		var progressCancel = document.createElement("a");
-		progressCancel.className = "progressCancel";
-		progressCancel.href = "#";
-		progressCancel.style.visibility = "hidden";
-		progressCancel.appendChild(document.createTextNode(" "));
-
-		var progressText = document.createElement("div");
-		progressText.className = "progressName";
-		progressText.appendChild(document.createTextNode(file.name));
-
-		var progressBar = document.createElement("div");
-		progressBar.className = "progressBarInProgress";
-
-		var progressStatus = document.createElement("div");
-		progressStatus.className = "progressBarStatus";
-		progressStatus.innerHTML = "&nbsp;";
-
-		this.fileProgressElement.appendChild(progressCancel);
-		this.fileProgressElement.appendChild(progressText);
-		this.fileProgressElement.appendChild(progressStatus);
-		this.fileProgressElement.appendChild(progressBar);
-
-		this.fileProgressWrapper.appendChild(this.fileProgressElement);
-
-		document.getElementById(targetID).appendChild(this.fileProgressWrapper);
-	} else {
-		this.fileProgressElement = this.fileProgressWrapper.firstChild;
-		this.reset();
-	}
-
-	this.height = this.fileProgressWrapper.offsetHeight;
-	this.setTimer(null);
-
-
-}
-
-FileProgress.prototype.setTimer = function (timer) {
-	this.fileProgressElement["FP_TIMER"] = timer;
-};
-FileProgress.prototype.getTimer = function (timer) {
-	return this.fileProgressElement["FP_TIMER"] || null;
-};
-
-FileProgress.prototype.reset = function () {
-	this.fileProgressElement.className = "progressContainer";
-
-	this.fileProgressElement.childNodes[2].innerHTML = "&nbsp;";
-	this.fileProgressElement.childNodes[2].className = "progressBarStatus";
-	
-	this.fileProgressElement.childNodes[3].className = "progressBarInProgress";
-	this.fileProgressElement.childNodes[3].style.width = "0%";
-	
-	this.appear();	
-};
-
-FileProgress.prototype.setProgress = function (percentage) {
-	this.fileProgressElement.className = "progressContainer green";
-	this.fileProgressElement.childNodes[3].className = "progressBarInProgress";
-	this.fileProgressElement.childNodes[3].style.width = percentage + "%";
-
-	this.appear();	
-};
-FileProgress.prototype.setComplete = function () {
-	this.fileProgressElement.className = "progressContainer blue";
-	this.fileProgressElement.childNodes[3].className = "progressBarComplete";
-	this.fileProgressElement.childNodes[3].style.width = "";
-
-	var oSelf = this;
-	this.setTimer(setTimeout(function () {
-		oSelf.disappear();
-	}, 10000));
-};
-FileProgress.prototype.setError = function () {
-	this.fileProgressElement.className = "progressContainer red";
-	this.fileProgressElement.childNodes[3].className = "progressBarError";
-	this.fileProgressElement.childNodes[3].style.width = "";
-
-	var oSelf = this;
-	this.setTimer(setTimeout(function () {
-		oSelf.disappear();
-	}, 5000));
-};
-FileProgress.prototype.setCancelled = function () {
-	this.fileProgressElement.className = "progressContainer";
-	this.fileProgressElement.childNodes[3].className = "progressBarError";
-	this.fileProgressElement.childNodes[3].style.width = "";
-
-	var oSelf = this;
-	this.setTimer(setTimeout(function () {
-		oSelf.disappear();
-	}, 2000));
-};
-FileProgress.prototype.setStatus = function (status) {
-	this.fileProgressElement.childNodes[2].innerHTML = status;
-};
-
-// Show/Hide the cancel button
-FileProgress.prototype.toggleCancel = function (show, swfUploadInstance) {
-	this.fileProgressElement.childNodes[0].style.visibility = show ? "visible" : "hidden";
-	if (swfUploadInstance) {
-		var fileID = this.fileProgressID;
-		this.fileProgressElement.childNodes[0].onclick = function () {
-			swfUploadInstance.cancelUpload(fileID);
-			return false;
-		};
-	}
-};
-
-FileProgress.prototype.appear = function () {
-	if (this.getTimer() !== null) {
-		clearTimeout(this.getTimer());
-		this.setTimer(null);
-	}
-	
-	if (this.fileProgressWrapper.filters) {
-		try {
-			this.fileProgressWrapper.filters.item("DXImageTransform.Microsoft.Alpha").opacity = 100;
-		} catch (e) {
-			// If it is not set initially, the browser will throw an error.  This will set it if it is not set yet.
-			this.fileProgressWrapper.style.filter = "progid:DXImageTransform.Microsoft.Alpha(opacity=100)";
-		}
-	} else {
-		this.fileProgressWrapper.style.opacity = 1;
-	}
+			}catch (e){}
+		} 
 		
-	this.fileProgressWrapper.style.height = "";
+	},
 	
-	this.height = this.fileProgressWrapper.offsetHeight;
-	this.opacity = 100;
-	this.fileProgressWrapper.style.display = "";
-	
-};
+	_createLabel:function(){
+		this.element.find('label').remove();
+		
+	},
 
-// Fades out and clips away the FileProgress box.
-FileProgress.prototype.disappear = function () {
+	_makeResizable : function() {
+	},
 
-	var reduceOpacityBy = 15;
-	var reduceHeightBy = 4;
-	var rate = 30;	// 15 fps
+	_browser : function() {
+		//this.element.find('label').remove();
+		//this.input.detach();
+		/*var c = this.content;
+		if (c.is(".ui-resizable")) c.resizable("destroy");
+		c.html(this.options.value + "").css("display", "");*/
+	},
 
-	if (this.opacity > 0) {
-		this.opacity -= reduceOpacityBy;
-		if (this.opacity < 0) {
-			this.opacity = 0;
-		}
+	_edit : function() {
+		//this.input.detach().val(this.options.value).appendTo(this.content.empty());
+	},
 
-		if (this.fileProgressWrapper.filters) {
-			try {
-				this.fileProgressWrapper.filters.item("DXImageTransform.Microsoft.Alpha").opacity = this.opacity;
-			} catch (e) {
-				// If it is not set initially, the browser will throw an error.  This will set it if it is not set yet.
-				this.fileProgressWrapper.style.filter = "progid:DXImageTransform.Microsoft.Alpha(opacity=" + this.opacity + ")";
-			}
-		} else {
-			this.fileProgressWrapper.style.opacity = this.opacity / 100;
-		}
-	}
+	_design : function() {
+		//this.input.detach();
+		//var self = this, o = this.options, c = this.content;
+		//if (c.is(".ui-resizable")) c.resizable("destroy");
+		//this.element.find('li').unbind();
+		/*c.html(o.value + "").css({ width : o.width, height : o.height, display : "" }).resizable(
+			{ stop : function(e, ui) {
+				o.width = c.width();
+				o.height = c.height();
+				$.extend(true, o.metadata[self.widgetName], { width : o.width, height : o.height });
+				self._updateMetadata();
+				self._trigger("resize", null, { size : ui.size, oldSize : ui.originalSize });
+			} });*/
+		var self = this;
+		//self.content.html(123);
+		/*$.get("http://192.168.1.52:8080/page2.html?dbid=519093fbac8f2702b2000002&formid=51abf3e521c7d6005b000069", {}, function(data) {
+			console.log(data);
+			//self.content.html(data);
+		}, 'html');*/
+		//console.log(document.body.innerHTML);
+		//var fram = '<iframe style="display:none;" src="http://192.168.1.52:8080/page2.html?dbid=519093fbac8f2702b2000002&formid=51abf3e521c7d6005b000069" />';
+		//console.log($(fram));
+		//this.content.html(fram);
+		//this.content.find();
+		/*$.ajax({
+			  type: "GET",
+			  url: "http://192.168.1.52:8080/page2.html?dbid=519093fbac8f2702b2000002&formid=51abf3e521c7d6005b000069",
+			  dataType: "html",
+			  success:function(data){
+				  fram.html(data);
+				  this.content.html(fram);
+			  }
+			});*/
+	},
 
-	if (this.height > 0) {
-		this.height -= reduceHeightBy;
-		if (this.height < 0) {
-			this.height = 0;
-		}
-
-		this.fileProgressWrapper.style.height = this.height + "px";
-	}
-
-	if (this.height > 0 || this.opacity > 0) {
-		var oSelf = this;
-		this.setTimer(setTimeout(function () {
-			oSelf.disappear();
-		}, rate));
-	} else {
-		this.fileProgressWrapper.style.display = "none";
-		this.setTimer(null);
-	}
-};/* Demo Note:  This demo uses a FileProgress class that handles the UI for displaying the file name and percent complete.
-The FileProgress class is not part of SWFUpload.
-*/
 
 
-/* **********************
-   Event Handlers
-   These are my custom event handlers to make my
-   web application behave the way I went when SWFUpload
-   completes different tasks.  These aren't part of the SWFUpload
-   package.  They are part of my application.  Without these none
-   of the actions SWFUpload makes will show up in my application.
-   ********************** */
-function fileQueued(file) {
-	try {
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setStatus("Pending...");
-		progress.toggleCancel(true, this);
+	/*highlight : function(highlight) {
+		(this.options.mode == "edit" ? this.input : this.element).toggleClass("an-state-hover", highlight);
+	},*/
 
-	} catch (ex) {
-		this.debug(ex);
-	}
+	destroy : function() {
+		//this.element.unbind(".customhtmlfield").remove();
+		this.element.removeClass("an-customhtmlfield");
+		return $.an.field.prototype.destroy.apply(this, arguments);
+	} });
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
 
-}
+(function( $, undefined ) {
 
-function fileQueueError(file, errorCode, message) {
-	try {
-		if (errorCode === SWFUpload.QUEUE_ERROR.QUEUE_LIMIT_EXCEEDED) {
-			alert("You have attempted to queue too many files.\n" + (message === 0 ? "You have reached the upload limit." : "You may select " + (message > 1 ? "up to " + message + " files." : "one file.")));
-			return;
-		}
+$.widget( "an.mobilelistview", $.an.view, {
+	options: {
+		printable: false,
+		pagerPosition: "bottom" // bottom, both sides
+	},
 
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setError();
-		progress.toggleCancel(false);
+	_create: function(){
+		$.an.view.prototype._create.apply(this, arguments);
 
-		switch (errorCode) {
-		case SWFUpload.QUEUE_ERROR.FILE_EXCEEDS_SIZE_LIMIT:
-			progress.setStatus("File is too big.");
-			this.debug("Error Code: File too big, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		case SWFUpload.QUEUE_ERROR.ZERO_BYTE_FILE:
-			progress.setStatus("Cannot upload Zero Byte files.");
-			this.debug("Error Code: Zero byte file, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		case SWFUpload.QUEUE_ERROR.INVALID_FILETYPE:
-			progress.setStatus("Invalid File Type.");
-			this.debug("Error Code: Invalid File Type, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		default:
-			if (file !== null) {
-				progress.setStatus("Unhandled Error");
-			}
-			this.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		}
-	} catch (ex) {
-        this.debug(ex);
-    }
-}
-
-function fileDialogComplete(numFilesSelected, numFilesQueued) {
-	try {
-		if (numFilesSelected > 0) {
-			document.getElementById(this.customSettings.cancelButtonId).disabled = false;
+		var o = this.options, el = this.element;
+		el.addClass("an-mobilelistbview");
+		o.templateTemp = o.view.templateTemp;
+		o.templateSelector = o.view.templateSelector;
+		o.templateConverts = o.view.templateConverts;
+		o.templateContent = o.view.templateContent;
+		this.documents = $(o.templateContent).prependTo(el);
+				
+		if (o.templateTemp) {
+			o.templateTemp=$.templates(o.templateTemp);
 		}
 		
-		/* I want auto start the upload and I can do that here */
-		this.startUpload();
-	} catch (ex)  {
-        this.debug(ex);
-	}
-}
-
-function uploadStart(file) {
-	try {
-		/* I don't want to do any file validation or anything,  I'll just update the UI and
-		return true to indicate that the upload should start.
-		It's important to update the UI here because in Linux no uploadProgress events are called. The best
-		we can do is say we are uploading.
-		 */
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setStatus("Uploading...");
-		progress.toggleCancel(true, this);
-	}
-	catch (ex) {}
-	
-	return true;
-}
-
-function uploadProgress(file, bytesLoaded, bytesTotal) {
-	try {
-		var percent = Math.ceil((bytesLoaded / bytesTotal) * 100);
-
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setProgress(percent);
-		progress.setStatus("Uploading...");
-	} catch (ex) {
-		this.debug(ex);
-	}
-}
-
-function uploadSuccess(file, serverData) {
-	try {
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setComplete();
-		progress.setStatus("Complete.");
-		progress.toggleCancel(false);
-
-	} catch (ex) {
-		this.debug(ex);
-	}
-}
-
-function uploadError(file, errorCode, message) {
-	try {
-		var progress = new FileProgress(file, this.customSettings.progressTarget);
-		progress.setError();
-		progress.toggleCancel(false);
-
-		switch (errorCode) {
-		case SWFUpload.UPLOAD_ERROR.HTTP_ERROR:
-			progress.setStatus("Upload Error: " + message);
-			this.debug("Error Code: HTTP Error, File name: " + file.name + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.UPLOAD_FAILED:
-			progress.setStatus("Upload Failed.");
-			this.debug("Error Code: Upload Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.IO_ERROR:
-			progress.setStatus("Server (IO) Error");
-			this.debug("Error Code: IO Error, File name: " + file.name + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.SECURITY_ERROR:
-			progress.setStatus("Security Error");
-			this.debug("Error Code: Security Error, File name: " + file.name + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.UPLOAD_LIMIT_EXCEEDED:
-			progress.setStatus("Upload limit exceeded.");
-			this.debug("Error Code: Upload Limit Exceeded, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.FILE_VALIDATION_FAILED:
-			progress.setStatus("Failed Validation.  Upload skipped.");
-			this.debug("Error Code: File Validation Failed, File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
-		case SWFUpload.UPLOAD_ERROR.FILE_CANCELLED:
-			// If there aren't any files left (they were all cancelled) disable the cancel button
-			if (this.getStats().files_queued === 0) {
-				document.getElementById(this.customSettings.cancelButtonId).disabled = true;
-			}
-			progress.setStatus("Cancelled");
-			progress.setCancelled();
-			break;
-		case SWFUpload.UPLOAD_ERROR.UPLOAD_STOPPED:
-			progress.setStatus("Stopped");
-			break;
-		default:
-			progress.setStatus("Unhandled Error: " + errorCode);
-			this.debug("Error Code: " + errorCode + ", File name: " + file.name + ", File size: " + file.size + ", Message: " + message);
-			break;
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
 		}
-	} catch (ex) {
-        this.debug(ex);
-    }
-}
+	},
 
-function uploadComplete(file) {
-	if (this.getStats().files_queued === 0) {
-		document.getElementById(this.customSettings.cancelButtonId).disabled = true;
+	_showDocuments:function(){
+		var self = this, o = this.options;
+		if (o.templateTemp) {
+			var html = o.templateTemp.render(self.docs);
+			$(o.templateSelector, this.documents).html(html);
+		}
+		if($(o.templateSelector).listview){
+			$(o.templateSelector).listview();
+		}
+		if(o.templateConverts&&typeof o.templateConverts=='string'){
+			o.templateConverts=eval("("+o.templateConverts+")");			
+			$.views.converters(o.templateConverts);
+		}
+	},
+	
+	_docsLoaded:function(){
+		this.refresh();
+		
+	},
+	
+	_design:function(){
+		this._showDocuments();
+	},
+	
+	_browser:function(){
+		this._showDocuments();
+		if($(this.options.templateSelector).listview){
+			$(this.options.templateSelector).listview('refresh');
+		}
+	},
+	
+	save:function(){
+		var value = {};
+		$.extend(this.options.view.options, value);
+		return $.an.view.prototype.save.apply(this,arguments);
+	},
+	
+	print: function(){ 
+		var o = this.options, loc = window.location, 
+		      url = loc.protocol +"//"+loc.host+"/pdfs?dbid="+o.dbId+"&viewid="+o.view._id;
+		print(url);
+	},
+	
+	destroy: function() {
+		this.element.unbind(".formview").removeClass("an-formview show-pager");
+		$.an.view.prototype.destroy.apply(this,arguments);
 	}
-}
+});
+})( jQuery );
+(function(a){function r(c,g){function n(C){return a.isArray(k.readonly)?(C=a(".dwwl",x).index(C),k.readonly[C]):k.readonly}function d(C){var d='<div class="dw-bf">',C=ja[C],C=C.values?C:E(C),b=1,c=C.values,j=C.keys||c;a.each(c,function(a,C){0==b%20&&(d+='</div><div class="dw-bf">');d+='<div class="dw-li dw-v" data-val="'+j[a]+'" style="height:'+G+"px;line-height:"+G+'px;"><div class="dw-i">'+C+"</div></div>";b++});return d+="</div>"}function j(C){Y=a(".dw-li",C).index(a(".dw-v",C).eq(0));Z=a(".dw-li",
+C).index(a(".dw-v",C).eq(-1));L=a(".dw-ul",x).index(C)}function J(a){var d=k.headerText;return d?"function"===typeof d?d.call(M,a):d.replace(/\{value\}/i,a):""}function A(){m.temp=$&&null!==m.val&&m.val!=H.val()||null===m.values?k.parseValue(H.val()||"",m):m.values.slice(0);fa()}function F(C){var d=window.getComputedStyle?getComputedStyle(C[0]):C[0].style,c;b?(a.each(["t","webkitT","MozT","OT","msT"],function(a,C){if(void 0!==d[C+"ransform"])return c=d[C+"ransform"],!1}),c=c.split(")")[0].split(", "),
+C=c[13]||c[5]):C=d.top.replace("px","");return Math.round(ka-C/G)}function e(a,d){clearTimeout(aa[d]);delete aa[d];a.closest(".dwwl").removeClass("dwa")}function p(a,d,c,j,n){var A=(ka-c)*G,g=a[0].style;A==ga[d]&&aa[d]||(j&&A!=ga[d]&&o("onAnimStart",[x,d,j]),ga[d]=A,g[y+"Transition"]="all "+(j?j.toFixed(3):0)+"s ease-out",b?g[y+"Transform"]="translate3d(0,"+A+"px,0)":g.top=A+"px",aa[d]&&e(a,d),j&&void 0!==n&&(a.closest(".dwwl").addClass("dwa"),aa[d]=setTimeout(function(){e(a,d)},1E3*j)),ca[d]=c)}
+function t(d,b,c,j,n){!1!==o("validate",[x,b,d])&&(a(".dw-ul",x).each(function(c){var A=a(this),g=a('.dw-li[data-val="'+m.temp[c]+'"]',A),f=a(".dw-li",A),l=f.index(g),F=f.length,J=c==b||void 0===b;if(!g.hasClass("dw-v")){for(var i=g,k=0,h=0;0<=l-k&&!i.hasClass("dw-v");)k++,i=f.eq(l-k);for(;l+h<F&&!g.hasClass("dw-v");)h++,g=f.eq(l+h);(h<k&&h&&2!==j||!k||0>l-k||1==j)&&g.hasClass("dw-v")?l+=h:(g=i,l-=k)}if(!g.hasClass("dw-sel")||J)m.temp[c]=g.attr("data-val"),a(".dw-sel",A).removeClass("dw-sel"),g.addClass("dw-sel"),
+p(A,c,l,J?d:0.1,J?n:!1)}),Q=k.formatResult(m.temp),"inline"==k.display?fa(c,0,!0):a(".dwv",x).html(J(Q)),c&&o("onChange",[Q]))}function o(d,c){var b;c.push(m);a.each([ha.defaults,oa,g],function(a,j){j[d]&&(b=j[d].apply(M,c))});return b}function r(d,c,b,j,g){var c=Math.max(Y,Math.min(c,Z)),A=a(".dw-li",d).eq(c),n=void 0===g?c:g,l=L,f=j?c==n?0.1:Math.abs((c-n)*k.timeUnit):0;m.temp[l]=A.attr("data-val");p(d,l,c,f,g);setTimeout(function(){t(f,l,!0,b,g)},10)}function R(a){var d=ca[L]+1;r(a,d>Z?Y:d,1,!0)}
+function S(a){var d=ca[L]-1;r(a,d<Y?Z:d,2,!0)}function fa(a,d,c,b){W&&!c&&t(d);Q=k.formatResult(m.temp);b||(m.values=m.temp.slice(0),m.val=Q);a&&$&&H.val(Q).trigger("change")}var ka,G,Q,x,T,O,qa,ba,P,U,va,ha,wa,ia,da,ra,X,xa,V,ea,Y,Z,K,L,sa,ta,m=this,ua=a.mobiscroll,M=c,H=a(M),k=I({},B),oa={},aa={},ca={},ga={},ja=[],$=H.is("input"),W=!1,Ba=function(d){z(d)&&!h&&!n(this)&&!ia&&(d.preventDefault(),h=!0,da="clickpick"!=k.mode,K=a(".dw-ul",this),j(K),ea=(ra=void 0!==aa[L])?F(K):ca[L],X=u(d,"Y"),xa=new Date,
+V=X,p(K,L,ea,0.0010),da&&K.closest(".dwwl").addClass("dwa"),a(document).bind(i,ya).bind(w,za))},ya=function(a){da&&(a.preventDefault(),a.stopPropagation(),V=u(a,"Y"),p(K,L,Math.max(Y-1,Math.min(ea+(X-V)/G,Z+1))));ra=!0},za=function(){var d=new Date-xa,c=Math.max(Y-1,Math.min(ea+(X-V)/G,Z+1)),b,j=K.offset().top;300>d?(d=(V-X)/d,b=d*d/k.speedUnit,0>V-X&&(b=-b)):b=V-X;d=Math.round(ea-b/G);if(!b&&!ra){var j=Math.floor((V-j)/G),g=a(".dw-li",K).eq(j);b=da;!1!==o("onValueTap",[g])?d=j:b=!0;b&&(g.addClass("dw-hl"),
+setTimeout(function(){g.removeClass("dw-hl")},200))}da&&r(K,d,0,!0,Math.round(c));h=!1;K=null;a(document).unbind(i,ya).unbind(w,za)},Ca=function(d){a(document).bind(w,Aa);a(this).hasClass("dwb-d")||a(this).addClass("dwb-a");if(a(this).hasClass("dwwb")){var c=a(this).closest(".dwwl");if(z(d)&&!n(c)&&!c.hasClass("dwa")){d.stopPropagation();d.preventDefault();ia=!0;var b=c.find(".dw-ul"),g=a(this).hasClass("dwwbp")?R:S;j(b);clearInterval(sa);sa=setInterval(function(){g(b)},k.delay);g(b)}}},Aa=function(){ia&&
+(clearInterval(sa),ia=!1);a(document).unbind(w,Aa);a(".dwb-a",x).removeClass("dwb-a")},Da=function(d){if(!n(this)){d.preventDefault();var d=d.originalEvent,d=d.wheelDelta?d.wheelDelta/120:d.detail?-d.detail/3:0,c=a(".dw-ul",this);j(c);r(c,Math.round(ca[L]-d),0>d?1:2)}};m.position=function(d){if(!("inline"==k.display||T===a(window).width()&&qa===a(window).height()&&d||!1===o("onPosition",[x]))){var c,b,j,g,A,n,l,f,J,F=0,h=0,d=a(window).scrollTop();g=a(".dwwr",x);var i=a(".dw",x),m={};A=void 0===k.anchor?
+H:k.anchor;T=a(window).width();qa=a(window).height();O=(O=window.innerHeight)||qa;/modal|bubble/.test(k.display)&&(a(".dwc",x).each(function(){c=a(this).outerWidth(!0);F+=c;h=c>h?c:h}),c=F>T?h:F,g.width(c).css("white-space",F>T?"":"nowrap"));ba=i.outerWidth();P=i.outerHeight(!0);"modal"==k.display?(b=(T-ba)/2,j=d+(O-P)/2):"bubble"==k.display?(J=!0,f=a(".dw-arrw-i",x),b=A.offset(),n=b.top,l=b.left,g=A.outerWidth(),A=A.outerHeight(),b=l-(i.outerWidth(!0)-g)/2,b=b>T-ba?T-(ba+20):b,b=0<=b?b:20,j=n-P,
+j<d||n>d+O?(i.removeClass("dw-bubble-top").addClass("dw-bubble-bottom"),j=n+A):i.removeClass("dw-bubble-bottom").addClass("dw-bubble-top"),f=f.outerWidth(),g=l+g/2-(b+(ba-f)/2),a(".dw-arr",x).css({left:Math.max(0,Math.min(g,f))})):(m.width="100%","top"==k.display?j=d:"bottom"==k.display&&(j=d+O-P));m.top=0>j?0:j;m.left=b;i.css(m);a(".dw-persp",x).height(0).height(j+P>a(document).height()?j+P:a(document).height());J&&(j+P>d+O||n>d+O)&&a(window).scrollTop(j+P-O)}};m.enable=function(){k.disabled=!1;
+$&&H.prop("disabled",!1)};m.disable=function(){k.disabled=!0;$&&H.prop("disabled",!0)};m.setValue=function(d,b,c,j){m.temp=a.isArray(d)?d.slice(0):k.parseValue.call(M,d+"",m);fa(b,c,!1,j)};m.getValue=function(){return m.values};m.getValues=function(){var a=[],d;for(d in m._selectedValues)a.push(m._selectedValues[d]);return a};m.changeWheel=function(b,c){if(x){var j=0,g=b.length;a.each(k.wheels,function(A,n){a.each(n,function(A,n){if(-1<a.inArray(j,b)&&(ja[j]=n,a(".dw-ul",x).eq(j).html(d(j)),g--,!g))return m.position(),
+t(c,void 0,!0),!1;j++});if(!g)return!1})}};m.isVisible=function(){return W};m.tap=function(a,d){var b,c;k.tap&&a.bind("touchstart",function(a){a.preventDefault();b=u(a,"X");c=u(a,"Y")}).bind("touchend",function(a){20>Math.abs(u(a,"X")-b)&&20>Math.abs(u(a,"Y")-c)&&d.call(this,a);s=!0;setTimeout(function(){s=!1},300)});a.bind("click",function(a){s||d.call(this,a)})};m.show=function(b){if(k.disabled||W)return!1;"top"==k.display&&(U="slidedown");"bottom"==k.display&&(U="slideup");A();o("onBeforeShow",
+[]);var c=0,j="";U&&!b&&(j="dw-"+U+" dw-in");var g='<div class="'+k.theme+" dw-"+k.display+(v?" dw"+v:"")+'">'+("inline"==k.display?'<div class="dw dwbg dwi"><div class="dwwr">':'<div class="dw-persp"><div class="dwo"></div><div class="dw dwbg '+j+'"><div class="dw-arrw"><div class="dw-arrw-i"><div class="dw-arr"></div></div></div><div class="dwwr">'+(k.headerText?'<div class="dwv"></div>':""))+'<div class="dwcc">';a.each(k.wheels,function(b,j){g+='<div class="dwc'+("scroller"!=k.mode?" dwpm":" dwsc")+
+(k.showLabel?"":" dwhl")+'"><div class="dwwc dwrc"><table cellpadding="0" cellspacing="0"><tr>';a.each(j,function(a,b){ja[c]=b;g+='<td><div class="dwwl dwrc dwwl'+c+'">'+("scroller"!=k.mode?'<div class="dwb-e dwwb dwwbp" style="height:'+G+"px;line-height:"+G+'px;"><span>+</span></div><div class="dwb-e dwwb dwwbm" style="height:'+G+"px;line-height:"+G+'px;"><span>&ndash;</span></div>':"")+'<div class="dwl">'+(b.label||a)+'</div><div class="dwww"><div class="dww" style="height:'+k.rows*G+"px;min-width:"+
+k.width+'px;"><div class="dw-ul">';g+=d(c);g+='</div><div class="dwwol"></div></div><div class="dwwo"></div></div><div class="dwwol"></div></div></td>';c++});g+="</tr></table></div></div>"});g+="</div>"+("inline"!=k.display?'<div class="dwbc'+(k.button3?" dwbc-p":"")+'"><span class="dwbw dwb-s"><span class="dwb dwb-e">'+k.setText+"</span></span>"+(k.button3?'<span class="dwbw dwb-n"><span class="dwb dwb-e">'+k.button3Text+"</span></span>":"")+'<span class="dwbw dwb-c"><span class="dwb dwb-e">'+k.cancelText+
+"</span></span></div></div>":"")+"</div></div></div>";x=a(g);t();o("onMarkupReady",[x]);"inline"!=k.display?(x.appendTo("body"),U&&!b&&(x.addClass("dw-trans"),setTimeout(function(){x.removeClass("dw-trans").find(".dw").removeClass(j)},350))):H.is("div")?H.html(x):x.insertAfter(H);o("onMarkupInserted",[x]);W=!0;ha.init(x,m);"inline"!=k.display&&(m.tap(a(".dwb-s span",x),function(){if(m.hide(false,"set")!==false){fa(true,0,true);o("onSelect",[m.val])}}),m.tap(a(".dwb-c span",x),function(){m.cancel()}),
+k.button3&&m.tap(a(".dwb-n span",x),k.button3),k.scrollLock&&x.bind("touchmove",function(a){P<=O&&ba<=T&&a.preventDefault()}),a("input,select,button").each(function(){this.disabled||a(this).addClass("dwtd").prop("disabled",true).data("autocomplete",a(this).attr("autocomplete")).attr("autocomplete","off")}),m.position(),a(window).bind("orientationchange.dw resize.dw",function(){clearTimeout(va);va=setTimeout(function(){m.position(true)},100)}));x.delegate(".dwwl","DOMMouseScroll mousewheel",Da).delegate(".dwb-e",
+D,Ca).delegate(".dwwl",D,Ba);o("onShow",[x,Q])};m.hide=function(d,b){if(!W||!1===o("onClose",[Q,b]))return!1;a(".dwtd").each(function(){a(this).prop("disabled",!1).removeClass("dwtd");a(this).data("autocomplete")?a(this).attr("autocomplete",a(this).data("autocomplete")):a(this).removeAttr("autocomplete")});H.blur();x&&("inline"!=k.display&&U&&!d?(x.addClass("dw-trans").find(".dw").addClass("dw-"+U+" dw-out"),setTimeout(function(){x.remove();x=null},350)):(x.remove(),x=null),W=!1,ga={},a(window).unbind(".dw"))};
+m.cancel=function(){!1!==m.hide(!1,"cancel")&&o("onCancel",[m.val])};m.init=function(a){ha=I({defaults:{},init:f},ua.themes[a.theme||k.theme]);wa=ua.i18n[a.lang||k.lang];I(g,a);I(k,ha.defaults,wa,g);m.settings=k;H.unbind(".dw");if(a=ua.presets[k.preset])oa=a.call(M,m),I(k,oa,g);ka=Math.floor(k.rows/2);G=k.height;U=k.animate;W&&m.hide();"inline"==k.display?m.show():(A(),$&&k.showOnFocus&&(void 0===ta&&(ta=M.readOnly),M.readOnly=!0,H.bind("focus.dw",function(){m.show()})))};m.trigger=function(a,d){return o(a,
+d)};m.option=function(a,d){var b={};"object"===typeof a?b=a:b[a]=d;m.init(b)};m.destroy=function(){m.hide();H.unbind(".dw");delete q[M.id];$&&(M.readOnly=ta)};m.getInst=function(){return m};m.values=null;m.val=null;m.temp=null;m._selectedValues={};m.init(g)}function e(a){for(var b in a)if(void 0!==o[a[b]])return!0;return!1}function z(a){if("touchstart"===a.type)p=!0;else if(p)return p=!1;return!0}function u(a,b){var c=a.originalEvent,d=a.changedTouches;return d||c&&c.changedTouches?c?c.changedTouches[0]["page"+
+b]:d[0]["page"+b]:a["page"+b]}function E(b){var c={values:[],keys:[]};a.each(b,function(a,d){c.keys.push(a);c.values.push(d)});return c}function c(a,b,c){var d=a;if("object"===typeof b)return a.each(function(){this.id||(t+=1,this.id="mobiscroll"+t);q[this.id]=new r(this,b)});"string"===typeof b&&a.each(function(){var a;if((a=q[this.id])&&a[b])if(a=a[b].apply(this,Array.prototype.slice.call(c,1)),void 0!==a)return d=a,!1});return d}var h,s,p,t=(new Date).getTime(),q={},f=function(){},o=document.createElement("modernizr").style,
+b=e(["perspectiveProperty","WebkitPerspective","MozPerspective","OPerspective","msPerspective"]),v=function(){var a=["Webkit","Moz","O","ms"],b;for(b in a)if(e([a[b]+"Transform"]))return"-"+a[b].toLowerCase();return""}(),y=v.replace(/^\-/,"").replace("moz","Moz"),I=a.extend,D="touchstart mousedown",i="touchmove mousemove",w="touchend mouseup",B={width:70,height:40,rows:3,delay:300,disabled:!1,readonly:!1,showOnFocus:!0,showLabel:!0,wheels:[],theme:"",headerText:"{value}",display:"modal",mode:"scroller",
+preset:"",lang:"en-US",setText:"Set",cancelText:"Cancel",scrollLock:!0,tap:!0,speedUnit:0.0012,timeUnit:0.1,formatResult:function(a){return a.join(" ")},parseValue:function(b,c){var n=b.split(" "),d=[],j=0,f;a.each(c.settings.wheels,function(b,c){a.each(c,function(b,c){c=c.values?c:E(c);f=c.keys||c.values;-1!==a.inArray(n[j],f)?d.push(n[j]):d.push(f[0]);j++})});return d}};a(document).bind("mouseover mouseup mousedown click",function(a){if(s)return a.stopPropagation(),a.preventDefault(),!1});a.fn.mobiscroll=
+function(b){I(this,a.mobiscroll.shorts);return c(this,b,arguments)};a.mobiscroll=a.mobiscroll||{setDefaults:function(a){I(B,a)},presetShort:function(a){this.shorts[a]=function(b){return c(this,I(b,{preset:a}),arguments)}},shorts:{},presets:{},themes:{},i18n:{}};a.scroller=a.scroller||a.mobiscroll;a.fn.scroller=a.fn.scroller||a.fn.mobiscroll})(jQuery);(function(a){a.mobiscroll.i18n.hu=a.extend(a.mobiscroll.i18n.hu,{setText:"OK",cancelText:"M\u00e9gse",dateFormat:"dd.mm.yy",dateOrder:"ddmmyy",dayNames:"Vas\u00e1rnap,H\u00e9tf\u0151,Kedd,Szerda,Cs\u00fct\u00f6rt\u00f6k,P\u00e9ntek,Szombat".split(","),dayNamesShort:"Va,H\u00e9,Ke,Sze,Cs\u00fc,P\u00e9,Szo".split(","),dayText:"Nap",hourText:"\u00d3ra",minuteText:"Perc",monthNames:"Janu\u00e1r,Febru\u00e1r,M\u00e1rcius,\u00c1prilis,M\u00e1jus,J\u00fanius,J\u00falius,Augusztus,Szeptember,Okt\u00f3ber,November,December".split(","),
+monthNamesShort:"Jan,Feb,M\u00e1r,\u00c1pr,M\u00e1j,J\u00fan,J\u00fal,Aug,Szep,Okt,Nov,Dec".split(","),monthText:"H\u00f3nap",secText:"M\u00e1sodperc",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"\u00c9v",nowText:"Most",dateText:"D\u00e1tum",timeText:"Id\u0151",calendarText:"Napt\u00e1r",wholeText:"Eg\u00e9sz",fractionText:"T\u00f6rt",unitText:"Egys\u00e9g",labels:"\u00c9v,H\u00f3nap,Nap,\u00d3ra,Perc,M\u00e1sodperc,".split(","),labelsShort:"\u00c9v,H\u00f3.,Nap,\u00d3ra,Perc,Mp.,".split(","),startText:"Ind\u00edt",
+stopText:"Meg\u00e1ll\u00edt",resetText:"Vissza\u00e1ll\u00edt",lapText:"Lap",hideText:"Elrejt"})})(jQuery);(function(a){a.mobiscroll.i18n.de=a.extend(a.mobiscroll.i18n.de,{setText:"OK",cancelText:"Abbrechen",dateFormat:"dd.mm.yy",dateOrder:"ddmmyy",dayNames:"Sonntag,Montag,Dienstag,Mittwoch,Donnerstag,Freitag,Samstag".split(","),dayNamesShort:"So,Mo,Di,Mi,Do,Fr,Sa".split(","),dayText:"Tag",hourText:"Stunde",minuteText:"Minuten",monthNames:"Januar,Februar,M\u00e4rz,April,Mai,Juni,Juli,August,September,Oktober,November,Dezember".split(","),monthNamesShort:"Jan,Feb,M\u00e4r,Apr,Mai,Jun,Jul,Aug,Sep,Okt,Nov,Dez".split(","),
+monthText:"Monat",secText:"Sekunden",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"Jahr",nowText:"Jetzt",dateText:"Datum",timeText:"Zeit",calendarText:"Kalender",wholeText:"Ganze Zahl",fractionText:"Bruchzahl",unitText:"Ma\u00dfeinheit",labels:"Jahre,Monate,Tage,Stunden,Minuten,Sekunden,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Start",stopText:"Stop",resetText:"Reset",lapText:"Lap",hideText:"Hide"})})(jQuery);(function(a){a.mobiscroll.i18n.es=a.extend(a.mobiscroll.i18n.es,{setText:"Aceptar",cancelText:"Cancelar",dateFormat:"dd/mm/yy",dateOrder:"ddmmyy",dayNames:"Domingo,Lunes,Martes,Mi&#xE9;rcoles,Jueves,Viernes,S&#xE1;bado".split(","),dayNamesShort:"Do,Lu,Ma,Mi,Ju,Vi,S&#xE1;".split(","),dayText:"D&#237;a",hourText:"Horas",minuteText:"Minutos",monthNames:"Enero,Febrero,Marzo,Abril,Mayo,Junio,Julio,Agosto,Septiembre,Octubre,Noviembre,Diciembre".split(","),monthNamesShort:"Ene,Feb,Mar,Abr,May,Jun,Jul,Ago,Sep,Oct,Nov,Dic".split(","),
+monthText:"Mes",secText:"Segundos",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"A&ntilde;o",nowText:"Ahora",dateText:"Fecha",timeText:"Tiempo",calendarText:"Calendario",wholeText:"Entero",fractionText:"Fracci\u00f3n",unitText:"Unidad",labels:"A\u00f1os,Meses,D\u00edas,Horas,Minutos,Segundos,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Iniciar",stopText:"Det\u00e9ngase",resetText:"Reinicializar",lapText:"Lap",hideText:"Esconder"})})(jQuery);(function(a){a.mobiscroll.i18n.fr=a.extend(a.mobiscroll.i18n.fr,{setText:"Termin\u00e9",cancelText:"Annuler",dateFormat:"dd/mm/yy",dateOrder:"ddmmyy",dayNames:"&#68;imanche,Lundi,Mardi,Mercredi,Jeudi,Vendredi,Samedi".split(","),dayNamesShort:"&#68;im.,Lun.,Mar.,Mer.,Jeu.,Ven.,Sam.".split(","),dayText:"Jour",monthText:"Mois",monthNames:"Janvier,F\u00e9vrier,Mars,Avril,Mai,Juin,Juillet,Ao\u00fbt,Septembre,Octobre,Novembre,D\u00e9cembre".split(","),monthNamesShort:"Janv.,F\u00e9vr.,Mars,Avril,Mai,Juin,Juil.,Ao\u00fbt,Sept.,Oct.,Nov.,D\u00e9c.".split(","),
+hourText:"Heures",minuteText:"Minutes",secText:"Secondes",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"Ann\u00e9e",nowText:"Maintenant",dateText:"Date",timeText:"Heure",calendarText:"Calendrier",wholeText:"Entier",fractionText:"Fraction",unitText:"Unit\u00e9",labels:"Ans,Mois,Jours,Heures,Minutes,Secondes,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Ind\u00edt",stopText:"Meg\u00e1ll\u00edt",resetText:"Vissza\u00e1ll\u00edt",lapText:"Lap",hideText:"Elrejt"})})(jQuery);(function(a){a.mobiscroll.i18n.it=a.extend(a.mobiscroll.i18n.it,{setText:"OK",cancelText:"Annulla",dateFormat:"dd-mm-yyyy",dateOrder:"ddmmyy",dayNames:"Domenica,Luned&Igrave;,Merted&Igrave;,Mercoled&Igrave;,Gioved&Igrave;,Venerd&Igrave;,Sabato".split(","),dayNamesShort:"Do,Lu,Ma,Me,Gi,Ve,Sa".split(","),dayText:"Giorno",hourText:"Ore",minuteText:"Minuti",monthNames:"Gennaio,Febbraio,Marzo,Aprile,Maggio,Giugno,Luglio,Agosto,Settembre,Ottobre,Novembre,Dicembre".split(","),monthNamesShort:"Gen,Feb,Mar,Apr,Mag,Giu,Lug,Ago,Set,Ott,Nov,Dic".split(","),
+monthText:"Mese",secText:"Secondi",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"Anno",dateText:"Data",timeText:"Volta",calendarText:"Calendario",wholeText:"Intero",fractionText:"Frazione",unitText:"Unit\u00e0",labels:"Anni,Mesi,Giorni,Ore,Minuti,Secondi,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Inizio",stopText:"Arresto",resetText:"Ripristina",lapText:"Lap",hideText:"Nascondi"})})(jQuery);(function(a){a.mobiscroll.i18n.no=a.extend(a.mobiscroll.i18n.no,{setText:"OK",cancelText:"Avbryt",dateFormat:"dd.mm.yy",dateOrder:"ddmmyy",dayNames:"S\u00f8ndag,Mandag,Tirsdag,Onsdag,Torsdag,Fredag,L\u00f8rdag".split(","),dayNamesShort:"S\u00f8,Ma,Ti,On,To,Fr,L\u00f8".split(","),dayText:"Dag",hourText:"Time",minuteText:"Minutt",monthNames:"Januar,Februar,Mars,April,Mai,Juni,Juli,August,September,Oktober,November,Desember".split(","),monthNamesShort:"Jan,Feb,Mar,Apr,Mai,Jun,Jul,Aug,Sep,Okt,Nov,Des".split(","),
+monthText:"M\u00e5ned",secText:"Sekund",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"\u00c5r",nowText:"N\u00e5",dateText:"Dato",timeText:"Tid",calendarText:"Kalender",wholeText:"Hele",fractionText:"Fraksjon",unitText:"Enhet",labels:"\u00c5r,M\u00e5neder,Dager,Timer,Minutter,Sekunder,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Start",stopText:"Stopp",resetText:"Tilbakestille",lapText:"Runde",hideText:"Skjul"})})(jQuery);(function(a){a.mobiscroll.i18n["pt-BR"]=a.extend(a.mobiscroll.i18n["pt-BR"],{setText:"Selecionar",cancelText:"Cancelar",dateFormat:"dd/mm/yy",dateOrder:"ddMMyy",dayNames:"Domingo,Segunda-feira,Ter\u00e7a-feira,Quarta-feira,Quinta-feira,Sexta-feira,S\u00e1bado".split(","),dayNamesShort:"Dom,Seg,Ter,Qua,Qui,Sex,S\u00e1b".split(","),dayText:"Dia",hourText:"Hora",minuteText:"Minutos",monthNames:"Janeiro,Fevereiro,Mar\u00e7o,Abril,Maio,Junho,Julho,Agosto,Setembro,Outubro,Novembro,Dezembro".split(","),
+monthNamesShort:"Jan,Fev,Mar,Abr,Mai,Jun,Jul,Ago,Set,Out,Nov,Dez".split(","),monthText:"M\u00eas",secText:"Segundo",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"Ano",dateText:"Data",timeText:"Tempo",calendarText:"Calend\u00e1rio",wholeText:"Inteiro",fractionText:"Fra\u00e7\u00e3o",unitText:"Unidade",labels:"Anos,Meses,Dias,Horas,Minutos,Segundos,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Come\u00e7ar",stopText:"Pare",resetText:"Reinicializar",lapText:"Lap",hideText:"Esconder"})})(jQuery);(function(a){a.mobiscroll.i18n.zh=a.extend(a.mobiscroll.i18n.zh,{setText:"\u786e\u5b9a",cancelText:"\u53d6\u6d88",dateFormat:"dd/mm/yy",dateOrder:"ddmmyy",dayNames:"\u5468\u65e5,\u5468\u4e00,\u5468\u4e8c,\u5468\u4e09,\u5468\u56db,\u5468\u4e94,\u5468\u516d".split(","),dayNamesShort:"\u65e5,\u4e00,\u4e8c,\u4e09,\u56db,\u4e94,\u516d".split(","),dayText:"\u65e5",hourText:"\u65f6",minuteText:"\u5206",monthNames:"1\u6708,2\u6708,3\u6708,4\u6708,5\u6708,6\u6708,7\u6708,8\u6708,9\u6708,10\u6708,11\u6708,12\u6708".split(","),
+monthNamesShort:"\u4e00,\u4e8c,\u4e09,\u56db,\u4e94,\u516d,\u4e03,\u516b,\u4e5d,\u5341,\u5341\u4e00,\u5341\u4e8c".split(","),monthText:"\u6708",secText:"\u79d2",timeFormat:"HH:ii",timeWheels:"HHii",yearText:"\u5e74",nowText:"\u5f53\u524d",dateText:"\u65e5",timeText:"\u65f6\u95f4",calendarText:"\u65e5\u5386",wholeText:"Whole",fractionText:"Fraction",unitText:"Unit",labels:"Years,Months,Days,Hours,Minutes,Seconds,".split(","),labelsShort:"Yrs,Mths,Days,Hrs,Mins,Secs,".split(","),startText:"Start",stopText:"Stop",
+resetText:"Reset",lapText:"Lap",hideText:"Hide"})})(jQuery);(function(a){a.mobiscroll.i18n.nl=a.extend(a.mobiscroll.i18n.nl,{setText:"Instellen",cancelText:"Annuleer",dateFormat:"dd/mm/yy",dateOrder:"ddmmyy",dayNames:"Zondag,Maandag,Dinsdag,Woensdag,Donderdag,Vrijdag,Zaterdag".split(","),dayNamesShort:"Zo,Ma,Di,Wo,Do,Vr,Za".split(","),dayText:"Dag",hourText:"Uur",minuteText:"Minuten",monthNames:"Januari,Februari,Maart,April,Mei,Juni,Juli,Augustus,September,Oktober,November,December".split(","),monthNamesShort:"Jan,Feb,Mrt,Apr,Mei,Jun,Jul,Aug,Sep,Okt,Nov,Dec".split(","),
+monthText:"Maand",secText:"Seconden",timeFormat:"hh:ii A",timeWheels:"hhiiA",yearText:"Jaar",nowText:"Nu",dateText:"Datum",timeText:"Tijd",calendarText:"Kalender",wholeText:"geheel",fractionText:"fractie",unitText:"eenheid",labels:"Jaren,Maanden,Dagen,Uren,Minuten,Seconden,".split(","),labelsShort:"j,m,d,u,min,sec,".split(","),startText:"Start",stopText:"Stop",resetText:"Reset",lapText:"Lap",hideText:"Verbergen"})})(jQuery);(function(a){var r=a.mobiscroll,e=new Date,z={dateFormat:"mm/dd/yy",dateOrder:"mmddy",timeWheels:"hhiiA",timeFormat:"hh:ii A",startYear:e.getFullYear()-100,endYear:e.getFullYear()+1,monthNames:"January,February,March,April,May,June,July,August,September,October,November,December".split(","),monthNamesShort:"Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec".split(","),dayNames:"Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday".split(","),dayNamesShort:"Sun,Mon,Tue,Wed,Thu,Fri,Sat".split(","),
+shortYearCutoff:"+10",monthText:"Month",dayText:"Day",yearText:"Year",hourText:"Hours",minuteText:"Minutes",secText:"Seconds",ampmText:"&nbsp;",nowText:"Now",showNow:!1,stepHour:1,stepMinute:1,stepSecond:1,separator:" "},u=function(e){function c(a,d,b){return void 0!==l[d]?+a[l[d]]:void 0!==b?b:la[g[d]]?la[g[d]]():g[d](la)}function h(a,d,b,c){a.push({values:b,keys:d,label:c})}function s(a,d){return Math.floor(a/d)*d}function p(a){var d=c(a,"h",0);return new Date(c(a,"y"),c(a,"m"),c(a,"d",1),c(a,"a")?
+d+12:d,c(a,"i",0),c(a,"s",0))}var t=a(this),q={},f;if(t.is("input")){switch(t.attr("type")){case "date":f="yy-mm-dd";break;case "datetime":f="yy-mm-ddTHH:ii:ssZ";break;case "datetime-local":f="yy-mm-ddTHH:ii:ss";break;case "month":f="yy-mm";q.dateOrder="mmyy";break;case "time":f="HH:ii:ss"}var o=t.attr("min"),t=t.attr("max");o&&(q.minDate=r.parseDate(f,o));t&&(q.maxDate=r.parseDate(f,t))}var b,v,y,u,D,o=a.extend({},e.settings),i=a.extend(e.settings,z,q,o),w=0,t=[],B=[],l={},g={y:"getFullYear",m:"getMonth",
+d:"getDate",h:function(a){a=a.getHours();a=F&&12<=a?a-12:a;return s(a,na)},i:function(a){return s(a.getMinutes(),ma)},s:function(a){return s(a.getSeconds(),pa)},a:function(a){return A&&11<a.getHours()?1:0}},n=i.preset,d=i.dateOrder,j=i.timeWheels,J=d.match(/D/),A=j.match(/a/i),F=j.match(/h/),N="datetime"==n?i.dateFormat+i.separator+i.timeFormat:"time"==n?i.timeFormat:i.dateFormat,la=new Date,na=i.stepHour,ma=i.stepMinute,pa=i.stepSecond,R=i.minDate||new Date(i.startYear,0,1),S=i.maxDate||new Date(i.endYear,
+11,31,23,59,59);f=f||N;if(n.match(/date/i)){a.each(["y","m","d"],function(a,c){b=d.search(RegExp(c,"i"));-1<b&&B.push({o:b,v:c})});B.sort(function(a,d){return a.o>d.o?1:-1});a.each(B,function(a,d){l[d.v]=a});o=[];for(q=0;3>q;q++)if(q==l.y){w++;y=[];v=[];u=R.getFullYear();D=S.getFullYear();for(b=u;b<=D;b++)v.push(b),y.push(d.match(/yy/i)?b:(b+"").substr(2,2));h(o,v,y,i.yearText)}else if(q==l.m){w++;y=[];v=[];for(b=0;12>b;b++)u=d.replace(/[dy]/gi,"").replace(/mm/,9>b?"0"+(b+1):b+1).replace(/m/,b+1),
+v.push(b),y.push(u.match(/MM/)?u.replace(/MM/,'<span class="dw-mon">'+i.monthNames[b]+"</span>"):u.replace(/M/,'<span class="dw-mon">'+i.monthNamesShort[b]+"</span>"));h(o,v,y,i.monthText)}else if(q==l.d){w++;y=[];v=[];for(b=1;32>b;b++)v.push(b),y.push(d.match(/dd/i)&&10>b?"0"+b:b);h(o,v,y,i.dayText)}t.push(o)}if(n.match(/time/i)){B=[];a.each(["h","i","s","a"],function(a,d){a=j.search(RegExp(d,"i"));-1<a&&B.push({o:a,v:d})});B.sort(function(a,d){return a.o>d.o?1:-1});a.each(B,function(a,d){l[d.v]=
+w+a});o=[];for(q=w;q<w+4;q++)if(q==l.h){w++;y=[];v=[];for(b=0;b<(F?12:24);b+=na)v.push(b),y.push(F&&0==b?12:j.match(/hh/i)&&10>b?"0"+b:b);h(o,v,y,i.hourText)}else if(q==l.i){w++;y=[];v=[];for(b=0;60>b;b+=ma)v.push(b),y.push(j.match(/ii/)&&10>b?"0"+b:b);h(o,v,y,i.minuteText)}else if(q==l.s){w++;y=[];v=[];for(b=0;60>b;b+=pa)v.push(b),y.push(j.match(/ss/)&&10>b?"0"+b:b);h(o,v,y,i.secText)}else q==l.a&&(w++,v=j.match(/A/),h(o,[0,1],v?["AM","PM"]:["am","pm"],i.ampmText));t.push(o)}e.setDate=function(a,
+d,b,c){for(var j in l)e.temp[l[j]]=a[g[j]]?a[g[j]]():g[j](a);e.setValue(e.temp,d,b,c)};e.getDate=function(a){return p(a?e.temp:e.values)};return{button3Text:i.showNow?i.nowText:void 0,button3:i.showNow?function(){e.setDate(new Date,!1,0.3,!0)}:void 0,wheels:t,headerText:function(){return r.formatDate(N,p(e.temp),i)},formatResult:function(a){return r.formatDate(f,p(a),i)},parseValue:function(a){var d=new Date,b,c=[];try{d=r.parseDate(f,a,i)}catch(j){}for(b in l)c[l[b]]=d[g[b]]?d[g[b]]():g[b](d);return c},
+validate:function(b){var j=e.temp,A={y:R.getFullYear(),m:0,d:1,h:0,i:0,s:0,a:0},f={y:S.getFullYear(),m:11,d:31,h:s(F?11:23,na),i:s(59,ma),s:s(59,pa),a:1},n=!0,h=!0;a.each("y,m,d,a,h,i,s".split(","),function(F,e){if(l[e]!==void 0){var p=A[e],q=f[e],o=31,y=c(j,e),v=a(".dw-ul",b).eq(l[e]),s,t;if(e=="d"){s=c(j,"y");t=c(j,"m");q=o=32-(new Date(s,t,32)).getDate();J&&a(".dw-li",v).each(function(){var b=a(this),c=b.data("val"),j=(new Date(s,t,c)).getDay(),c=d.replace(/[my]/gi,"").replace(/dd/,c<10?"0"+c:
+c).replace(/d/,c);a(".dw-i",b).html(c.match(/DD/)?c.replace(/DD/,'<span class="dw-day">'+i.dayNames[j]+"</span>"):c.replace(/D/,'<span class="dw-day">'+i.dayNamesShort[j]+"</span>"))})}n&&R&&(p=R[g[e]]?R[g[e]]():g[e](R));h&&S&&(q=S[g[e]]?S[g[e]]():g[e](S));if(e!="y"){var u=a(".dw-li",v).index(a('.dw-li[data-val="'+p+'"]',v)),r=a(".dw-li",v).index(a('.dw-li[data-val="'+q+'"]',v));a(".dw-li",v).removeClass("dw-v").slice(u,r+1).addClass("dw-v");e=="d"&&a(".dw-li",v).removeClass("dw-h").slice(o).addClass("dw-h")}y<
+p&&(y=p);y>q&&(y=q);n&&(n=y==p);h&&(h=y==q);if(i.invalid&&e=="d"){var w=[];i.invalid.dates&&a.each(i.invalid.dates,function(a,d){d.getFullYear()==s&&d.getMonth()==t&&w.push(d.getDate()-1)});if(i.invalid.daysOfWeek){var E=(new Date(s,t,1)).getDay(),N;a.each(i.invalid.daysOfWeek,function(a,d){for(N=d-E;N<o;N=N+7)N>=0&&w.push(N)})}i.invalid.daysOfMonth&&a.each(i.invalid.daysOfMonth,function(a,d){d=(d+"").split("/");d[1]?d[0]-1==t&&w.push(d[1]-1):w.push(d[0]-1)});a.each(w,function(d,b){a(".dw-li",v).eq(b).removeClass("dw-v")})}j[l[e]]=
+y}})}}};a.each(["date","time","datetime"],function(a,c){r.presets[c]=u;r.presetShort(c)});r.formatDate=function(e,c,h){if(!c)return null;var h=a.extend({},z,h),s=function(a){for(var b=0;q+1<e.length&&e.charAt(q+1)==a;)b++,q++;return b},p=function(a,b,c){b=""+b;if(s(a))for(;b.length<c;)b="0"+b;return b},t=function(a,b,c,e){return s(a)?e[b]:c[b]},q,f="",o=!1;for(q=0;q<e.length;q++)if(o)"'"==e.charAt(q)&&!s("'")?o=!1:f+=e.charAt(q);else switch(e.charAt(q)){case "d":f+=p("d",c.getDate(),2);break;case "D":f+=
+t("D",c.getDay(),h.dayNamesShort,h.dayNames);break;case "o":f+=p("o",(c.getTime()-(new Date(c.getFullYear(),0,0)).getTime())/864E5,3);break;case "m":f+=p("m",c.getMonth()+1,2);break;case "M":f+=t("M",c.getMonth(),h.monthNamesShort,h.monthNames);break;case "y":f+=s("y")?c.getFullYear():(10>c.getYear()%100?"0":"")+c.getYear()%100;break;case "h":var b=c.getHours(),f=f+p("h",12<b?b-12:0==b?12:b,2);break;case "H":f+=p("H",c.getHours(),2);break;case "i":f+=p("i",c.getMinutes(),2);break;case "s":f+=p("s",
+c.getSeconds(),2);break;case "a":f+=11<c.getHours()?"pm":"am";break;case "A":f+=11<c.getHours()?"PM":"AM";break;case "'":s("'")?f+="'":o=!0;break;default:f+=e.charAt(q)}return f};r.parseDate=function(e,c,h){var s=new Date;if(!e||!c)return s;var c="object"==typeof c?c.toString():c+"",p=a.extend({},z,h),t=p.shortYearCutoff,h=s.getFullYear(),q=s.getMonth()+1,f=s.getDate(),o=-1,b=s.getHours(),s=s.getMinutes(),v=0,u=-1,r=!1,D=function(a){(a=l+1<e.length&&e.charAt(l+1)==a)&&l++;return a},i=function(a){D(a);
+a=c.substr(B).match(RegExp("^\\d{1,"+("@"==a?14:"!"==a?20:"y"==a?4:"o"==a?3:2)+"}"));if(!a)return 0;B+=a[0].length;return parseInt(a[0],10)},w=function(a,b,d){a=D(a)?d:b;for(b=0;b<a.length;b++)if(c.substr(B,a[b].length).toLowerCase()==a[b].toLowerCase())return B+=a[b].length,b+1;return 0},B=0,l;for(l=0;l<e.length;l++)if(r)"'"==e.charAt(l)&&!D("'")?r=!1:B++;else switch(e.charAt(l)){case "d":f=i("d");break;case "D":w("D",p.dayNamesShort,p.dayNames);break;case "o":o=i("o");break;case "m":q=i("m");break;
+case "M":q=w("M",p.monthNamesShort,p.monthNames);break;case "y":h=i("y");break;case "H":b=i("H");break;case "h":b=i("h");break;case "i":s=i("i");break;case "s":v=i("s");break;case "a":u=w("a",["am","pm"],["am","pm"])-1;break;case "A":u=w("A",["am","pm"],["am","pm"])-1;break;case "'":D("'")?B++:r=!0;break;default:B++}100>h&&(h+=(new Date).getFullYear()-(new Date).getFullYear()%100+(h<=("string"!=typeof t?t:(new Date).getFullYear()%100+parseInt(t,10))?0:-100));if(-1<o){q=1;f=o;do{p=32-(new Date(h,q-
+1,32)).getDate();if(f<=p)break;q++;f-=p}while(1)}b=new Date(h,q-1,f,-1==u?b:u&&12>b?b+12:!u&&12==b?0:b,s,v);if(b.getFullYear()!=h||b.getMonth()+1!=q||b.getDate()!=f)throw"Invalid date";return b}})(jQuery);(function(a){var r=a.mobiscroll,e={invalid:[],showInput:!0,inputClass:""},z=function(u){function r(d,b,e,A){for(var f=0;f<b;){var n=a(".dwwl"+f,d),g=c(A,f,e);a.each(g,function(d,b){a('.dw-li[data-val="'+b+'"]',n).removeClass("dw-v")});f++}}function c(a,b,c){for(var e=0,f,n=[];e<b;){var g=a[e];for(f in c)if(c[f].key==g){c=c[f].children;break}e++}for(e=0;e<c.length;)c[e].invalid&&n.push(c[e].key),e++;return n}function h(a,b){for(var c=[];a;)c[--a]=!0;c[b]=!1;return c}function s(a,b,c){var e=0,f,n,g=
+[],h=B;if(b)for(f=0;f<b;f++)g[f]=[{}];for(;e<a.length;){f=g;for(var b=e,i=h,q={keys:[],values:[],label:l[e]},o=0;o<i.length;)q.values.push(i[o].value),q.keys.push(i[o].key),o++;f[b]=[q];f=0;for(b=void 0;f<h.length&&void 0===b;){if(h[f].key==a[e]&&(void 0!==c&&e<=c||void 0===c))b=f;f++}if(void 0!==b&&h[b].children)e++,h=h[b].children;else if((n=p(h))&&n.children)e++,h=n.children;else break}return g}function p(a,b){if(!a)return!1;for(var c=0,e;c<a.length;)if(!(e=a[c++]).invalid)return b?c-1:e;return!1}
+function t(b,c){a(".dwc",b).css("display","").slice(c).hide()}function q(a,b){var c=[],e=B,f=0,n=!1,g,h;if(void 0!==a[f]&&f<=b){n=0;g=a[f];for(h=void 0;n<e.length&&void 0===h;)e[n].key==a[f]&&!e[n].invalid&&(h=n),n++}else h=p(e,!0),g=e[h].key;n=void 0!==h?e[h].children:!1;for(c[f]=g;n;){e=e[h].children;f++;if(void 0!==a[f]&&f<=b){n=0;g=a[f];for(h=void 0;n<e.length&&void 0===h;)e[n].key==a[f]&&!e[n].invalid&&(h=n),n++}else h=p(e,!0),h=!1===h?void 0:h,g=e[h].key;n=void 0!==h&&p(e[h].children)?e[h].children:
+!1;c[f]=g}return{lvl:f+1,nVector:c}}function f(b){var c=[];D=D>i++?D:i;b.children("li").each(function(b){var d=a(this),e=d.clone();e.children("ul,ol").remove();var e=e.html().replace(/^\s\s*/,"").replace(/\s\s*$/,""),n=d.data("invalid")?!0:!1,b={key:d.data("val")||b,value:e,invalid:n,children:null},d=d.children("ul,ol");d.length&&(b.children=f(d));c.push(b)});i--;return c}var o=a.extend({},u.settings),b=a.extend(u.settings,e,o),o=a(this),v,y,z=this.id+"_dummy",D=0,i=0,w={},B=b.wheelArray||f(o),l=
+function(a){var c=[],e;for(e=0;e<a;e++)c[e]=b.labels&&b.labels[e]?b.labels[e]:e;return c}(D),g=[],n=function(a){for(var b=[],c,e=!0,f=0;e;)if(c=p(a),b[f++]=c.key,e=c.children)a=c.children;return b}(B),n=s(n,D);a("#"+z).remove();b.showInput&&(v=a('<input type="text" id="'+z+'" value="" class="'+b.inputClass+'" readonly />').insertBefore(o),u.settings.anchor=v,b.showOnFocus&&v.focus(function(){u.show()}));b.wheelArray||o.hide().closest(".ui-field-contain").trigger("create");return{width:50,wheels:n,
+headerText:!1,onBeforeShow:function(){var a=u.temp;g=a.slice(0);u.settings.wheels=s(a,D,D);y=true},onSelect:function(a){v&&v.val(a)},onChange:function(a){v&&b.display=="inline"&&v.val(a)},onClose:function(){v&&v.blur()},onShow:function(b){a(".dwwl",b).bind("mousedown touchstart",function(){clearTimeout(w[a(".dwwl",b).index(this)])})},validate:function(a,b,c){var e=u.temp;if(b!==void 0&&g[b]!=e[b]||b===void 0&&!y){u.settings.wheels=s(e,null,b);var f=[],n=(b||0)+1,i=q(e,b);if(b!==void 0)u.temp=i.nVector.slice(0);
+for(;n<i.lvl;)f.push(n++);t(a,i.lvl);g=u.temp.slice(0);if(f.length){y=true;u.settings.readonly=h(D,b);clearTimeout(w[b]);w[b]=setTimeout(function(){u.changeWheel(f);u.settings.readonly=false},c*1E3);return false}r(a,i.lvl,B,u.temp)}else{i=q(e,e.length);r(a,i.lvl,B,e);t(a,i.lvl)}y=false}}};a.each(["list","image","treelist"],function(a,e){r.presets[e]=z;r.presetShort(e)})})(jQuery);(function(a){var r={inputClass:"",invalid:[],rtl:!1,group:!1,groupLabel:"Groups"};a.mobiscroll.presetShort("select");a.mobiscroll.presets.select=function(e){function z(){var b,d=0,e=[],f=[],g=[[]];c.group?(c.rtl&&(d=1),a("optgroup",h).each(function(b){e.push(a(this).attr("label"));f.push(b)}),g[d]=[{values:e,keys:f,label:v}],b=t,d+=c.rtl?-1:1):b=h;e=[];f=[];a("option",b).each(function(){var b=a(this).attr("value");e.push(a(this).text());f.push(b);a(this).prop("disabled")&&y.push(b)});g[d]=[{values:e,
+keys:f,label:v}];return g}function u(a,b){var c=[];if(s){var f=[],g=0;for(g in e._selectedValues)f.push(D[g]),c.push(g);l.val(f.join(", "))}else l.val(a),c=b?e.values[w]:null;b&&(o=!0,h.val(c).trigger("change"))}var E=a.extend({},e.settings),c=a.extend(e.settings,r,E),h=a(this),s=h.prop("multiple"),E=this.id+"_dummy",p=s?h.val()?h.val()[0]:a("option",h).attr("value"):h.val(),t=h.find('option[value="'+p+'"]').parent(),q=t.index()+"",f=q,o;a('label[for="'+this.id+'"]').attr("for",E);var b=a('label[for="'+
+E+'"]'),v=void 0!==c.label?c.label:b.length?b.text():h.attr("name"),y=[],I=[],D={},i,w,B,l,g=c.readonly;c.group&&!a("optgroup",h).length&&(c.group=!1);c.invalid.length||(c.invalid=y);c.group?c.rtl?(i=1,w=0):(i=0,w=1):(i=-1,w=0);a("#"+E).remove();l=a('<input type="text" id="'+E+'" class="'+c.inputClass+'" readonly />').insertBefore(h);a("option",h).each(function(){D[a(this).attr("value")]=a(this).text()});c.showOnFocus&&l.focus(function(){e.show()});E=h.val()||[];b=0;for(b;b<E.length;b++)e._selectedValues[E[b]]=
+E[b];u(D[p]);h.unbind(".dwsel").bind("change.dwsel",function(){o||e.setValue(s?h.val()||[]:[h.val()],true);o=false}).hide().closest(".ui-field-contain").trigger("create");e._setValue||(e._setValue=e.setValue);e.setValue=function(b,d,g,i,o){var l=a.isArray(b)?b[0]:b;p=l!==void 0?l:a("option",h).attr("value");if(s){e._selectedValues={};l=0;for(l;l<b.length;l++)e._selectedValues[b[l]]=b[l]}if(c.group){t=h.find('option[value="'+p+'"]').parent();f=t.index();b=c.rtl?[p,t.index()]:[t.index(),p];if(f!==q){c.wheels=
+z();e.changeWheel([w]);q=f+""}}else b=[p];e._setValue(b,d,g,i,o);if(d){d=s?true:p!==h.val();u(D[p],d)}};e.getValue=function(a){return(a?e.temp:e.values)[w]};return{width:50,wheels:void 0,headerText:!1,multiple:s,anchor:l,formatResult:function(a){return D[a[w]]},parseValue:function(){var b=h.val()||[],d=0;if(s){e._selectedValues={};for(d;d<b.length;d++)e._selectedValues[b[d]]=b[d]}p=s?h.val()?h.val()[0]:a("option",h).attr("value"):h.val();t=h.find('option[value="'+p+'"]').parent();f=t.index();q=f+
+"";return c.group&&c.rtl?[p,f]:c.group?[f,p]:[p]},validate:function(b,d,j){if(d===void 0&&s){var l=e._selectedValues,o=0;a(".dwwl"+w+" .dw-li",b).removeClass("dw-msel");for(o in l)a(".dwwl"+w+' .dw-li[data-val="'+l[o]+'"]',b).addClass("dw-msel")}if(d===i){f=e.temp[i];if(f!==q){t=h.find("optgroup").eq(f);f=t.index();p=(p=t.find("option").eq(0).val())||h.val();c.wheels=z();if(c.group){e.temp=c.rtl?[p,f]:[f,p];c.readonly=[c.rtl,!c.rtl];clearTimeout(B);B=setTimeout(function(){e.changeWheel([w]);c.readonly=
+g;q=f+""},j*1E3);return false}}else c.readonly=g}else p=e.temp[w];var r=a(".dw-ul",b).eq(w);a.each(c.invalid,function(b,c){a('.dw-li[data-val="'+c+'"]',r).removeClass("dw-v")})},onBeforeShow:function(){c.wheels=z();if(c.group)e.temp=c.rtl?[p,t.index()]:[t.index(),p]},onMarkupReady:function(b){a(".dwwl"+i,b).bind("mousedown touchstart",function(){clearTimeout(B)});if(s){b.addClass("dwms");a(".dwwl",b).eq(w).addClass("dwwms");I={};for(var c in e._selectedValues)I[c]=e._selectedValues[c]}},onValueTap:function(a){if(s&&
+a.hasClass("dw-v")&&a.closest(".dw").find(".dw-ul").index(a.closest(".dw-ul"))==w){var b=a.attr("data-val");a.hasClass("dw-msel")?delete e._selectedValues[b]:e._selectedValues[b]=b;a.toggleClass("dw-msel");c.display=="inline"&&u(b,true);return false}},onSelect:function(a){u(a,true);if(c.group)e.values=null},onCancel:function(){if(c.group)e.values=null;if(s){e._selectedValues={};for(var a in I)e._selectedValues[a]=I[a]}},onChange:function(a){if(c.display=="inline"&&!s){l.val(a);o=true;h.val(e.temp[w]).trigger("change")}},
+onClose:function(){l.blur()}}}})(jQuery);(function(a){a.mobiscroll.themes.android={defaults:{dateOrder:"Mddyy",mode:"clickpick",height:50,showLabel:!1}}})(jQuery);(function(a){var r={defaults:{dateOrder:"Mddyy",mode:"mixed",rows:5,width:70,height:36,showLabel:!1,useShortLabels:!0}};a.mobiscroll.themes["android-ics"]=r;a.mobiscroll.themes["android-ics light"]=r})(jQuery);(function(a){a.mobiscroll.themes.ios={defaults:{dateOrder:"MMdyy",rows:5,height:30,width:55,headerText:!1,showLabel:!1,useShortLabels:!0}}})(jQuery);(function(a){a.mobiscroll.themes.jqm={defaults:{jqmBorder:"a",jqmBody:"c",jqmHeader:"b",jqmWheel:"d",jqmClickPick:"c",jqmSet:"b",jqmCancel:"c"},init:function(r,e){var z=e.settings;a(".dw",r).removeClass("dwbg").addClass("ui-overlay-shadow ui-corner-all ui-body-"+z.jqmBorder);a(".dwb-s span",r).attr("data-role","button").attr("data-theme",z.jqmSet);a(".dwb-n span",r).attr("data-role","button").attr("data-theme",z.jqmCancel);a(".dwb-c span",r).attr("data-role","button").attr("data-theme",z.jqmCancel);
+a(".dwwb",r).attr("data-role","button").attr("data-theme",z.jqmClickPick);a(".dwv",r).addClass("ui-header ui-bar-"+z.jqmHeader);a(".dwwr",r).addClass("ui-body-"+z.jqmBody);a(".dwpm .dwwl",r).addClass("ui-body-"+z.jqmWheel);a(".dwpm .dwl",r).addClass("ui-body-"+z.jqmBody);r.trigger("create");a(".dwo",r).click(function(){e.cancel()})}}})(jQuery);(function(a){var r;a.mobiscroll.themes.wp={defaults:{width:70,height:76,accent:"none",dateOrder:"mmMMddDDyy",showLabel:!1,onAnimStart:function(e,z,u){a(".dwwl"+z,e).addClass("wpam");clearTimeout(r[z]);r[z]=setTimeout(function(){a(".dwwl"+z,e).removeClass("wpam")},1E3*u+100)}},init:function(e,z){var u,E;r={};a(".dw",e).addClass("wp-"+z.settings.accent);a(".dwwl",e).delegate(".dw-sel","touchstart mousedown DOMMouseScroll mousewheel",function(){u=!0;E=a(this).closest(".dwwl").hasClass("wpa");a(".dwwl",
+e).removeClass("wpa");a(this).closest(".dwwl").addClass("wpa")}).bind("touchmove mousemove",function(){u=!1}).bind("touchend mouseup",function(){u&&E&&a(this).closest(".dwwl").removeClass("wpa")})}};a.mobiscroll.themes["wp light"]=a.mobiscroll.themes.wp})(jQuery);
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
 
-// This event comes from the Queue Plugin
-function queueComplete(numFilesUploaded) {
-	var status = document.getElementById("divStatus");
-	status.innerHTML = numFilesUploaded + " file" + (numFilesUploaded === 1 ? "" : "s") + " uploaded.";
-}
+(function( $, undefined ) {
+
+$.widget( "an.mobiledatefield", $.an.inputfield, {
+	
+	options:{
+		theme: 'jqm',
+		lang: 'en',
+		display: 'bottom',
+		mode: 'scroller',
+		dateFormat:'yy-mm-dd',
+		dateOrder: 'yy mmD dd'
+	},
+
+	_create: function() {
+		$.an.inputfield.prototype._create.apply(this, arguments);
+		this.element.addClass("an-mobiledatetimefield");
+	},
+	
+	_edit:function(){
+		var date=new Date(), lng=window.database.local,
+		opts={
+			//invalid: { daysOfWeek: [0, 6], daysOfMonth: ['5/1', '12/24', '12/25'] },
+			theme: this.options.theme,
+			lang: this.options.lang,
+			display: this.options.display,
+			mode: this.options.mode,
+			dateFormat:this.options.dateFormat,
+			dateOrder: this.options.dateOrder,
+		}
+		
+		$.an.inputfield.prototype._edit.apply( this, arguments );
+		this.input.mobiscroll().date(opts);
+	},
+	
+	destroy: function() {
+		this.input.mobiscroll("destroy");
+		this.input.removeAttr("readony");
+		this.element.removeClass("an-mobiledatetimefield" );
+		return $.an.inputfield.prototype.destroy.apply( this, arguments );
+	}
+});
+})( jQuery );
+/*!
+ * Agile Notes 1.0
+ *
+ * Copyright 2013, Sihong Zhu and other contributors
+* Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+* and GPL (http://www.opensource.org/licenses/gpl-license.php) version 2 licenses.
+* This software is not distributed under version 3 or later of the GPL.
+ *
+ * http://agilemore.com/agilenotes
+ */
+
+(function( $, undefined ) {
+
+$.widget( "an.swipewidget", $.an.widget, {
+
+    options:{
+        swipeContent : '<li>no content</li>',
+        swipeIcon : '<b class="swipe-icon-active"></b>',
+        swipeindex : 0,
+        swipeContent : '<li>no content</li>',
+        swipeduration : false,
+        swipeduration : 2000,
+        width : '100'
+    },
+
+	_create: function() {
+        $.an.widget.prototype._create.apply(this, arguments);
+        var o = this.options;
+        if(o.mobile){
+            var self = this;
+            this.element.addClass("an-swipewidget");
+            var wrap = $('<div class="swipeBox"></div>'),
+                contentList = $('<ul class="swipeList c"></ul>'),
+                iconList = $('<div class="iconList"></div>');
+            contentList.append(o.swipeContent);
+            contentList.find('li').each(function(i){
+                var icon = '<b></b>';
+                if(i == o.swipeindex){
+                    icon = '<b class="swipe-icon-active"></b>';
+                }
+                iconList.append($(icon));
+            });
+            contentList.width(o.width * contentList.find('li').length+'%');
+            contentList.find('li').width(o.width / contentList.find('li').length+'%');
+
+			wrap.append(contentList).append(iconList).appendTo(this.element.find('.content'));
+            self.pos = {};
+            var pos = self.pos;
+            pos.t = null;
+            pos.index = o.swipeindex;
+            pos.itemLen = contentList.find('li').length;
+            pos.itemWidth = contentList.find('li').eq(0).outerWidth(true);
+
+           this.element.bind('touchstart.swipewidget', function(e){
+             var e = e.originalEvent.touches[0];
+             pos.x = e.pageX;
+             pos.y = e.pageY;
+             pos.dx = 0;
+             pos.dy = 0;
+             pos.Left = contentList.offset().left;
+             pos.target = e.target.tagName.toLowerCase() == 'li' ? e.target : $(e.target).closest('li');
+             pos.index = contentList.find('li').index($(pos.target));
+             pos.itemWidth = $(pos.target).outerWidth(true);
+
+             clearTimeout(pos.t);
+             pos.t = null;
+          })
+
+          this.element.bind('touchmove.swipewidget', function(e){
+             e.preventDefault();  //important
+             var e = e.originalEvent.touches[0];
+             pos.dx = e.pageX - pos.x;
+             pos.dy = e.pageY - pos.y;
+             contentList.css({"left":parseInt(pos.dx + pos.Left)+"px"});
+          })
+
+          this.element.bind('touchend.swipewidget', function(e){
+              var posLeft = 0, posIndex = 0;
+              if(pos.index == 0 && pos.dx > 0){
+                 posLeft = 0;
+                 posIndex = 0;
+              }else if(pos.index == pos.itemLen-1 && pos.dx < 0){
+                  posLeft = -pos.itemWidth*pos.index;
+                  posIndex = pos.index;
+              }else{
+                if(Math.abs(pos.dx) >= pos.itemWidth/2){
+                    if(pos.dx > 0){
+                        posLeft = -pos.itemWidth*(pos.index-1);
+                        posIndex = pos.index-1;
+                    }else if(pos.dx < 0){
+                        posLeft = -pos.itemWidth*(pos.index+1);
+                        posIndex = pos.index+1;
+                    }
+                }else{
+                    posLeft = -pos.itemWidth*(pos.index);
+                    posIndex = pos.index;
+                }
+              }
+              self._setActive(contentList, posLeft, posIndex);
+              if(o.autoSwipe && o.mode != 'design'){
+                 pos.t = setTimeout(function(){self.autoRun(contentList, posLeft, posIndex);},o.swipeduration);
+              }
+          })
+        }
+	},
+    _setActive : function(obj, posLeft, index){
+        var self = this;
+        //obj.css({'left':posLeft + 'px'});
+        obj.css({'left':-index*100+'%'});
+        setTimeout(function(){
+            self.element.find('.iconList b').eq(index).addClass('swipe-icon-active').siblings().removeClass('swipe-icon-active');
+        },100);  //after css3 transition complete
+    },
+    autoRun:function(obj, posLeft, index){
+        var self = this, o = this.options, pos = this.pos;
+        if(index <= 0 || index > (pos.itemLen - 1)){
+            index = 0;
+        }
+        posLeft = -pos.itemWidth*index;
+        self._setActive(obj, posLeft, index);
+        index ++;
+        pos.index++;
+        pos.t = setTimeout(function(){self.autoRun(obj, posLeft, index);},o.swipeduration);
+   },
+	_browser:function(){
+		var o = this.options;
+        if(o.autoSwipe){
+           this.autoRun(this.element.find('.swipeList'), 0, 0);
+        }
+	},
+
+	_edit:function(){
+		var o = this.options;
+        if(o.autoSwipe){
+           this.autoRun(this.element.find('.swipeList'), 0, 0);
+        }
+	},
+
+    _design: function(){
+		var o = this.options;
+
+    },
+
+	destroy: function() {
+		this.element.removeClass("an-swipewidget");
+        this.element.unbind('swipewidget');
+        this.content.remove();
+		return $.an.widget.prototype.destroy.apply( this, arguments );
+	}
+});
+})( jQuery );
 /*!
  * Agile Notes 1.0
  *
