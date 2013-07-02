@@ -104,6 +104,7 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.customhtmlfield.js"><\/script>\
 <script src="javascripts/jquery.an.mobilelistview.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.swipewidget.js"><\/script>\
+<script src="javascripts/jquery.an.loading.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');

@@ -66,3 +66,4 @@
 ..\javascripts\swfupload\swfupload.queue.js
 ..\javascripts\swfupload\fileprogress.js
 ..\javascripts\swfupload\handlers.js
+..\javascripts\jquery.an.loading.js

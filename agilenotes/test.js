@@ -5,12 +5,12 @@ var util = require("util");
 
 var versionFile = "public/version/version.txt";
 
-function md5file(dataObj, path) {
+function md5file(dataObj, path, update_time) {
 	var stats = fs.statSync(path);
 	var md5sum = crypto.createHash('md5');
 	md5sum.update(path);
 	var result = md5sum.digest('hex');
-	dataObj[result] = { name : path.substr(7), update_time : (new Date(stats.mtime).toJSON()) };
+	dataObj[result] = { name : path.substr(7), update_time : update_time ? update_time : (new Date(stats.mtime).toJSON()) };
 	return result;
 }
 
@@ -35,7 +35,11 @@ function listFiles(dataObj, path) {
 			if ((path + "/" + data[i]) != 'public/version') listFiles(dataObj, path + "/" + data[i]);
 		}
 	} else if (stat.isFile()) {
-		md5file(dataObj, path);
+		if (path == 'public/javascripts/jquery.ans.js') {
+			md5file(dataObj, path, new Date("1970-01-01").toJSON());
+		} else {
+			md5file(dataObj, path);
+		}
 	}
 }
 
