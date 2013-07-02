@@ -15,29 +15,33 @@ $.widget( "an.togglefield", $.an.sliderfield, {
 	_create: function() {
 		$.an.sliderfield.prototype._create.apply(this, arguments);
 		this.element.addClass("an-togglefield");
+		this.element.unbind("change.widget");
 	},
 	
 	_createControl : function() {
 		var o = this.options, self = this;
+		var el=this.element;
 		o.ontext = o.ontext || "On";
 		o.offtext = o.offtext || "Off";
 		this.input = $('<select >\
 		    <option value="no">' + o.ontext + '</option>\
 		    <option value="yes">' + o.offtext + '</option>\
-		  </select>').attr({ name : o.id }).bind(
-			"change.inputfield keyup.inputfield",
-			function(e) {
-				var value = self.input.val(), oldValue = o.value;
-				if (value != oldValue) {
-					o.value = value;
-					self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,
-						isTransient : o.isTransient });
-				}
-			});
+		  </select>').attr({ name : o.id });
+		o.stop=function(e, ui){
+			var value = self.input.val(), oldValue = o.value;
+			if (value != oldValue) {
+				o.value = value;
+				self._trigger("optionchanged", null, { key : "value", value : value, oldValue : oldValue,isTransient : o.isTransient });
+			}
+			if($(e.target).closest(".widget")[0] == self.element[0]){
+				setTimeout(function(){el.trigger($.Event(e,{type:"widgetchange"}), self);},20);
+			}
+		}
 		self._trigger("optionchanged", null, { key : "value", value : "no", oldValue : "",isTransient : o.isTransient });
 	},
 	
 	_edit : function() {
+		var o = this.options, self = this;
 		this.input.appendTo(this.content).slider(this.options);
 	},
 	
