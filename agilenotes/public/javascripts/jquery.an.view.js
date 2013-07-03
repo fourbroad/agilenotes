@@ -181,10 +181,6 @@ $.widget( "an.view", {
             param.limit = o.limit;
             param.sort = opts.sort || o.view.sort;
             param.options = {exec : true};
-            for(var i in param.taskFilter){
-               param.options[i] = param.taskFilter[i];
-            }
-            delete param.taskFilter;
 
             $.ans.getDoc(o.dbId,taskUrl,param,function(err,data){
                 self.docs = data.docs;
