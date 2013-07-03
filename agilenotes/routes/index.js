@@ -206,7 +206,6 @@ function getDoc(req,res){
 			options.query = q;
 			delete(options.query.options);
 			if (options.query.selector) delete(options.query.selector);
-            if (options.query.filter) delete(options.query.filter);
 			options.ip = Functions.getClientIP(req);
 			options.method = req.method;
 			options.headers = req.headers;
