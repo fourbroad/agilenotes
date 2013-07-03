@@ -180,8 +180,7 @@ $.widget( "an.view", {
             param.skip = o.skip;
             param.limit = o.limit;
             param.sort = opts.sort || o.view.sort;
-            param.options = {exec : true};
-
+            param.options = {exec : true, redirect : true};
             $.ans.getDoc(o.dbId,taskUrl,param,function(err,data){
                 self.docs = data.docs;
 				try{self._docsLoaded && self._docsLoaded();}catch(e){};
