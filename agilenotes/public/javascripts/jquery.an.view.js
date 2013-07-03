@@ -176,11 +176,17 @@ $.widget( "an.view", {
 
         if($.type(taskUrl) == 'string' && taskUrl.replace(/(^\s*)|(\s*$)/g,'') != ''){
             var param = {};
-            param.filter = typeof filter == 'string' ? eval("("+filter+")") : filter;
+            param.taskFilter = typeof filter == 'string' ? eval("("+filter+")") : filter;
             param.skip = o.skip;
             param.limit = o.limit;
-            param.sort = o.view.sort;
-            $.get(taskUrl,param,function(data){
+            param.sort = opts.sort || o.view.sort;
+            param.options = {exec : true};
+            for(var i in param.taskFilter){
+               param.options[i] = param.taskFilter[i];
+            }
+            delete param.taskFilter;
+
+            $.ans.getDoc(o.dbId,taskUrl,param,function(err,data){
                 self.docs = data.docs;
 				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
