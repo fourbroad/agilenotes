@@ -10442,10 +10442,16 @@ if ( typeof define === "function" && define.amd && define.amd.jQuery ) {
    },
 
    postDoc: function(dbId, doc, options, callback){
-	   ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
+	   if(options.redirect){
+		 $.post('/dbs/'+dbId,doc,function(result){
+			  callback(result);
+		 });
+	   }else{
+		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
 		   if(!err) $(document).trigger("documentCreated",doc);
-	   });
+	    });
+	   }
    },
 
    putDoc: function(dbId, docId, fields, options, callback){
@@ -35621,11 +35627,12 @@ $.widget( "an.view", {
 
         if($.type(taskUrl) == 'string' && taskUrl.replace(/(^\s*)|(\s*$)/g,'') != ''){
             var param = {};
-            param.filter = typeof filter == 'string' ? eval("("+filter+")") : filter;
+            param.taskFilter = typeof filter == 'string' ? eval("("+filter+")") : filter;
             param.skip = o.skip;
             param.limit = o.limit;
-            param.sort = o.view.sort;
-            $.get(taskUrl,param,function(data){
+            param.sort = opts.sort || o.view.sort;
+            param.options = {exec : true, redirect : true};
+            $.ans.getDoc(o.dbId,taskUrl,param,function(err,data){
                 self.docs = data.docs;
 				try{self._docsLoaded && self._docsLoaded();}catch(e){};
 				self._trigger("documentloaded",null,data);
@@ -43096,7 +43103,9 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 		display: 'bottom',
 		mode: 'scroller',
 		dateFormat:'yy-mm-dd',
-		dateOrder: 'yy mmD dd'
+		dateOrder: 'yy mmD dd',
+		minDate:'',
+		maxDate:'',
 	},
 
 	_create: function() {
@@ -43105,9 +43114,10 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 	},
 	
 	_edit:function(){
+		var minDate,maxDate;
 		var date=new Date(), lng=window.database.local,
 		opts={
-			//invalid: { daysOfWeek: [0, 6], daysOfMonth: ['5/1', '12/24', '12/25'] },
+			//invalid: {  dates: [new Date(2013/07/01), new Date(2014/06/30)],daysOfWeek: [], daysOfMonth: [] },
 			theme: this.options.theme,
 			lang: this.options.lang,
 			display: this.options.display,
@@ -43115,7 +43125,10 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 			dateFormat:this.options.dateFormat,
 			dateOrder: this.options.dateOrder,
 		}
-		
+		minDate=this.options.minDate=="now"?date:new Date(this.options.minDate);
+		minDate.toString()!="Invalid Date"&&(opts.minDate=minDate);
+		maxDate=this.options.maxDate=="now"?date:new Date(this.options.maxDate);
+		maxDate.toString()!="Invalid Date"&&(opts.maxDate=maxDate);
 		$.an.inputfield.prototype._edit.apply( this, arguments );
 		this.input.mobiscroll().date(opts);
 	},
@@ -43312,9 +43325,9 @@ $.widget( "an.loading", {
 	},
 
 	close:function(){
-		this.destroy();
+		this.wrap && this.wrap.hide();
 	},
-	
+
 	destroy: function() {
 		this.element.css("postion",this.oldPos);
 		this.wrap && this.wrap.remove();
