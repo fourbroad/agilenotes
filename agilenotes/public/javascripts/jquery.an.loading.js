@@ -31,9 +31,9 @@ $.widget( "an.loading", {
 	},
 
 	close:function(){
-		this.destroy();
+		this.wrap && this.wrap.hide();
 	},
-	
+
 	destroy: function() {
 		this.element.css("postion",this.oldPos);
 		this.wrap && this.wrap.remove();
