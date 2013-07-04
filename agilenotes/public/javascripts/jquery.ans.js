@@ -220,9 +220,16 @@
 
    postDoc: function(dbId, doc, options, callback){
 	   if(options.redirect){
-		 $.post('/dbs/'+dbId,doc,function(result){
-			  callback(result);
-		 });
+		  $.ajax({
+			  type: "POST", 
+			  url: '/dbs/'+dbId, 
+			  dataType: "json",
+			  contentType: "application/json",
+			  data: JSON.stringify(doc),
+			  success: function(result) {
+				 callback(result);
+			  }
+		  });
 	   }else{
 		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
