@@ -21,7 +21,7 @@ function ensureAuthenticated(req, res, next) {
 
 //  check user login state
 function login(req,res){
-	
+
         if ( !req.user && typeof( req.session.passport.user ) === 'undefined' ){
             res.send(MSG.auth.c1502, 200);
         } else {
@@ -42,7 +42,7 @@ function cleanFileField(provider, docid, fieldName, values, newValues, callback)
 		callback(null, newValues);
 		return;
 	}
-	
+
 	var value = values.shift();
 	if(value._tmp){
 		if(value._del){
@@ -80,7 +80,7 @@ function cleanFileFields(provider, docid, doc, fileFields, callback){
 		callback(null, doc);
 		return;
 	}
-	
+
 	var fileField = fileFields.shift(), values = eval("doc."+fileField);
 	cleanFileField(provider, docid, fileField, values, [], function(error, newValues){
 		eval("doc."+fileField +"="+JSON.stringify(newValues));
@@ -109,7 +109,7 @@ function validate(dbid, doc, callback){
 			for(var i in forms){
 				var f = $("<form/>").append(forms[i].content);
 				f.find(".field[type!=button]").each(function(){
-					var $this = $(this), field = $this.attr("id"), md = $this.metadata(), 
+					var $this = $(this), field = $this.attr("id"), md = $this.metadata(),
 					    input = $("<input type='text'/>").attr("name",$this.attr("id") || $this.attr("name")).appendTo($this),
 					    value = eval("try{doc['"+field+"']}catch(e){}");
 					if(value){
@@ -132,7 +132,7 @@ function validate(dbid, doc, callback){
 					break;
 				}
 			}
-			
+
 			if(errors.length == 0){
 				callback(error, doc, fileFields);
 			}else{
@@ -150,7 +150,7 @@ function rend(req,res){
 	var reg = new  RegExp('[0-9a-f]{24}');
 	if(reg.test(dbn)){
         	dbQuery = {type:Model.DATABASE, _id:new BSON.ObjectID(dbn)};
-        }	
+        }
 	if(reg.test(docn)){
         	docQuery = { _id:new BSON.ObjectID(docn)};
         }
@@ -164,7 +164,7 @@ function rend(req,res){
 		                if (err || doc == null) {
 				    res.render('page_404', {});
 				    return;
-		                }  
+		                }
 			        var data =  new Object();
 		                data.db = db;
 		                data.doc = doc;
@@ -172,7 +172,7 @@ function rend(req,res){
 			        data = data.replace(/<\/script>/g, '<\\/script>');
 			        res.render('page', {data: data});
 			});
-			
+
 		});
 }
 
@@ -256,7 +256,7 @@ function getDoc(req,res){
 function postDoc(req,res){
 	var params = req.params, dbid = params.dbid, doc = req.body,  docid = params.docid, q = req.query, options = q.options;
 	res.header('Content-Type', 'application/json');
-	
+
 	var  process = function(data, response, options, callback) {
 		var doc = data.shift();
 		if (doc) {
@@ -275,7 +275,7 @@ function postDoc(req,res){
 			callback(null, response);
 		}
 	};
-	
+
 	if (typeof(docid) != 'undefined') {
 		options = options || {};
 		options.query = q;
@@ -323,7 +323,7 @@ function postDoc(req,res){
 						doc.userId = req.user._id;
 					}
 					doc._ownerID = req.user._id;
-					
+
 					provider.insert(doc, options, function(error,docs){
 						if(error) {
 							res.send(403);
@@ -370,8 +370,8 @@ function postDoc(req,res){
 												});
 											}
 										});
-									}	
-									
+									}
+
 									var t = setInterval(function() {
 										if (respArr.length >= options.task.length) {
 											docs[0].result = respArr;
@@ -416,7 +416,7 @@ function putDoc(req,res){
 		}
 	};
 	if(docid){
-		var q = req.query, options = q.options, selector = q.selector,doc = req.body, 
+		var q = req.query, options = q.options, selector = q.selector,doc = req.body,
 		    provider = providers.getProvider(dbid, doc.type);
 		validate(dbid, doc, function(error, doc, fileFields){
 			if(error) {
@@ -451,8 +451,8 @@ function putDoc(req,res){
 													msg : "document not found or not authorized!" });
 										});
 									});
-								}	
-								
+								}
+
 								var t = setInterval(function() {
 									if (respArr.length >= options.task.length) {
 										doc.result = respArr;
@@ -532,7 +532,7 @@ function getAttachment(req,res){
 }
 
 function postAttachment(req,res){
-	var params = req.params, dbid = params.dbid, docid = params.docid, 
+	var params = req.params, dbid = params.dbid, docid = params.docid,
 	    path = params[1] ? params[1] +"/":"", attachment = req.files.attachment;
 	if(attachment){
 		providers.getProvider(dbid).createAttachment(docid, path+attachment.filename, attachment.mime, function(error,gridStore){
@@ -568,7 +568,7 @@ function postTempFile(req,res){
 }
 
 function acl(req,res,next){
-	var params = req.params, dbid = params.dbid, user = req.user, q = req.query, 
+	var params = req.params, dbid = params.dbid, user = req.user, q = req.query,
 	    doc = req.body, docid = params.docid, dbn = params.dbn, docn = params.docn,	provider = providers.getProvider(Model.ADMIN_DB);
 	var reg = new  RegExp('[0-9a-f]{24}');
 	if(reg.test(dbn)||dbid){
@@ -590,7 +590,7 @@ function acl(req,res,next){
 		q.selector = JSON.parse(q.selector||"{}");
 		q.options = JSON.parse(q.options||"{}");
 		if(docid) q.selector["_id"] = docid;
-	
+
 		ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type || doc && docid, function(error, selector){
 			if(error){
 				res.json({error:"Not Authorized!"});
@@ -607,7 +607,7 @@ module.exports = function(agilenotes){
 	providers.openAdminDb(function(error, db){
 		if(db){
 			var ous = {}, groups = {};
-			
+
 			ouAuthz = agilenotes.get("ou_authz");
 			groupAuthz = agilenotes.get("group_authz");
 			roleAuthz = agilenotes.get("role_authz");
@@ -626,7 +626,7 @@ module.exports = function(agilenotes){
 					groups[i] = docs[i];
 				}
 			});
-			
+
 			ACL.init(ous, groups, ouAuthz, groupAuthz,roleAuthz);
 			agilenotes.set("acl", ACL);
 
@@ -663,14 +663,14 @@ module.exports = function(agilenotes){
 									MSG.auth.c1501.isFirstLogin = 0;
 								}
 								res.send(MSG.auth.c1501, 200);
-	
+
 							});
 						}
 					})(req, res, next);});
 
 			agilenotes.get('/logout', logout);
 			agilenotes.get('/login', login);
-			
+
 
 			agilenotes.get('/dbs/:dbid/:docid?', acl, getDoc);
 			agilenotes.post('/dbs/:dbid/:docid?', acl, postDoc);
@@ -689,12 +689,12 @@ module.exports = function(agilenotes){
 			agilenotes.get('/pdfs', MailLib.pdfDownload);
 
 			agilenotes.set('providers', providers);
-                        
-			
+
+
 			// agilenotes.get('/mailtest', getMailTest);
 			agilenotes.get("/dbs/:dbid/:docid/readmail(\/?|\/*)", acl, MailLib.readMail);
 			agilenotes.post("/dbs/:dbid/:docid/sendmail(\/?|\/*)", MailLib.sendObject);
-			
+
 			// sms module
 			agilenotes.post("/sms", Functions.sendSms);
 
