@@ -103,6 +103,7 @@ document.write('\
 <script src="javascripts/mobiscroll.custom-2.6.0.min.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.mobiledatefield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.swipewidget.js"><\/script>\
+<script src="javascripts/jquery.an.loading.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');

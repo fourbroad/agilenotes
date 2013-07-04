@@ -219,10 +219,16 @@
    },
 
    postDoc: function(dbId, doc, options, callback){
-	   ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
+	   if(options.redirect){
+		 $.post('/dbs/'+dbId,doc,function(result){
+			  callback(result);
+		 });
+	   }else{
+		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
 		   if(!err) $(document).trigger("documentCreated",doc);
-	   });
+	    });
+	   }
    },
 
    putDoc: function(dbId, docId, fields, options, callback){
