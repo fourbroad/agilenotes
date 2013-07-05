@@ -36,8 +36,8 @@
 	  }
 	  return data;
   };
-  
-  function prepareUserDoc(user_doc, new_password) {    
+
+  function prepareUserDoc(user_doc, new_password) {
     if (typeof hex_sha1 == "undefined") {
       alert("creating a user doc requires sha1.js to be loaded in the page");
       return;
@@ -78,7 +78,7 @@
 
   function ajax_get(url,callback,options){
   	$.ajax($.extend(true,{
-		type: "GET", 
+		type: "GET",
 		url: url,
 		cache:!($.browser.msie),
 		dataType: "json",
@@ -93,11 +93,11 @@
 		}
 	},options));
   }
-  
+
   function ajax_post(url,doc,callback){
 	  $.ajax({
-		  type: "POST", 
-		  url: url, 
+		  type: "POST",
+		  url: url,
 		  dataType: "json",
 		  contentType: "application/json",
 		  data: JSON.stringify(doc),
@@ -115,7 +115,7 @@
 
   function ajax_put(url,doc,callback){
 	  $.ajax({
-		  type: "PUT", 
+		  type: "PUT",
 		  url: url,
 		  dataType: "json",
 		  contentType: "application/json",
@@ -131,10 +131,10 @@
 		  }
 	  });
   }
-  
+
   function ajax_del(url,callback){
 	  $.ajax({
-		  type: "DELETE", 
+		  type: "DELETE",
 		  url: url,
 		  dataType: "json",
 		  complete: function(req) {
@@ -148,22 +148,22 @@
 		  }
 	  });
   }
-  
+
   // TODO 规范接口错误消息
   $.extend($.ans, {
-	  
+
     login: function(loginInfo, callback){
     	ajax_post("/login", loginInfo, callback);
     },
-    
+
     logout: function(callback){
     	ajax_get("/logout", callback);
     },
-    
+
     dbAttachmentUri: function(dbId,filepath){
     	return "/dbs/"+Model.ADMINDBID+"/"+dbId+"/attachments/" + filepath;
     },
-    
+
     getDB: function(dbId, options, callback){
     	options = options || {};
     	$.extend(true, options, {selector:{type:Model.DATABASE}});
@@ -176,7 +176,7 @@
     		if(!err) $(document).trigger("databaseCreated",result);
     	});
     },
-    
+
     putDB: function(dbId, dbdoc, options, callback){
     	options = options || {};
     	$.extend(true, options, {selector:{type:Model.DATABASE}});
@@ -185,7 +185,7 @@
     		if(!err) $(document).trigger("databaseChanged",dbdoc);
     	});
     },
-    
+
    delDB: function(dbId, options, callback){
 	   options = options || {};
 	   $.extend(true, options, {selector:{type:Model.DATABASE}});
@@ -196,15 +196,15 @@
     },
 
    getDBAttachment: function(dbId, attachment){},
-   
+
    postDBAttachment: function(db, input,options){
 		var form = $('<form action="" method="POST"></form>')
-		           .append(input.clone().attr("name","attachment"));	
+		           .append(input.clone().attr("name","attachment"));
 		var o = {url: "/dbs/"+Model.ADMINDBID+"/"+db._id+"/attachments"};
 		$.extend(o, options);
 		form.ajaxSubmit(o);
    },
-   
+
    delDBAttachment: function(dbId, attachment){},
 
    getDoc: function(dbId, docId, options, callback){
@@ -219,11 +219,19 @@
    },
 
    postDoc: function(dbId, doc, options, callback){
-	   if(options.redirect){
-		 $.post('/dbs/'+dbId,doc,function(result){
-			  callback(result);
-		 });
+	   if( options && options.redirect){
+		  $.ajax({
+			  type: "POST", 
+			  url: '/dbs/'+dbId, 
+			  dataType: "json",
+			  contentType: "application/json",
+			  data: JSON.stringify(doc),
+			  success: function(result) {
+				 callback(result);
+			  }
+		  });
 	   }else{
+
 		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
 		   if(!err) $(document).trigger("documentCreated",doc);
@@ -255,17 +263,17 @@
    },
 
    delAttachment: function(dbId,docId,attachment){},
-   
+
    getTempPath: function(filename){
 	   return "/tmp/"+filename;
    },
-   
+
    postTemp: function(input, options){
-	   var form = $('<form action="" method="POST"></form>').append(input.attr("name","file")),	
+	   var form = $('<form action="" method="POST"></form>').append(input.attr("name","file")),
 	       o = {url: "/tmp"};
 	   $.extend(o, options);
 	   form.ajaxSubmit(o);
    }
   });
-  
+
 })(jQuery);

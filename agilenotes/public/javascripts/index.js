@@ -27,6 +27,8 @@ document.write('\
 <link rel="stylesheet" href="stylesheets/rte/paddinginput.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.rte.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/base.css" type="text/css">\
+<link rel="stylesheet" href="javascripts/codemirror/lib/codemirror.css" type="text/css">\
+<link rel="stylesheet" href="javascripts/codemirror/theme/solarized.css" type="text/css">\
 <script src="javascripts/lib/model.js"><\/script>\
 <script src="javascripts/lib/utils.js"><\/script>\
 <script src="javascripts/lib/objectid.js"><\/script>\
@@ -103,8 +105,13 @@ document.write('\
 <script src="javascripts/widgets/jquery.an.listviewfield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.customhtmlfield.js"><\/script>\
 <script src="javascripts/jquery.an.mobilelistview.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.mobiledatefield.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.swipewidget.js"><\/script>\
 <script src="javascripts/jquery.an.loading.js"><\/script>\
+<script src="javascripts/codemirror/lib/codemirror.js"><\/script>\
+<script src="javascripts/codemirror/mode/javascript.js"><\/script>\
+<script src="javascripts/codemirror/mode/css.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.codeareafield.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');

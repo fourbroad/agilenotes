@@ -17,7 +17,7 @@ $.widget( "an.textareafield", $.an.field, {
 		$.an.field.prototype._create.apply(this, arguments);
 		this.element.addClass("an-textareafield");
 	},
-	
+
 	_createControl:function(){
 		var self = this, o = this.options, el = this.element;
 		if (o.mobile) {
@@ -51,17 +51,17 @@ $.widget( "an.textareafield", $.an.field, {
 				}
 			}).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
 		}
-		
-		
-		
-		if(o.resizable) this.content.resizable();		
+
+
+
+		if(o.resizable) this.content.resizable();
 		if(!$.isEmptyObject(o.validate)){
 			this.textarea.addClass($.toJSON({validate:o.validate}));
 		}
 	},
-	
+
 	_makeResizable:function(){},
-	
+
 	_browser:function(){
 		this.textarea.detach();
 
@@ -69,13 +69,13 @@ $.widget( "an.textareafield", $.an.field, {
 		if(c.is(".ui-resizable")) c.resizable("destroy");
 		c.html(o.pre? "<pre>"+o.value+"</pre>": o.value).css("display","");
 	},
-	
+
 	_edit:function(){
 		this.textarea.detach().val(this.options.value).appendTo(this.content.empty());
 	},
 
 	_design:function(){
-		
+
 		this.textarea.detach();
 
 		var self = this, o = this.options, c = this.content;
@@ -91,7 +91,7 @@ $.widget( "an.textareafield", $.an.field, {
 			}
 		});
 	},
-	
+
 	_handleChange:function(key, value, oldValue){
 		if(key === "label"){
 			this.textarea.remove();
@@ -102,7 +102,7 @@ $.widget( "an.textareafield", $.an.field, {
 			$.an.field.prototype._handleChange.apply(this, arguments);
 		}
 	},
-	
+
 	destroy: function() {
 		this.textarea.unbind(".textareafield").parent().remove();
 		this.element.removeClass( "an-textareafield" );

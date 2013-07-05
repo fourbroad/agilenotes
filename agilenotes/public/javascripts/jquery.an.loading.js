@@ -14,6 +14,7 @@
 $.widget( "an.loading", {
 	options:{
 		trans:'0.6',
+		fullscreen:false,
 		msg:''
 	},
 	
@@ -22,8 +23,12 @@ $.widget( "an.loading", {
 		this.wrap=$('<div class="loading" style="width:100%;height:100%;position:absolute;left:0;top:0;z-index:9997;vertical-align:middle;"><div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9998;background:#fff;"></div></div>');
 		this.wrap.css('opacity',o.trans);
 		this.wrap.append($('<span style="background:url(images/large-loading.gif) no-repeat;width:32px;height:32px;position:absolute;left:49%;top:49%;z-index:9999;padding-top:32px;">'+o.msg+'</span>'));
-		this.oldPos=this.element.css("postion");
-		this.element.css("postion","relatvie").append(this.wrap);;
+		if(!o.fullscreen){
+			this.oldPos=this.element.css("postion");
+			this.element.css("postion","relatvie").append(this.wrap);
+		}else{
+			this.wrap.css("position","fixed").appendTo($("body"));
+		}
 	},
 	
 	open:function(){
@@ -35,7 +40,9 @@ $.widget( "an.loading", {
 	},
 
 	destroy: function() {
-		this.element.css("postion",this.oldPos);
+		if(this.oldPos){
+			this.element.css("postion",this.oldPos);
+		}
 		this.wrap && this.wrap.remove();
 		delete this.pager;
 		$.Widget.prototype.destroy.apply(this,arguments);

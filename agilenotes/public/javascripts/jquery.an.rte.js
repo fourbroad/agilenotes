@@ -42,17 +42,17 @@ $.widget( "an.rte", {
 
 		o.win = o.iframe[0].contentWindow;
 		var doc = (o.doc = o.win.document);
-		
+
 		if(o.resizable) el.resizable();
 		this.source = $("<textarea class='content'/>").appendTo(el);
 		this.source[o.mode=="sourcecode"?"show":"hide"]();
 
 		o.actions = this._createActions();
-		
+
 		$(o.win).bind("focus.rte blur.rte",function(e){
 			self._trigger(e.type, e, el);
 		});
-		
+
 		$(doc).bind('dragend.rte', function(e) {
 			setTimeout(function() {
 				try {
@@ -62,7 +62,7 @@ $.widget( "an.rte", {
 				} catch(e) { }
 			}, 200);
 		});
-		
+
 		o.iframe.load(function(){
 			var body = $(this).contents().find("body")[0];
 			// make iframe editable.
@@ -70,12 +70,12 @@ $.widget( "an.rte", {
 				body.contentEditable = true;
 			} else {
 				try {
-					body.contentEditable = true; 
+					body.contentEditable = true;
 					//doc.designMode = "on";
 					doc.execCommand('styleWithCSS', false, o.styleWithCSS);
 				}catch(e){}
 			}
-			
+
 			if (o.mobile) {
 				var iself = this;
 				this.width = "100%";
@@ -83,7 +83,7 @@ $.widget( "an.rte", {
 					var bHeight = iself.contentWindow.document.body.scrollHeight;
 					var dHeight = iself.contentWindow.document.documentElement.scrollHeight;
 					var height = Math.max(bHeight, dHeight);
-					iself.height = height; 
+					iself.height = height;
 				}, 500);
 			}
 
@@ -95,7 +95,7 @@ $.widget( "an.rte", {
 			o.restore && o.restore(self.$body);
 			self._restore();
 		});
-		
+
 		/* put content into iframe */
 		var html = '<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
 		$.each(o.cssFiles, function() {
@@ -104,7 +104,7 @@ $.widget( "an.rte", {
 		$.each(o.jsFiles,function(){
 			html +="<script type='text/javascript' language='javascript' src='"+this+"'></script>";
 		});
-		
+
 		/*if (o.mobile && o.modelType === 'page') {
 			html += '<script src="javascripts/jquery.mobile-1.3.1.js"></script>\
 				<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">';
@@ -130,7 +130,7 @@ $.widget( "an.rte", {
 					r.text = "\t"+r.text;
 					this.focus();
 				} else {
-					var value = this.value, before = value.substr(0, this.selectionStart), 
+					var value = this.value, before = value.substr(0, this.selectionStart),
 					    after = value.substr(this.selectionEnd);
 					this.value = before+"\t"+after;
 					this.setSelectionRange(before.length+1, before.length+1);
@@ -153,14 +153,14 @@ $.widget( "an.rte", {
 			if (e.keyCode == 32 && $.browser.opera) { // Space
 				sel.insertNode(o.doc.createTextNode(" "));
 			}
-			
+
 			if ((e.keyCode>=48 && e.keyCode <=57) || e.keyCode==61 || e.keyCode == 109
-				|| (e.keyCode>=65 && e.keyCode<=90) || (e.keyCode>=188&&e.keyCode<=190) 
-				|| e.keyCode==191 || (e.keyCode>=219 && e.keyCode<=222) 
+				|| (e.keyCode>=65 && e.keyCode<=90) || (e.keyCode>=188&&e.keyCode<=190)
+				|| e.keyCode==191 || (e.keyCode>=219 && e.keyCode<=222)
 				|| e.keyCode == 8 || e.keyCode == 46 || e.keyCode == 32 || e.keyCode == 13) {
 				self.element.trigger("change");
 			}
-			if ((e.keyCode >= 8 && e.keyCode <= 13) || (e.keyCode>=32 && e.keyCode<= 40) 
+			if ((e.keyCode >= 8 && e.keyCode <= 13) || (e.keyCode>=32 && e.keyCode<= 40)
 					|| e.keyCode == 46 || (e.keyCode >=96 && e.keyCode <= 111)
 					||(e.keyCode == 65)&&(e.metaKey || e.ctrlKey)) {
 				self.updatePath();
@@ -208,7 +208,7 @@ $.widget( "an.rte", {
 				}
 			});
 		}
-		
+
 		if ($.browser.safari) {
 			$(doc).bind('click.rte', function(e) {
 				content.find('.rte-webkit-hl').removeClass('rte-webkit-hl');
@@ -219,11 +219,11 @@ $.widget( "an.rte", {
 				content.find('.rte-webkit-hl').removeClass('rte-webkit-hl');
 			});
 		}
-		
-		
+
+
 		o.win.focus();
 	},
-	
+
 	option: function( key, value ) {
 		if(/^can.*/.test(key)){
 			this.options[key] = this['_'+key]?this['_'+key]():false;
@@ -235,7 +235,7 @@ $.widget( "an.rte", {
 		}
 		return $.Widget.prototype.option.apply(this, arguments );
 	},
-	
+
 	_setOption: function( key, value ) {
 		var o = this.options, oldValue = this.option(key);
 		if(!equals(value,oldValue)){
@@ -267,9 +267,9 @@ $.widget( "an.rte", {
 			}else if(key == "stylesheet"){
 				$(o.doc).find("#stylesheet").text(value);
 			}else	if(key == "height"){
-				this.element.css("height",value);				
+				this.element.css("height",value);
 			}else if(key == "width"){
-				this.element.css("width",value);				
+				this.element.css("width",value);
 			}else if(key == "showToolbar"){
 				this.showToolbar(value);
 			}else if(key == "path"){
@@ -277,7 +277,7 @@ $.widget( "an.rte", {
 			}
 			this._trigger("optionchanged",null,{key:key, value:value, oldValue:oldValue});
 		}
-		return this; 
+		return this;
 	},
 	history:function(){
 		var self=this,o=self.options,ht=o.history;
@@ -313,7 +313,7 @@ $.widget( "an.rte", {
 		self._restore();
 		self.option("undoable",true);
 		(self.htStep==ht.length-1)&&self.option("redoable",false);
-		
+
 	},
 	showToolbar: function(show){
 		if(show){
@@ -339,7 +339,7 @@ $.widget( "an.rte", {
 			}
 		}
 	},
-	
+
 	_getContent:function(){
 		var o = this.options, content = o.content;
 		if(o.mode == "design" && this.$body){
@@ -360,7 +360,7 @@ $.widget( "an.rte", {
 			}
 		});
 		$("img",this.$body).unbind('dblclick');
-		
+
 		this.$body.find(".widget[type=tabsx]").each(function(){
 			var tw = $(this).data("tabsxwidget");
 			if(tw) tw.destroy();
@@ -384,7 +384,7 @@ $.widget( "an.rte", {
 				self._showDialog("Image", attrs, [ids.standard,ids.image], function(attrs){
 					$.each(attrs, function(k,v){
 						if(k=='width'||k=='height'){
-							v = $.trim(v)?$img.css(k,v):$img.removeAttr(k); 
+							v = $.trim(v)?$img.css(k,v):$img.removeAttr(k);
 						}else{
 							v = $.trim(v)?$img.attr(k,v):$img.removeAttr(k);
 						}
@@ -394,7 +394,7 @@ $.widget( "an.rte", {
 				});
 			});
 		});
-		
+
 		this.$body.find(".widget[type=tabsx]").each(function(){
 			var $this = $(this);
 			if($this.is(".an-tabsxwidget")){
@@ -402,7 +402,7 @@ $.widget( "an.rte", {
 			}else{
 				$this.tabsxwidget({
 					parent:function(){return self;},
-					mode:o.mode, 
+					mode:o.mode,
 					dbId:o.dbId,
 					optionchanged:function(e,data){
 						if(data.key == "metadata" || data.key == "attributes"){
@@ -422,11 +422,11 @@ $.widget( "an.rte", {
 			return [this._modeActionSet()];
 		}
 	},
-	
+
 	_controlActionSet:function(){
 		return this._createActionSet(["properties","cleanFormat"]);
 	},
-	
+
 	_formatActionSet:function(){
 		return this._createActionSet(["bold","italic","underline","strikethrough","subscript",
 		        "superscript","alignLeft","alignCenter","alignRight","alignFull","font","fontSize",
@@ -434,9 +434,9 @@ $.widget( "an.rte", {
 		        "indent","orderedList","unorderedList","link","deleteLink","horizontalRule",
 		        "blockQuote","blockElement","stopFloat","image"]);
 	},
-	
+
 	_tableActionSet:function(){
-		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow", 
+		return this._createActionSet(["table","tableProps","deleteTable","rowBefore","rowAfter","deleteRow",
 		"columnBefore","columnAfter","deleteColumn", "cellProps","mergeCells",
 		"splitCells"]);
 	},
@@ -444,7 +444,7 @@ $.widget( "an.rte", {
 	_widgetActionSet:function(){
 		return this._createActionSet(["tabsx"]);
 	},
-	
+
 	_modeActionSet:function(){
 		return this._createActionSet(["sourcecode"]);
 	},
@@ -456,7 +456,7 @@ $.widget( "an.rte", {
 		});
 		return actionSet;
 	},
-	
+
 	// do cut, copy, paste.
 	_doCCP: function(op){
 			this.addHistory();
@@ -487,7 +487,7 @@ $.widget( "an.rte", {
 			}
 			this.updatePath();
 	},
-	
+
 	_canCCP: function(op){
 		var o = this.options,ret = false;
 		try{
@@ -496,7 +496,7 @@ $.widget( "an.rte", {
 		};
 		return ret;
 	},
-	
+
 	_canCut: function(){
 		return this._canCCP("cut");
 	},
@@ -504,28 +504,28 @@ $.widget( "an.rte", {
 	_canCopy: function(){
 		return this._canCCP("copy");
 	},
-	
+
 	_canPaste: function(){
 		return this._canCCP("paste");
 	},
-	
+
 	cut: function(){
 		this._doCCP("cut");
 	},
-	
+
 	copy: function(){
 		this._doCCP("copy");
 	},
-	
+
 	paste: function(){
 		this._doCCP("paste");
 	},
-	
+
 	updatePath: function(cleanCache){
 		var o = this.options,sel = o.selection, dom = o.dom;
 		cleanCache && sel.cleanCache();
 		var n    = sel.getNode(),	 p = dom.parents(n, '*'), rtl = o.rtl, sep  = rtl ? ' &laquo; ' : ' &raquo; ', path = '', i;
-		
+
 		function _name(n) {
 			var name = n.nodeName.toLowerCase();
 			n = $(n);
@@ -550,51 +550,51 @@ $.widget( "an.rte", {
 		for (i=0; i < p.length; i++) {
 			path += (i>0 ? sep : '')+_name(p[i]);
 		}
-		
+
 		return this.option("path", path);
 	},
-	
+
 	removeFormat: function(){
 		this.options.doc.execCommand("removeformat", false, null);
 		return this;
 	},
-	
+
     bold: function(){
     	this.options.doc.execCommand("bold", false, null);
 		this.element.trigger("contentchange");
 		return this;
     },
-    
+
 	italic: function(){
     	this.options.doc.execCommand("italic", false, null);
 		this.element.trigger("contentchange");
     	return this;
     },
-    
+
 	underline: function(){
     	this.options.doc.execCommand("underline", false, null);
 		this.element.trigger("contentchange");
     	return this;
     },
-    
+
 	strikethrough: function(){
     	this.options.doc.execCommand("strikethrough", false, null);
 		this.element.trigger("contentchange");
 		return this;
     },
-    
+
 	subscript: function(){
     	this.options.doc.execCommand("subscript", false, null);
 		this.element.trigger("contentchange");
 		return this;
     },
-    
+
 	superscript: function(){
     	this.options.doc.execCommand("superscript", false, null);
 		this.element.trigger("contentchange");
 		return this;
     },
-    
+
     align: function(dir){
     	var o = this.options, s = o.selection.selected({collapsed:true, blocks : true, tag : 'div'}),
 		l = s.length;
@@ -604,7 +604,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	leftToRight: function(){
 		var o = this.options, dom = o.dom,sel = o.selection, n = sel.getNode();
 		if ($(n).attr('dir') == 'ltr' || $(n).parents('[dir="ltr"]').length || $(n).find('[dir="ltr"]').length) {
@@ -626,7 +626,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	rightToLeft: function(){
 		var o = this.options, dom = o.dom, n = o.selection.getNode();
 		if ($(n).attr('dir') == 'rtl' || $(n).parents('[dir="rtl"]').length || $(n).find('[dir="rtl"]').length) {
@@ -662,7 +662,7 @@ $.widget( "an.rte", {
 				}
 				return ret;
 			}
-			
+
 			var n = sel.getNode(), ret = checkNode(n);
 			if (ret.val) {
 				ret.node = n;
@@ -677,7 +677,7 @@ $.widget( "an.rte", {
 			}
 			return ret;
 		};
-		
+
 		var v = find();
 		if (v.node) {
 			$(v.node).css(v.type, (v.val>40 ? v.val-40 : 0)+'px');
@@ -690,13 +690,13 @@ $.widget( "an.rte", {
     indent: function(){
     	var o = this.options, sel = o.selection, dom = o.dom, doc = o.doc,
     	    nodes = sel.selected({collapsed : true, blocks : true, wrap : 'inline', tag : 'p'});
-    	
+
 		function indent(n) {
 			var css = /(IMG|HR|TABLE|EMBED|OBJECT)/.test(n.nodeName) ? 'margin-left' : 'padding-left';
 			var val = dom.attr(n, 'style').indexOf(css) != -1 ? parseInt($(n).css(css))||0 : 0;
 			$(n).css(css, val+40+'px');
 		}
-		
+
 		for (var i=0; i < nodes.length; i++) {
 			if (/^(TABLE|THEAD|TFOOT|TBODY|COL|COLGROUP|TR)$/.test(nodes[i].nodeName)) {
 				$(nodes[i]).find('td,th').each(function() {
@@ -714,7 +714,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	orderedList: function(){
 		this.options.doc.execCommand("insertorderedlist", false, null);
 		this.updatePath();
@@ -763,9 +763,9 @@ $.widget( "an.rte", {
 			close : function(e, ui) {sel.removeBookmark(bm); $.browser.msie && sel.restoreIERange(); $(this).remove();}
 		});
     },
-    
+
 	link: function(){
-		var self = this, o = this.options, sel = o.selection, dom = o.dom, doc = o.doc, 
+		var self = this, o = this.options, sel = o.selection, dom = o.dom, doc = o.doc,
 		      n = sel.getNode(), link = dom.selfOrParentLink(n), ids = o.formIds;
 		function isLink(n) { return n.nodeName == 'A' && n.href; }
 		if (!link) {
@@ -794,7 +794,7 @@ $.widget( "an.rte", {
 				link = $('a[href="'+fakeURL+'"]', doc).each(function() {
 					var $this = $(this);
 					if (!$.trim($this.html()) && !$.trim($this.text())) {
-						$this.replaceWith($this.text()); 
+						$this.replaceWith($this.text());
 					}
 				});
 			}
@@ -806,7 +806,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-    
+
 	blockQuote: function(){
     	var o = this.options, sel = o.selection, dom = o.dom, n, nodes;
 		if (sel.collapsed() && (n = dom.selfOrParent(sel.getNode(), /^BLOCKQUOTE$/))) {
@@ -819,7 +819,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	blockElement:function(){
     	var o = this.options, sel = o.selection, dom = o.dom, n, nodes;
 		if (sel.collapsed()) {
@@ -846,7 +846,7 @@ $.widget( "an.rte", {
 				}
 			}
 		};
-		
+
 		var n = find();
 		if (n) {
 			n = $(n);
@@ -862,14 +862,14 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
     deleteTable: function(){
     	$(this.options.dom.parent(this.options.selection.getNode(), /^TABLE$/)).remove();
 		this.updatePath();
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	insertTableRow: function(param){
 		var o = this.options, dom = o.dom,sel = o.selection, n  = sel.getNode(), doc = o.doc,
 		    c  = dom.selfOrParent(n, /^(TD|TH)$/), r  = dom.selfOrParent(c, /^TR$/),
@@ -885,7 +885,7 @@ $.widget( "an.rte", {
 					}
 				}
 			}
-			
+
 			for (var i=0; i<mx[ro].length; i++) {
 				if (mx[ro][i] && mx[ro][i].nodeName) {
 					var cell    = $(mx[ro][i]);
@@ -917,13 +917,13 @@ $.widget( "an.rte", {
 				$(this).attr('rowspan', parseInt($(this).attr('rowspan')||1)+1);
 			});
 			this.updatePath();
-		}				
+		}
 		this.element.trigger("contentchange");
 		return this;
 	},
 
     deleteRow: function(){
-    	var o = this.options,sel = o.selection, dom = o.dom, n = sel.getNode(), 
+    	var o = this.options,sel = o.selection, dom = o.dom, n = sel.getNode(),
     	    c = dom.selfOrParent(n, /^(TD|TH)$/), r = dom.selfOrParent(c, /^TR$/),
     	    tb = dom.selfOrParent(c, /^TABLE$/), mx = dom.tableMatrix(tb);
 
@@ -985,7 +985,7 @@ $.widget( "an.rte", {
 					if (rowspan>1) {
 						cell.attr('rowspan', rowspan-1);
 						move && _move(cell, i, ro);
-					} 
+					}
 				}
 			};
 
@@ -1000,9 +1000,9 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	insertTableColumn: function(param){
-		var o=this.options,doc = o.doc, dom=o.dom,sel=o.selection, 
+		var o=this.options,doc = o.doc, dom=o.dom,sel=o.selection,
 		    cells = dom.tableColumn(sel.getNode(), false, true);
 		if (cells.length) {
 			$.each(cells, function() {
@@ -1019,14 +1019,14 @@ $.widget( "an.rte", {
 					}
 				}
 			});
-		}				
+		}
 		this.updatePath();
 		this.element.trigger("contentchange");
 		return this;
 	},
 
     deleteColumn: function(){
-    	var o=this.options,sel=o.selection,dom=o.dom, n = sel.getNode(), 
+    	var o=this.options,sel=o.selection,dom=o.dom, n = sel.getNode(),
     	    c = dom.selfOrParent(n, /^(TD|TH)$/), prev  = $(c).prev('td,th')[0],
     	    next  = $(c).next('td,th')[0], tb = dom.parent(n, /^TABLE$/),
     	    cells = dom.tableColumn(n, false, true);
@@ -1044,20 +1044,20 @@ $.widget( "an.rte", {
 			if (prev || next) {
 				sel.selectContents(prev ? prev : next).collapse(true);
 			}
-		}				
+		}
 		this.updatePath();
 		this.element.trigger("contentchange");
 		return this;
 	},
 
     mergeCells: function(){
-    	var o=this.options,sel=o.selection,dom=o.dom, cells = null, 
-    	    c1 = dom.selfOrParent(sel.getStart(), /^(TD|TH)$/), 
-    	    c2 = dom.selfOrParent(sel.getEnd(), /^(TD|TH)$/);		
+    	var o=this.options,sel=o.selection,dom=o.dom, cells = null,
+    	    c1 = dom.selfOrParent(sel.getStart(), /^(TD|TH)$/),
+    	    c2 = dom.selfOrParent(sel.getEnd(), /^(TD|TH)$/);
 		if (c1 && c2 && c1!=c2 && $(c1).parents('table')[0] == $(c2).parents('table')[0]) {
 			cells = [c1, c2];
 		}
-		
+
 		if (cells) {
 			var _s  = dom.indexOf($(cells[0]).parent('tr')[0]),
 			    _e  = dom.indexOf($(cells[1]).parent('tr')[0]),
@@ -1073,14 +1073,14 @@ $.widget( "an.rte", {
 					$(this).children('td,th').each(function() {
 						var $this   = $(this), inBegin = $.inArray(this, colBegin.column),
 						    inEnd   = $.inArray(this, colEnd.column);
-						
+
 						if (inBegin!=-1 || inEnd!=-1) {
 							accept = inBegin!=-1 && inEnd==-1;
 							var len = parseInt($this.attr('colspan')||1);
 							if (i == 0) {
 								length += len;
 							}
-							
+
 							if (inBegin!=-1 && i>0) {
 								var delta = colBegin.info.delta[inBegin], cell;
 								if (delta>0) {
@@ -1096,7 +1096,7 @@ $.widget( "an.rte", {
 									}
 								}
 							}
-							
+
 							if (inEnd!=-1) {
 								var delta = colEnd.info.delta[inEnd], cell;
 								if (len-delta>1) {
@@ -1137,7 +1137,7 @@ $.widget( "an.rte", {
 			if (rl>1) {
 				target.attr('rowspan', rl);
 			}
-			// sometimes when merge cells with different rowspans we get "lost" cells in rows 
+			// sometimes when merge cells with different rowspans we get "lost" cells in rows
 			// this add cells if needed
 			dom.fixTable($(cells[0]).parents('table').get(0));
 		}
@@ -1147,7 +1147,7 @@ $.widget( "an.rte", {
 	},
 
     splitCells: function(){
-    	var o=this.options,sel=o.selection,dom=o.dom, doc = o.doc, 
+    	var o=this.options,sel=o.selection,dom=o.dom, doc = o.doc,
     	    n = dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
 		if (n) {
 			var colspan = parseInt(dom.attr(n, 'colspan')), rowspan = parseInt(dom.attr(n, 'rowspan'));
@@ -1189,7 +1189,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	fontColor: function(c){
 		var o =  this.options, sel = o.selection;
 		if (!sel.collapsed()) {
@@ -1208,7 +1208,7 @@ $.widget( "an.rte", {
 		}
 		return this;
 	},
-	
+
 	backgroundColor:function(c){
 		var o = this.options, sel = o.selection;
 		if (!sel.collapsed()) {
@@ -1227,7 +1227,7 @@ $.widget( "an.rte", {
 		}
 		return this;
 	},
-	
+
 	font: function(size){
 		var o = this.options, sel = o.selection, nodes = sel.selected({filter : 'textContainsNodes'});
 		$.each(nodes, function() {
@@ -1238,7 +1238,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	fontSize: function(size){
 		var o = this.options, nodes = o.selection.selected({filter : 'textContainsNodes'});
 		$.each(nodes, function() {
@@ -1249,7 +1249,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	format: function(v){
 		var o = this.options, sel = o.selection, dom = o.dom, doc = o.doc;
 		function f(n, tag) {
@@ -1259,7 +1259,7 @@ $.widget( "an.rte", {
 				});
 				return p;
 			}
-			
+
 			if (/^(LI|DT|DD|TD|TH|CAPTION)$/.test(n.nodeName)) {
 				!dom.isEmpty(n) && dom.wrapContents(replaceChilds(n), tag);
 			} else if (/^(UL|OL|DL|TABLE)$/.test(n.nodeName)) {
@@ -1268,7 +1268,7 @@ $.widget( "an.rte", {
 				!dom.isEmpty(n) && $(replaceChilds(n)).replaceWith( $(doc.createElement(tag)).html($(n).html()));
 			}
 		}
-		
+
 		var tag = v.toUpperCase(),	i, n, $n, c = sel.collapsed(), bm = sel.getBookmark(),
 			nodes = sel.selected({ collapsed : true, blocks:true, filter : 'textContainsNodes', wrap:'inline', tag:'span'}),
 			l = nodes.length, s = $(nodes[0]).prev(), e = $(nodes[nodes.length-1]).next();
@@ -1293,7 +1293,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
 	},
-	
+
 	deleteLink:function(){
 		var o = this.options, sel = o.selection, dom = o.dom, doc = o.doc, n = sel.getNode(), l = dom.selfOrParentLink(n);
 		function isLink(n) { return n.nodeName == 'A' && n.href; }
@@ -1330,7 +1330,7 @@ $.widget( "an.rte", {
 		this.element.trigger("contentchange");
 		return this;
     },
-	
+
 	properties: function(){
 		var self = this, o = this.options, sel = o.selection, n = sel.getNode();
 		if (n.nodeType == 3)  n = n.parentNode;
@@ -1354,7 +1354,7 @@ $.widget( "an.rte", {
 			img['height'] = img.offsetHeight;
 			$(img).attr('style',$(img).attr('style').replace(/height:\s*\d+px/,'height:' + img.offsetHeight + 'px'));
 		}
-		
+
 		var as = attributes(img),
 			oldValue = $.extend(true,{},as);
     	this._showDialog("Image", attributes(img), [ids.standard,ids.image], function(attrs){
@@ -1370,7 +1370,7 @@ $.widget( "an.rte", {
 			});
 			if(!img.parentNode) sel.insertNode(img);
 			self.element.trigger("contentchange");
-			
+
 			/*$img.resizable({
 				stop: function(event, ui) {
 					self.element.trigger("contentchange");
@@ -1391,7 +1391,7 @@ $.widget( "an.rte", {
 				self._showDialog("Image", attrs, [ids.standard,ids.image], function(attrs){
 					$.each(attrs, function(k,v){
 						if(k=='width'||k=='height'){
-							v = $.trim(v)?$img.css(k,v):$img.removeAttr(k); 
+							v = $.trim(v)?$img.css(k,v):$img.removeAttr(k);
 						}else{
 							v = $.trim(v)?$img.attr(k,v):$img.removeAttr(k);
 						}
@@ -1408,7 +1408,7 @@ $.widget( "an.rte", {
     	var o = this.options, sel = o.selection, n = sel.getStart(), $n = $(n);
     	if(!$n.is('.widget[type='+type+']')){
     		$n = $("<div class='widget'/>").attr("type",type).css((opts&&opts.style)||{});
-    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime", "mobiledate",
+    		$n.toggleClass("field", $.inArray(type,["text","checkbox", "radio","select", "datetime", "mobiledate","codearea",
     		                                          "textarea", "file","grid","jsrender","password","rte", "search",
     		                                          "toggle", "listview","customhtml"])!=-1);
     		$n.toggleClass("box", $.inArray(type,["box","editor", "page","view"])!=-1);
@@ -1463,15 +1463,15 @@ $.widget( "an.rte", {
 	rteWidgetActive: function(type){
 		var n = this.options.selection.getEnd();
 		if(n&&n.nodeName == "DIV"){
-			return $(n).is('.widget[type='+type+']'); 
+			return $(n).is('.widget[type='+type+']');
 		}
     	return false;
 	},
-	
+
     _alignEnable: function(){
     	var o = this.options;
     	if(o.mode != "design") return false;
-    	var s = o.selection.getNode(); 
+    	var s = o.selection.getNode();
     	return s&&s.nodeName == 'BODY' ? s : o.dom.selfOrParent(s, 'textNodes')||(s&&s.parentNode && s.parentNode.nodeName == 'BODY' ? s.parentNode : null) ? true : false;
     },
 
@@ -1482,26 +1482,26 @@ $.widget( "an.rte", {
     	     n = s.nodeName == 'BODY' ? s : o.dom.selfOrParent(s, 'textNodes')||(s.parentNode && s.parentNode.nodeName == 'BODY' ? s.parentNode : null);
     	return $(n).css('text-align') == align;
     },
-    
+
     _commandEnabled: function(cmd){
     	var o = this.options, enabled = false;
     	try{
-    		enabled = (o.mode == "design") && o.doc.queryCommandEnabled(cmd); 
+    		enabled = (o.mode == "design") && o.doc.queryCommandEnabled(cmd);
     	}catch(e){};
     	return enabled;
     },
-    
+
     _commandState: function(cmd){
     	var o = this.options, state = false;
     	try{state = (o.mode == "design") && o.doc.queryCommandState(cmd);}catch(e){};
     	return state;
     },
-    
+
     _directionActive:function(dir){
 		var $n = $(this.options.selection.getNode());
 		return $n.attr('dir') == dir || $n.parents('[dir='+dir+']').length || $n.find('[dir='+dir+']').length;
     },
-    
+
     _colorEnable:function(element, color){
     	var o = this.options;
 		if(o.mode != "design") return false;
@@ -1513,7 +1513,7 @@ $.widget( "an.rte", {
 		}
 		return false;
     },
-    
+
     _fontEnable:function(action){
     	var o = this.options;
     	if(o.mode != "design") return false;
@@ -1527,7 +1527,7 @@ $.widget( "an.rte", {
 		}
 		return false;
     },
-    
+
     _fontSizeEnable:function(action){
     	var o = this.options;
 		if(o.mode != "design") return false;
@@ -1535,7 +1535,7 @@ $.widget( "an.rte", {
 		action.element.data("select").val((m = o.dom.attr(n, 'style').match(/font-size:\s*([^;]+)/i)) ? m[1] : '');
 		return true;
     },
-    
+
     _formatEnable:function(action){
     	var o = this.options;
     	if(o.mode != "design") return false;
@@ -1543,11 +1543,11 @@ $.widget( "an.rte", {
 		action.element.data("select").val(n ? n.nodeName.toLowerCase() : 'span');
 		return true;
     },
-    
+
     _outdentEnable:function(){
     	var o = this.options;
 		if(o.mode != "design") return false;
-		
+
 		var sel = o.selection, dom = o.dom;
 		function checkNode(n) {
 			var ret = {type : '', val : 0}, s;
@@ -1572,20 +1572,20 @@ $.widget( "an.rte", {
 		}
 		return node ? true: false;
     },
-    
+
     _linkEnable:function(){
     	var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, n = sel.getNode();
 		if(n){
 			var dom = o.dom;
-			return dom.selfOrParentLink(n) 
+			return dom.selfOrParentLink(n)
 				|| dom.selectionHas(sel, function(n) { return n.nodeName == 'A' && n.href; })
 				|| !sel.collapsed() || n.nodeName == 'IMG';
 		}
 		return false;
     },
-    
+
     _linkActive:function(){
     	var o = this.options, sel = o.selection;
 		if(o.mode != "design") return false;
@@ -1609,7 +1609,7 @@ $.widget( "an.rte", {
 		}
 		return false;
 	},
-	
+
 	_blockQuoteEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
@@ -1624,7 +1624,7 @@ $.widget( "an.rte", {
 		var sel = o.selection,dom = o.dom;
 		return !sel.collapsed() || dom.selfOrParent(sel.getNode(), /^DIV$/);
 	},
-	
+
 	_blockElementActive:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
@@ -1648,7 +1648,7 @@ $.widget( "an.rte", {
 			n = n.parentNode;
 		}
 		n = (n&&n.nodeType == 1 && n.nodeName != 'BODY') ? n : null;
-		return n ? true : false;	        		
+		return n ? true : false;
 	},
 
 	_imageActive:function(){
@@ -1666,7 +1666,7 @@ $.widget( "an.rte", {
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, dom = o.dom;
-		return dom.selfOrParent(sel.getNode(), /^TABLE$/); 
+		return dom.selfOrParent(sel.getNode(), /^TABLE$/);
 	},
 
 	_deleteTableEnable:function(){
@@ -1675,48 +1675,48 @@ $.widget( "an.rte", {
 		var sel = o.selection, dom = o.dom;
 		return dom.parent(sel.getNode(), /^TABLE$/);
 	},
-	
+
 	_rowBeforeEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection,dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^TR$/);
 	},
-	
+
 	_rowAfterEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^TR$/);
 	},
-	
+
 	_deleteRowEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^TR$/);
 	},
-	
+
 	_columnBeforeEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection,dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
 	},
-	
+
 	_columnAfterEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
 	},
-	
+
 	_deleteColumnEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
 		var sel = o.selection, dom = o.dom;
 		return dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
-	},	
+	},
 
 	_cellPropsEnable:function(){
 		var o = this.options;
@@ -1724,7 +1724,7 @@ $.widget( "an.rte", {
 		var sel = o.selection, dom = o.dom;
 		return dom.parent(sel.getNode(), /^TABLE$/);
 	},
-	
+
 	_mergeCellsEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
@@ -1733,7 +1733,7 @@ $.widget( "an.rte", {
 		      c2 = dom.selfOrParent(sel.getEnd(), /^(TD|TH)$/);
 		return c1 && c2 && c1!=c2 && $(c1).parents('table').get(0) == $(c2).parents('table').get(0);
 	},
-	
+
 	_splitCellsEnable:function(){
 		var o = this.options;
 		if(o.mode != "design") return false;
@@ -1741,7 +1741,7 @@ $.widget( "an.rte", {
 		      n = dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
 		return n && (parseInt(dom.attr(n, 'colspan'))>1 || parseInt(dom.attr(n, 'rowspan'))>1);
 	},
-	
+
 	_parseURL: function(url) {
 		var reg = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
 		var u   = url.match(reg);
@@ -1754,11 +1754,11 @@ $.widget( "an.rte", {
 		}
 		return ret;
 	},
-	
+
 	_absoluteURL: function(url) {
 		var baseURL = this.url.protocol+'://'+(this.url.userInfo ?  parts.userInfo+'@' : '')+this.url.host+(this.url.port ? ':'+this.url.port : '');
 		var path    = !this.url.file ? this.url.path : this.url.path.substring(0, this.url.path.length - this.url.file.length);
-		
+
 		url = $.trim(url);
 		if (!url) return '';
 		if (url[0] == '#') 	return url;
@@ -1818,12 +1818,12 @@ $.widget( "an.rte", {
 		if (c.indexOf('#') === 0) {
 			return c;
 		}
-		
+
 		function hex(s) {
 			s = parseInt(s).toString(16);
-			return s.length > 1 ? s : '0' + s; 
+			return s.length > 1 ? s : '0' + s;
 		};
-		
+
 		if (colors[c]) {
 			return colors[c];
 		}
@@ -1837,13 +1837,13 @@ $.widget( "an.rte", {
 		c = c ? c.toString() : '';
 		return $.trim(c.replace(/\r*\n/mg, '').replace(/^function\s*on[a-z]+\s*\(\s*event\s*\)\s*\{(.+)\}$/igm, '$1'));
 	},
-	
+
 	_toPixels : function(num) {
 		var m = num.match(/([0-9]+\.?[0-9]*)\s*(px|pt|em|%)/);
 		if (m) {
 			num  = m[1];
 			unit = m[2];
-		} 
+		}
 		if (num[0] == '.') {
 			num = '0'+num;
 		}
@@ -1860,7 +1860,7 @@ $.widget( "an.rte", {
 		}
 		return num;
 	},
-	
+
 	_parseStyle: function(s) {
 		var st = {}, t, n, v, p;
 		if (typeof(s) == 'string' && s.length) {
@@ -1879,7 +1879,7 @@ $.widget( "an.rte", {
 		}
 		return st;
 	},
-	
+
 	/**
 	 * Encode entities in string
 	 *
@@ -1895,7 +1895,7 @@ $.widget( "an.rte", {
 		 * entities regexp
 		 **/
 		var entitiesRegExp = /[<>&\"]/g;
-		
+
 		var e = entities;
 		return (''+s).replace(entitiesRegExp, function(c) {
 			return e[c];
@@ -1942,7 +1942,7 @@ $.widget( "an.rte", {
 			delete attrs.rows;
 			delete attrs.columns;
 			delete attrs._isNew;
-			
+
 			if(attrs['width'] && attrs['style']){
 				attrs['style'] = attrs['style'].replace(/width:\s*\d+px/,'width:' + attrs['width'] + 'px');
 			}
@@ -1964,7 +1964,7 @@ $.widget( "an.rte", {
 		});
 		return this;
 	},
-	
+
 	_cellProperties:function(){
 		var self = this, o = this.options, sel = o.selection, dom = o.dom, ids = o.formIds;
 		var cell = dom.selfOrParent(sel.getNode(), /^(TD|TH)$/);
@@ -1992,27 +1992,27 @@ $.widget( "an.rte", {
 					break;
 			}
 			delete attrs.apply;
-			
+
 			if (cell.nodeName.toLowerCase() != attrs.type){
 				$.each(target.get(), function() {
 						$(this).replaceWith($('<'+attrs.type+' />').html($(this).html()));
 				});
-			} 
+			}
 			delete attrs.type;
 			self.element.trigger("contentchange");
 			$.each(attrs, function(k,v){ v = $.trim(v)?target.attr(k,v):target.removeAttr(k);});
 		});
 		return this;
 	},
-	
+
 	addClass: function(selector, cls){
 		this.$body.find(selector).addClass(cls);
 	},
-	
+
 	removeClass:function(selector, cls){
 		this.$body.find(selector).removeClass(cls);
 	},
-	
+
 	toggleClass:function(selector, cls, tag){
 		this.$body.find(selector).toggleClass(cls,tag);
 	},
@@ -2182,9 +2182,9 @@ $.widget( "an.rte", {
 	    		tpl : '<span style="font-size:%val;line-height:1.2em">%label</span>',
 	    		src : {
 	    			''         : 'Font size',
-	    			'xx-small' : 'Small (8pt)', 
-	    			'x-small'  : 'Small (10px)', 
-	    			'small'    : 'Small (12pt)', 
+	    			'xx-small' : 'Small (8pt)',
+	    			'x-small'  : 'Small (10px)',
+	    			'small'    : 'Small (12pt)',
 	    			'medium'   : 'Normal (14pt)',
 	    			'large'    : 'Large (18pt)',
 	    			'x-large'  : 'Large (24pt)',
@@ -2264,7 +2264,7 @@ $.widget( "an.rte", {
 	        	label: "Horizontal rule",
 	    		icons: {primary: "ui-icon-horizontal-rule"},
 	        	handler: function(){self.horizontalRule();},
-	        	checked:function(){ return o.mode == "design" && o.selection.getEnd() &&o.selection.getEnd().nodeName == 'HR';} 
+	        	checked:function(){ return o.mode == "design" && o.selection.getEnd() &&o.selection.getEnd().nodeName == 'HR';}
 	    	},
 	    	blockQuote:{
 	        	type: "checkbox",
@@ -2395,7 +2395,7 @@ $.widget( "an.rte", {
 	        	enabled:function(){return true;}
 	    	}
 	    };
-	    
+
 	    $.each(actions, function(){
 	    	this.text = false;
 	    	if(!this.enabled){
@@ -2404,10 +2404,10 @@ $.widget( "an.rte", {
 	    		};
 	    	}
 	    });
-	    
+
 	    return actions;
 	},
-	
+
 	destroy: function() {
 		var o = this.options, doc = o.doc;
 		o.history=[];

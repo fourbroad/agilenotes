@@ -13,6 +13,7 @@
 #widget.an-editor{
     border: medium none;
 }
+.pageLoading{background:#fff url(images/large-loading.gif) center center no-repeat;width:100%;height:100%;position:absolute;left:0;top:0;z-index:9999;text-align:center;line-height:100%;margin-top:50px;}
 </style>
 
 <script type="text/javascript" charset="utf-8">
@@ -30,7 +31,9 @@ function loadValidateMethods(dbId, callback){
 		callback();
 	});
 }
-
+function clearLoading(){
+	$(".pageLoading").remove();
+}
 $(function(){
 	$.mobile.ajaxEnabled = true;
 	var dbId = getUrlParam("dbid"), pageId = getUrlParam("pageid"),
@@ -55,6 +58,7 @@ $(function(){
 				if(pageId){
 					$.ans.getDoc(dbId, pageId, null, function(err,page){
 						$("#widget").mpage({title:page.title||page.name||pageId,dbId:dbId,page:page, mobile:page.mobile});
+						clearLoading();
 					});
 				}else if(viewId){
 					$.ans.getDoc(dbId, viewId, null, function(err,view){
@@ -66,6 +70,7 @@ $(function(){
 								window.open("page.html?dbid="+dbId+"&docid="+data.doc._id);
 							}
 						});
+						clearLoading();
 					});
 				}else if(docId){
 					$.ans.getDoc(dbId,docId,null,function(err,doc){
@@ -78,6 +83,7 @@ $(function(){
 									forms:[form],
 									mobile:form.mobile
 								});
+								clearLoading();
 							});
 						}else{
 							$.ans.getDoc(dbId,doc.type,null, function(error,type){
@@ -88,6 +94,7 @@ $(function(){
 										document:doc, 
 										forms:forms 
 									});
+									clearLoading();
 								})
 							});
 						}
@@ -102,12 +109,13 @@ $(function(){
 							mode: "edit",
 							mobile:form.mobile
 						});
+						clearLoading();
 					});
 				}else{
 					$.ans.getDoc(Model.ADMINDBID, dbId, null, function(err,dbDoc){
 						if(dbDoc.homePage){
 							$.ans.getDoc(dbId, dbDoc.homePage, null, function(err,page){
-								$("#widget").mpage({title:page.title||page.name||pageId,dbId:dbId,page:page});
+								$("#widget").mpage({title:page.title||page.name||pageId,dbId:dbId,page:page});clearLoading();
 							});
 						}
 					});
@@ -128,5 +136,5 @@ $(document).ready(function(){
 });
 </script>
 </head>
-<body><div id="widget"/></body>
+<body><div class="pageLoading"><span>页面正在跳转...</span></div><div id="widget"></div></body>
 </html>
