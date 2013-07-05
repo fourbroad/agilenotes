@@ -12,6 +12,11 @@
 (function( $, undefined ) {
 
 $.widget( "an.codeareafield", $.an.field, {
+    options:{
+        lineNumbers : false,
+        modeType : 'javascript',
+        codeTheme: 'solarized'  //default/solarized
+    },
 
 	_create: function() {
 		$.an.field.prototype._create.apply(this, arguments);
@@ -21,7 +26,7 @@ $.widget( "an.codeareafield", $.an.field, {
 	_createControl:function(){
 		var self = this, o = this.options, el = this.element;
         this.textarea = $("<textarea type='" + o.type + "' name='" + o.id + "'/>");
-        this.textarea.appendTo(this.content.width('100%'));
+        this.textarea.appendTo(this.content.width('100%').height('100%'));
 
 	},
 
@@ -33,23 +38,39 @@ $.widget( "an.codeareafield", $.an.field, {
 	},
 
 	_edit:function(){
-         var self = this;
-         self.codeEdit = CodeMirror.fromTextArea(self.textarea[0], {
-               lineNumbers: true,
-               mode : 'javascript',
-               theme: 'solarized'
+        var self = this, o = this.options;
+        if(!self.codeEdit){
+            self.codeEdit = CodeMirror.fromTextArea(self.textarea[0], {
+               lineNumbers: o.lineNumbers,
+               mode : o.modeType,
+               theme: o.codeTheme
             });
-            self.codeEdit.doc.setValue($(self.textarea).val());
-            self.codeEdit.on('change',function(edit){
-                if(self.editTimeout){
-                   clearTimeout(self.editTimeout);
-                   self.editTimeout = null;
-                }
-                self.editTimeout = setTimeout(function(){
-                    $(self.textarea).val(self.codeEdit.doc.getValue());
-                },500);
-            })
-		//this.textarea.detach().val(this.options.value).appendTo(this.content.empty());
+        }
+
+        var lineBox = this.content.find('.CodeMirror-gutters');
+        lineBox.css('min-height',lineBox.find('.CodeMirror-linenumbers').outerHeight());
+
+        $(self.textarea).val(o.value);
+        self.codeEdit.doc.setValue(o.value);
+        self.codeEdit.on('change',function(edit){
+            if(self.editTimeout){
+               clearTimeout(self.editTimeout);
+               self.editTimeout = null;
+            }
+            self.editTimeout = setTimeout(function(){
+                $(self.textarea).val(self.codeEdit.doc.getValue());
+                $(self.textarea).trigger('change');
+            },800);
+        });
+
+        this.textarea.bind("change.textareafield keyup.textareafield",function(e){
+            e.preventDefault();
+            var value = self.textarea.val(), oldValue = o.value;
+            if(value != oldValue){
+                o.value = value;
+                self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+            }
+        }).bind("dblclick.textareafield",function(e){e.stopImmediatePropagation();});
 	},
 
 	_design:function(){

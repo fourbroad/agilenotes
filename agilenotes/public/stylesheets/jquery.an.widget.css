@@ -8,7 +8,7 @@
 }
 
 .widget>.content {
-    display:inline-block;	
+    display:inline-block;
 }
 
 .widget[type=tabsx]>.content{
@@ -31,15 +31,15 @@
 }
 
 .field[type=textarea]>.content{
-    display:inline-block;	
+    display:inline-block;
 }
 
 .field[type=textarea]>.content>textarea{
-	width:100%; 
-	height:100%; 
-	zoom:1; 
+	width:100%;
+	height:100%;
+	zoom:1;
 	padding:0;
-	margin:0; 
+	margin:0;
 	outline:none;
 	resize: none;
 }
@@ -155,8 +155,8 @@
 }
 
 .widget.design.selected {
-	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important; 
-	font-weight: normal; 
+	background: #e6e6e6 url(/stylesheets/images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x !important;
+	font-weight: normal;
 	color: #555555;
 }
 
@@ -176,4 +176,9 @@
 .design .ui-resizable-handle{
 	background:none;
 	border:0 none;
+}
+.an-codeareafield{
+    width:100%;
+    height:auto;
+    overflow:hidden;
 }
