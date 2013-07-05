@@ -44,6 +44,13 @@ $.widget( "an.togglefield", $.an.sliderfield, {
 		var o = this.options, self = this;
 		this.input.appendTo(this.content).slider(this.options);
 	},
+
+	_browser : function() {
+		var o = this.options, self = this;
+		var text=o.value=="no"?o.ontext:o.offtext;
+		this.input.detach();
+		this.content.empty().append($("<span style=\"height:32px;line-height:32px;margin:.5em 0;width: 5.8em;display:inline-block;\">"+text+"</span>"));
+	},
 	
 	_makeResizable:function(){},
 	

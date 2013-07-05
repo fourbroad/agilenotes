@@ -54,13 +54,13 @@ $.widget( "an.selectfield", $.an.field, {
 	
 	_browser:function(){
 		var self = this, o = this.options;
-			this.select.detach();
-			$.each(o.selectItems, function(){
-				if(this.value == o.value){
-					self.content.html(this.label).show();
-					return false;
-				}
-			});
+		this.select.detach();
+		$.each(o.selectItems, function(){
+			if(this.value == o.value){
+				self.content.html("<span style=\"padding: .6em 20px;display:inline-block;\">"+this.label+"</span>").show();
+				return false;
+			}
+		});
 	},
 	
 	_edit:function(){

@@ -40,7 +40,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.theme){
 				newOps.theme=o.theme;
 			}
-			wrap.collapsible(newOps);
+			wrap.collapsible&&wrap.collapsible(newOps);
         }
 	},
 	

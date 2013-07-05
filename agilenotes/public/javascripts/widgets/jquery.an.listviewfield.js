@@ -125,8 +125,10 @@ $.widget( "an.listviewfield", $.an.field, {
 		}
 		
 		this.ul_element.append(button_li);
-		this.ul_element.listview();
-		this.ul_element.data("mobileListview").refresh();
+		if(this.ul_element.listview){
+			this.ul_element.listview();
+			this.ul_element.data("mobileListview").refresh();
+		}
 	},
 
 	_design : function() {

@@ -50,7 +50,7 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
-		this.input.mobiscroll("destroy");
+		this.input.mobiscroll&&this.input.mobiscroll("destroy");
 		this.input.removeAttr("readony");
 		this.element.removeClass("an-mobiledatetimefield" );
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
