@@ -33,12 +33,22 @@ $.widget( "an.codeareafield", $.an.field, {
 	_makeResizable:function(){},
 
 	_browser:function(){
-        //this.textarea.val(this.codeEdit.doc.getValue()).show();
-		//this.textarea.detach();
+        this.textarea.hide();
+        if(this.codeEdit){
+            this.codeEdit.off('change',function(){});
+            this.codeEdit = null;
+        }
+        this.content.find('.CodeMirror').length > 0 && this.content.find('.CodeMirror').remove();
+        if(!this.pre){
+           this.pre = $("<pre>"+this.options.value+"</pre>");
+           this.pre.appendTo(this.content);
+        }
+
 	},
 
 	_edit:function(){
         var self = this, o = this.options;
+        this.pre && this.pre.remove() && (this.pre = null);
         if(!self.codeEdit){
             self.codeEdit = CodeMirror.fromTextArea(self.textarea[0], {
                lineNumbers: o.lineNumbers,
@@ -58,13 +68,12 @@ $.widget( "an.codeareafield", $.an.field, {
                self.editTimeout = null;
             }
             self.editTimeout = setTimeout(function(){
-                $(self.textarea).val(self.codeEdit.doc.getValue());
+                self.codeEdit && $(self.textarea).val(self.codeEdit.doc.getValue());
                 $(self.textarea).trigger('change');
             },800);
         });
 
         this.textarea.bind("change.textareafield keyup.textareafield",function(e){
-            e.preventDefault();
             var value = self.textarea.val(), oldValue = o.value;
             if(value != oldValue){
                 o.value = value;
@@ -79,6 +88,12 @@ $.widget( "an.codeareafield", $.an.field, {
 		this.textarea.detach();
 	},
 	destroy: function() {
+        if(this.codeEdit){
+            this.codeEdit.off('change',function(){});
+            this.codeEdit = null;
+        }
+        this.content.find('.CodeMirror').length > 0 && this.content.find('.CodeMirror').remove();
+        this.pre && this.pre.remove() && (this.pre = null);
 		this.textarea.unbind(".codeareafield").parent().remove();
 		this.element.removeClass( "an-codeareafield" );
 		return $.an.field.prototype.destroy.apply(this, arguments);
