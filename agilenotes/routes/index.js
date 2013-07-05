@@ -501,23 +501,36 @@ function getAttachment(req,res){
 		provider.findAttachmentByPath(docid, filepath, function(error,gridStore){
 			if(gridStore && gridStore.stream){
 				// Create a stream to the file
-				var stream = gridStore.stream(true);
-				res.setHeader("Content-Type", gridStore.contentType);
-				res.setHeader("Content-length", gridStore.length);
-				var baseName = gridStore.metadata.filename ? gridStore.metadata.filename : gridStore.metadata.filepath;
-				var names = baseName.split("/");
-				var str = iconv.decode(names[names.length - 1], 'iso-8859-1'); //return unicode string from iso-8859-1 encoded bytes
-				var buf = iconv.encode(str, 'utf-8');//return utf-8 encoded bytes from unicode string
-				var userAgent = req.headers['user-agent'].toLowerCase();
-				if (userAgent.indexOf("msie") != -1) {
-					buf = encodeURI(names[names.length - 1]);
-				}
-				res.header("Content-Disposition", "attachment; filename=" + buf);
+				var since = req.headers['if-modified-since'];
+				if (parseInt(new Date(gridStore.uploadDate).getTime() / 1000) != parseInt(new Date(since).getTime() / 1000) 
+						|| req.headers['if-none-match'] != gridStore.fileId ) {
+					var uploadDate = new Date(gridStore.uploadDate).toGMTString();
+					var stream = gridStore.stream(true);
+					res.setHeader("Content-Type", gridStore.contentType);
+					res.setHeader("Content-length", gridStore.length);
+					res.setHeader("Date", uploadDate);
+					res.setHeader("Last-Modified", uploadDate);
+					res.setHeader("Etag", gridStore.fileId);
+					res.setHeader("Cache-control", "max-age=30");
+					var expire = new Date(gridStore.uploadDate);
+					res.setHeader("Expires", new Date(expire.setTime(expire.getTime() + 30000)).toGMTString());
+					var baseName = gridStore.metadata.filename ? gridStore.metadata.filename : gridStore.metadata.filepath;
+					var names = baseName.split("/");
+					var str = iconv.decode(names[names.length - 1], 'iso-8859-1'); //return unicode string from iso-8859-1 encoded bytes
+					var buf = iconv.encode(str, 'utf-8');//return utf-8 encoded bytes from unicode string
+					var userAgent = req.headers['user-agent'].toLowerCase();
+					if (userAgent.indexOf("msie") != -1) {
+						buf = encodeURI(names[names.length - 1]);
+					}
+					res.header("Content-Disposition", "attachment; filename=" + buf);
 
-				// Register events
-				stream.on("data", function(chunk) { res.write(chunk); });
-				stream.on("end", function() { res.end(); });
-				stream.on("close", function() { });
+					// Register events
+					stream.on("data", function(chunk) { res.write(chunk); });
+					stream.on("end", function() { res.end(); });
+					stream.on("close", function() { });
+				} else {
+					res.send(304);
+				}
 			}else{
 				res.send(403);
 			}
