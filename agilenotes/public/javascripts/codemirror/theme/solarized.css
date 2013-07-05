@@ -16,8 +16,10 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
     border: 1px solid #eee;
 }
 .CodeMirror-scroll {
+    /*
     overflow-y: hidden;
     overflow-x: auto;
+    */
 }
 .solarized.base03 { color: #002b36; }
 .solarized.base02 { color: #073642; }
