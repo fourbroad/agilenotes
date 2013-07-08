@@ -2,6 +2,7 @@ var designMode='develop';
 
 if(designMode=='develop'){
 document.write('\
+<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.ui.timepicker.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.menu.css" type="text/css">\
 <link rel="stylesheet" href="stylesheets/jquery.an.agilegrid.css" type="text/css">\
@@ -110,12 +111,15 @@ document.write('\
 <script src="javascripts/codemirror/mode/javascript.js"><\/script>\
 <script src="javascripts/codemirror/mode/css.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.codeareafield.js"><\/script>\
+<script src="javascripts/jquery.mobile-1.3.1.min.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');
+document.write('<link rel="stylesheet" href="stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">');
 document.write('\
 <script src="javascripts/jquery-1.8.2.min.js"><\/script>\
 <script src="javascripts/jquery-ui-1.8.24.custom.min.js"><\/script>\
 <script src="javascripts/agnotes.js?v=0.0.1"><\/script>\
+<script src="javascripts/jquery.mobile-1.3.1.min.js"><\/script>\
 ');
 }
