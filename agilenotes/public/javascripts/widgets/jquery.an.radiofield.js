@@ -29,13 +29,12 @@ $.widget( "an.radiofield", $.an.inputfield, {
 			radio_group.append($("<label />").attr("for", o.id).html(o.label).css("display", "block"));
 			$.each(o.selectItems||[], function(k,v){
 				var radio_elem = $("<div class='ui-radio' />");
-				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
-				    .addClass("ui-widget-content").appendTo(radio_elem);
+				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value}).addClass("ui-widget-content").appendTo(radio_elem);
 				$("<div class='content'/>").hide().appendTo(el);
 				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
 					<span class="ui-icon ui-icon-radio-on ui-icon-shadow"> </span>\
 					</span>';
-				// ui-btn-up-a
+
 				var label_elem = $("<label class='ui-radio-off ui-btn ui-btn-up-c ui-fullsize ui-btn-icon-left' style='margin:0'  />").attr("for",o.id+k);
 				if (!o.data_theme) {
 					o.data_theme = 'c';
@@ -52,17 +51,24 @@ $.widget( "an.radiofield", $.an.inputfield, {
 				label_elem.html(label).appendTo(radio_elem);
 				radio_elem.appendTo(radio_group);
 				
-				radio_elem.bind("click.radiofield", function(e) {
-					$(this).find('input[type="radio"]').attr('checked','checked');
-					if (o.orientation == "vertical") {
-						$(this).removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
-					} else {
-						$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
-					}
-				});
 			});
-			
-			radio_group.appendTo($("<div border='1' class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
+			var $wrap=$("<div border='1' class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>");
+			if(o.isMini){
+				$wrap.addClass("ui-mini");
+			}
+			radio_group.appendTo($wrap.appendTo(el));
+			radio_group.delegate(".ui-radio","click", function(e) {
+				var $this=$(this);
+				if (o.orientation == "vertical") {
+					$this.removeClass("ui-icon-radio-off").addClass('ui-radio-on').siblings().removeClass('ui-radio-on');
+				} else {
+					$this.find(">label").addClass('ui-btn-active');
+					$this.siblings().find(">label").removeClass('ui-btn-active');
+				}
+				$this.find('input').attr('checked','checked');
+				$this.siblings().find('input').removeAttr('checked');
+				$this.find('input').trigger("change.radiofield");
+			});
 		} else {
 			$.each(o.selectItems||[], function(k,v){
 				$("<input type='radio'/>").attr({id:o.id+k, name:o.id, value:this.value})
@@ -73,8 +79,7 @@ $.widget( "an.radiofield", $.an.inputfield, {
 			});
 			
 		}
-		
-		this.inputs = el.children("input");
+		this.inputs = el.find("input");
 		this.contents = el.children(".content");
 		if(!$.isEmptyObject(o.validate)){
 			this.inputs.addClass($.toJSON({validate:o.validate}));
