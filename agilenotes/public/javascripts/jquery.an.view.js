@@ -189,7 +189,7 @@ $.widget( "an.view", {
             return;
         }
 
-		if($.type(sel)=="string"){
+		if($.type(sel)=="string"&&sel.replace(/\s/g,"")){
 			sel = eval("("+sel+")");
 			if($.type(filter)=="string"){
 				selectorStr=filter.replace(/\s/g,"")?{selector:sel,filter:eval("("+filter+")"),options:opts}:{selector:sel,options:opts};
