@@ -23,3 +23,5 @@ rte\paddinginput.css
 jquery.an.rte.css
 base.css
 mobiscroll.custom-2.6.0.min.css
+..\javascripts\codemirror\lib\codemirror.css
+..\javascripts\codemirror\theme\solarized.css
