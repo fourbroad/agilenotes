@@ -112,6 +112,7 @@ document.write('\
 <script src="javascripts/codemirror/mode/javascript.js"><\/script>\
 <script src="javascripts/codemirror/mode/css.js"><\/script>\
 <script src="javascripts/widgets/jquery.an.codeareafield.js"><\/script>\
+<script src="javascripts/widgets/jquery.an.mlistwidget.js"><\/script>\
 ');
 }else{
 document.write('<link rel="stylesheet" href="stylesheets/uicombin.css" type="text/css">');

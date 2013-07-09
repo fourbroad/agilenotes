@@ -333,8 +333,21 @@ var Model = {
     					if(err){
     						console.log("Load forms "+type.forms+" error: "+err);
     					}else{
-    						element.editor($.extend(true, { title:title, dbId:dbId, document:viewDoc, forms:forms, design:true, isViewEditor:true}, $.extend(true,{},opts,{mode:"edit"})));
-    						opts.opened && opts.opened(element.data("editor"));
+    						if (opts.mobile) {
+    							var cb = viewDoc.viewType;
+    							if (cb == 'mobilelistview') {
+    								element.mobilelistview({view:viewDoc, dbId:dbId, mode:"design"});
+    							} else if (cb == 'customview') {
+    								element.customview({view:viewDoc, dbId:dbId, mode:"design"});
+    							} else {
+    								element.view({view:viewDoc, dbId:dbId, mode:"design"});
+    							}
+    							
+    							opts.opened && opts.opened(element.data(cb));
+    						} else {
+    							element.editor($.extend(true, { title:title, dbId:dbId, document:viewDoc, forms:forms, design:true, isViewEditor:true}, $.extend(true,{},opts,{mode:"edit"})));
+        						opts.opened && opts.opened(element.data("editor"));
+    						}
     					}
     				});
     			}
