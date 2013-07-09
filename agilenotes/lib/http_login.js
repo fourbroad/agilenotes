@@ -1,7 +1,7 @@
 var http = require('http');
 var data = JSON.stringify({ 'username': 'zaitu', 'password': 'zttzzt' });
 var cookie = '';
-var hostname = 'chgz.dev.com';
+var hostname = 'chartis2.ins24.com';
 
 var headers = {
     'Host': hostname,
