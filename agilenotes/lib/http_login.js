@@ -1,4 +1,5 @@
 var http = require('http');
+var mongo = require("mongodb"), BSON = mongo.BSONPure;
 var data = JSON.stringify({ 'username': 'zaitu', 'password': 'zttzzt' });
 var cookie = '';
 var hostname = 'chartis2.ins24.com';
