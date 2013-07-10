@@ -16,30 +16,53 @@ var options = {
   method: 'GET'
 };
 
-var coreLogin = function (callback){
+
+var saveUserInfo = function (provider, username, password, callback){
+  var post_data = JSON.stringify({ 'username': username, 'password': password });
+  
    options.path = '/ah/session';
    options.method = 'POST';
-   options.headers['Content-Length'] = Buffer.byteLength(data);
-   console.log(options);
+   options.headers['Content-Length'] = Buffer.byteLength(post_data);
+   //console.log(options);
    var req = http.request(options, function(res) {
      console.log('STATUS: ' + res.statusCode);
      console.log('HEADERS: ' + JSON.stringify(res.headers));
      res.setEncoding('utf8');
      res.on('data', function (chunk) {
-       //console.log('BODY: ' + chunk);
-       // record the cookie
-       callback(res.headers['set-cookie']);
+       var user_data = {};
+       user_data._create_at = new Date();
+       user_data.category = "userdata";
+       user_data.username = username;
+       user_data.type = "51dbc4e01097ed07eb000112";
+       user_data.content = JSON.stringify(res.headers['set-cookie']);
+       provider.insert(user_data, {}, function(err, data) {
+	  callback(chunk);
+       });
      });
    });
-   
+
    req.on('error', function(e) {
      console.log('problem with request: ' + e.message);
    });
-   
+
    // write data to request body
    req.write(data);
    req.end();
-};
+}
+
+var coreLogin = function (provider, username, callback ) {
+  provider.findOne({type: '51dbc4e01097ed07eb000112', username: username}, null, null, function(error, result){
+    if (result) {
+    cookie = JSON.parse(result.content);
+console.log(cookie);
+    callback(cookie);
+    } else {
+     
+    }
+  }); 
+
+}
 
 exports.coreLogin = coreLogin;
 exports.default_options = options;
+exports.saveUserInfo = saveUserInfo;
