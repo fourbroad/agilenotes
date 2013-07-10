@@ -18,9 +18,8 @@ var options = {
 };
 
 
-var saveUserInfo = function (provider, username, password, callback){
+var saveUserInfo = function (provider, cookie_id, username, password, callback){
   var post_data = JSON.stringify({ 'username': username, 'password': password });
-  
    options.path = '/ah/session';
    options.method = 'POST';
    options.headers['Content-Length'] = Buffer.byteLength(post_data);
@@ -30,19 +29,39 @@ var saveUserInfo = function (provider, username, password, callback){
      console.log('HEADERS: ' + JSON.stringify(res.headers));
      res.setEncoding('utf8');
      res.on('data', function (chunk) {
-       var user_data = {};
-       user_data._create_at = new Date();
-       user_data.category = "userdata";
-       user_data.username = username;
-       user_data.type = "51dbc4e01097ed07eb000112";
-       user_data.content = JSON.stringify(res.headers['set-cookie']);
-       provider.insert(user_data, {}, function(err, data) {
-          var res = {};
-          res.core_msg = chunk;
-          res.cookie_id = data[0]._id;
-          console.log(res);
-	  callback(res);
-       });
+       chunk = JSON.parse(chunk);
+       console.log(chunk);
+       if ( chunk.code == 1508) {
+         if (cookie_id) {
+           provider.update({ _id : new BSON.ObjectID(cookie_id) },
+             { "$set" : { content: JSON.stringify(res.headers['set-cookie']), login_time: new Date() } }, null, function(err, data) {
+                if (err) {
+                  console.log(err);
+                }else {
+                  chunk.cookie_id = cookie_id;
+                  callback(chunk);
+                }
+	     });
+         }else{ 
+           var user_data = {};
+           user_data._create_at = new Date();
+           user_data.login_time = new Date();
+           user_data.category = "userdata";
+           user_data.username = username;
+           user_data.type = "51dbc4e01097ed07eb000112";
+           user_data.content = JSON.stringify(res.headers['set-cookie']);
+           provider.insert(user_data, {}, function(err, data) {
+              if (err) {
+                console.log(err);
+              }else {
+                chunk.cookie_id = data[0]._id;
+                callback(chunk);
+              }
+           });
+         }
+       } else {
+         callback(chunk);
+       }
      });
    });
 
@@ -51,7 +70,7 @@ var saveUserInfo = function (provider, username, password, callback){
    });
 
    // write data to request body
-   req.write(data);
+   req.write(post_data);
    req.end();
 }
 
