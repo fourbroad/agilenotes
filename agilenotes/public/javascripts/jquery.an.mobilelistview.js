@@ -39,13 +39,16 @@ $.widget( "an.mobilelistview", $.an.view, {
 	},
 
 	_showDocuments:function(){
-		var self = this, o = this.options;
+		var self = this, o = this.options, html = '';
 		if (o.templateTemp) {
-			var html = o.templateTemp.render(self.docs);
+			html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
 		}
+		
 		if($(o.templateSelector).listview){
 			$(o.templateSelector).listview();
+		}else if (o.templateTemp) {
+			$(o.templateSelector, this.documents).attr('data-role', 'listview').mlist();
 		}
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
