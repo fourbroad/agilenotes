@@ -1,4 +1,5 @@
 var http = require('http');
+var mongo = require("mongodb"), BSON = mongo.BSONPure;
 var data = JSON.stringify({ 'username': 'zaitu', 'password': 'zttzzt' });
 var cookie = '';
 var hostname = 'chartis2.ins24.com';
@@ -36,7 +37,11 @@ var saveUserInfo = function (provider, username, password, callback){
        user_data.type = "51dbc4e01097ed07eb000112";
        user_data.content = JSON.stringify(res.headers['set-cookie']);
        provider.insert(user_data, {}, function(err, data) {
-	  callback(chunk);
+          var res = {};
+          res.core_msg = chunk;
+          res.cookie_id = data[0]._id;
+          console.log(res);
+	  callback(res);
        });
      });
    });
@@ -50,8 +55,8 @@ var saveUserInfo = function (provider, username, password, callback){
    req.end();
 }
 
-var coreLogin = function (provider, username, callback ) {
-  provider.findOne({type: '51dbc4e01097ed07eb000112', username: username}, null, null, function(error, result){
+var coreLogin = function (provider, cookie_id, callback ) {
+  provider.findOne({type: '51dbc4e01097ed07eb000112', _id: BSON.ObjectID(cookie_id)}, null, null, function(error, result){
     if (result) {
     cookie = JSON.parse(result.content);
 console.log(cookie);
