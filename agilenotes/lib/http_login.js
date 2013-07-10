@@ -73,6 +73,15 @@ var saveUserInfo = function (provider, cookie_id, username, password, callback){
    req.write(post_data);
    req.end();
 }
+var coreLogout = function (provider, cookie_id, callback ) {
+  provider.remove({type: '51dbc4e01097ed07eb000112', _id: BSON.ObjectID(cookie_id)}, null, function(error, result){
+   if (error){
+    callback(error);
+    }else {
+      callback(false, result)
+    }
+  });
+}
 
 var coreLogin = function (provider, cookie_id, callback ) {
   provider.findOne({type: '51dbc4e01097ed07eb000112', _id: BSON.ObjectID(cookie_id)}, null, null, function(error, result){
@@ -88,5 +97,6 @@ console.log(cookie);
 }
 
 exports.coreLogin = coreLogin;
+exports.coreLogout = coreLogout;
 exports.default_options = options;
 exports.saveUserInfo = saveUserInfo;
