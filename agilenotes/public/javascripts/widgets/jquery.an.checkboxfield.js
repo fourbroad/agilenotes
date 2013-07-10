@@ -21,12 +21,12 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 
 	_createControl:function(){
-		var self = this, o = this.options, el = this.element;
+		var self = this, o = this.options, el = this.element,c=this.content;
 		if(o.mobile){
 			var elementoptions = {};
 
 			if(o.selectItems.length>1){				
-				var checks_group = $("<fieldset data-role='controlgroup' />").appendTo(this.content);
+				var checks_group = $("<fieldset data-role='controlgroup' />").appendTo(c);
 				if(o.orientation == "horizontal"){
 					checks_group.attr({"data-type":"horizontal"});
 				}
@@ -37,8 +37,8 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 				
 			}else{
 				$.each(o.selectItems||[], function(k,v){
-					this.input = $("<input type='checkbox'/>").attr({id:o.id, name:o.id, value:this.value}).addClass("custom").appendTo(this.content);
-					$("<label  />").attr({for:o.id}).html(this.label).appendTo(this.content);
+					this.input = $("<input type='checkbox'/>").attr({id:o.id, name:o.id, value:this.value}).addClass("custom").appendTo(c);
+					$("<label  />").attr({for:o.id}).html(this.label).appendTo(c);
 				});
 			}
 			if (!o.data_theme) {
