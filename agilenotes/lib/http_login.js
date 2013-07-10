@@ -90,7 +90,7 @@ var coreLogin = function (provider, cookie_id, callback ) {
 console.log(cookie);
     callback(cookie);
     } else {
-     
+     callback(null);
     }
   }); 
 
