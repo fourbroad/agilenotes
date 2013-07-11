@@ -32,13 +32,13 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 				}
 				$.each(o.selectItems||[], function(k,v){
 					this.input = $("<input type='checkbox'/>").attr({id:o.id+k, name:o.id+k, value:this.value}).appendTo(checks_group);
-					$("<label />").attr({for:o.id+k}).html(this.label).appendTo(checks_group);
+					$("<label />").attr({"for":o.id+k}).html(this.label).appendTo(checks_group);
 				});
 				
 			}else{
 				$.each(o.selectItems||[], function(k,v){
 					this.input = $("<input type='checkbox'/>").attr({id:o.id, name:o.id, value:this.value}).addClass("custom").appendTo(c);
-					$("<label  />").attr({for:o.id}).html(this.label).appendTo(c);
+					$("<label  />").attr({"for":o.id}).html(this.label).appendTo(c);
 				});
 			}
 			if (!o.data_theme) {
