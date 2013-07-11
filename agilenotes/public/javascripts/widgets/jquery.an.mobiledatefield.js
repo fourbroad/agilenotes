@@ -30,22 +30,25 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 	},
 	
 	_edit:function(){
-		var minDate,maxDate;
+		var minDate,maxDate,self=this,o=this.options;
 		var date=new Date(), lng=window.database.local,
 		opts={
 			//invalid: {  dates: [new Date(2013/07/01), new Date(2014/06/30)],daysOfWeek: [], daysOfMonth: [] },
-			theme: this.options.theme,
-			lang: this.options.lang,
-			display: this.options.display,
-			mode: this.options.mode,
-			dateFormat:this.options.dateFormat,
-			dateOrder: this.options.dateOrder,
+			theme: o.theme,
+			lang: o.lang,
+			display: o.display,
+			mode: o.mode,
+			dateFormat:o.dateFormat,
+			dateOrder: o.dateOrder,
 		}
-		minDate=this.options.minDate=="now"?date:new Date(this.options.minDate);
+		minDate=o.minDate=="now"?date:new Date(o.minDate);
 		minDate.toString()!="Invalid Date"&&(opts.minDate=minDate);
-		maxDate=this.options.maxDate=="now"?date:new Date(this.options.maxDate);
+		maxDate=o.maxDate=="now"?date:new Date(o.maxDate);
 		maxDate.toString()!="Invalid Date"&&(opts.maxDate=maxDate);
 		$.an.inputfield.prototype._edit.apply( this, arguments );
+		opts.onSelect=function(value){
+			self.input.trigger("keyup");
+		};
 		this.input.mobiscroll().date(opts);
 	},
 	

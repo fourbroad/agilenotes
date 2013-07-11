@@ -24,7 +24,12 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
             var wrap = $('<div data-content-theme="'+o.content_theme+'"></div>'),
 				header = $('<h3>' + o.headerText + '</h3>');
             this.contentDiv = $('<div></div>');
-			wrap.append(header).append(this.contentDiv);
+			wrap.append(header);
+			if(o.link=="raw"){
+				wrap.append(this.element.children(".content").children());
+			}else{
+				wrap.append(this.contentDiv);
+			}
             this.element.find('.content').append(wrap);
 			if(o.collapsedIcon){
 				newOps.collapsedIcon=o.collapsedIcon;
@@ -41,6 +46,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.theme){
 				newOps.theme=o.theme;
 			}
+			
 			wrap.collapsible&&wrap.collapsible(newOps);
         }
 	},
@@ -62,7 +68,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 		this.option("contextmenu2", false);
 		this.content[0].contentEditable = false;
 		if(link && link != "raw"){
-			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"edit"});
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
 			this.contentDiv.css("border","0 none");
 		}else{
 			this.contentDiv.append(o.contentText);
