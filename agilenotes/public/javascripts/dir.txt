@@ -73,3 +73,4 @@
 ..\javascripts\widgets\jquery.an.mobiledatefield.js
 ..\javascripts\widgets\jquery.an.swipewidget.js
 ..\javascripts\jquery.an.loading.js
+..\javascripts\widgets\jquery.an.mlistwidget.js

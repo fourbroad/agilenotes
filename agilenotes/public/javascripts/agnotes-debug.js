@@ -333,8 +333,21 @@ var Model = {
     					if(err){
     						console.log("Load forms "+type.forms+" error: "+err);
     					}else{
-    						element.editor($.extend(true, { title:title, dbId:dbId, document:viewDoc, forms:forms, design:true, isViewEditor:true}, $.extend(true,{},opts,{mode:"edit"})));
-    						opts.opened && opts.opened(element.data("editor"));
+    						if (opts.mobile) {
+    							var cb = viewDoc.viewType;
+    							if (cb == 'mobilelistview') {
+    								element.mobilelistview({view:viewDoc, dbId:dbId, mode:"design"});
+    							} else if (cb == 'customview') {
+    								element.customview({view:viewDoc, dbId:dbId, mode:"design"});
+    							} else {
+    								element.view({view:viewDoc, dbId:dbId, mode:"design"});
+    							}
+    							
+    							opts.opened && opts.opened(element.data(cb));
+    						} else {
+    							element.editor($.extend(true, { title:title, dbId:dbId, document:viewDoc, forms:forms, design:true, isViewEditor:true}, $.extend(true,{},opts,{mode:"edit"})));
+        						opts.opened && opts.opened(element.data("editor"));
+    						}
     					}
     				});
     			}
@@ -885,8 +898,8 @@ ObjectId.prototype.toString = function () {
 		  contentType: "application/json",
 		  data: JSON.stringify(doc),
 		  complete: function(req) {
-			  var resp = httpData(req, "json"), err, result;
-			  if (req.status == 201) {
+			  var resp = httpData(req, "json"), err = null, result = null;
+			  if (req.status == 201 || req.status == 200) {
 				  result = resp;
 			  } else {
 				  err = {status: req.status, error:resp.error, reason:resp.reason};
@@ -1014,7 +1027,6 @@ ObjectId.prototype.toString = function () {
 			  }
 		  });
 	   }else{
-
 		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
 		   if(!err) $(document).trigger("documentCreated",doc);
@@ -6201,7 +6213,7 @@ $.widget( "an.box", $.an.widget, {
 	        });
 		if (o.mobile && o.mode == 'design') {
 			Model.getPages(dbId,[formId],function(err, forms){
-				el.page({mode:"design", page:forms[0], mobile:true});
+				el.page({mode:"design", page:forms[0], document: forms[0], mobile:true});
 			});
 		} else {
 			Model.openPage(el, dbId, formId, optsx);
@@ -6836,107 +6848,39 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 
 	_createControl:function(){
-		var self = this, o = this.options, el = this.element;
+		var self = this, o = this.options, el = this.element,c=this.content;
 		if(o.mobile){
-			var checkbox_group = $("<div class='ui-controlgroup-controls' />");
-			checkbox_group.append($("<label />").attr("for", o.id).html(o.label));
-			$.each(o.selectItems||[], function(k,v){
-				var checkbox_elem = $("<div class='ui-checkbox incheck' />");
-				$("<input type='checkbox'/>").attr({id:o.id+k, name:o.id, value:this.value})
-				    .addClass("ui-widget-content").appendTo(checkbox_elem);
-				$("<div class='content'/>").hide().appendTo(el);
-				var label = '<span class="ui-btn-inner"><span class="ui-btn-text">' + this.label + '</span> \
-					<span class="ui-icon ui-icon-checkbox-off ui-icon-shadow"> </span>\
-					</span>';
-				var label_elem = $("<label class=' ui-checkbox-off ui-btn  ui-fullsize ui-btn-icon-left' />").attr("for",o.id+k);
-				// ui-btn-up-a
-				if(k==0){
-					label_elem.addClass("ui-first-child");
+			var elementoptions = {};
+
+			if(o.selectItems.length>1){				
+				var checks_group = $("<fieldset data-role='controlgroup' />").appendTo(c);
+				if(o.orientation == "horizontal"){
+					checks_group.attr({"data-type":"horizontal"});
 				}
-				if(k==o.selectItems.length-1){
-					label_elem.addClass("ui-last-child");
-				}
+				$.each(o.selectItems||[], function(k,v){
+					this.input = $("<input type='checkbox'/>").attr({id:o.id+k, name:o.id+k, value:this.value}).appendTo(checks_group);
+					$("<label />").attr({"for":o.id+k}).html(this.label).appendTo(checks_group);
+				});
 				
-				if (!o.data_theme) {
+			}else{
+				$.each(o.selectItems||[], function(k,v){
+					this.input = $("<input type='checkbox'/>").attr({id:o.id, name:o.id, value:this.value}).addClass("custom").appendTo(c);
+					$("<label  />").attr({"for":o.id}).html(this.label).appendTo(c);
+				});
+			}
+			if (!o.data_theme) {
 					o.data_theme = 'c';
 				}
-				if (o.isMini) {
-					label_elem.addClass("ui-mini");
-				}
-				label_elem.addClass("ui-btn-up-" + o.data_theme);
-				label_elem.html(label).appendTo(checkbox_elem);
-				checkbox_elem.appendTo(checkbox_group);
-				
-			});
-			
-			checkbox_group.appendTo($("<div class='ui-controlgroup ui-corner-all ui-controlgroup-" + o.orientation + "'/>").appendTo(el));
-			
-			el.find(".incheck").bind("mousedown.checkboxfield",function(e){
-				$(this).find("label").addClass("ui-btn-down-" + o.data_theme);				  
-			  }).bind("mouseup.checkboxfield",function(e){
-				  $(this).find("label").removeClass("ui-btn-down-" + o.data_theme);
-			  }).bind("mousemove.checkboxfield",function(e){
-				  $(this).find("label").removeClass("ui-btn-up-" + o.data_theme).addClass("ui-btn-hover-" + o.data_theme);
-			  }).bind("mouseout.checkboxfield",function(e){
-				  $(this).find("label").removeClass("ui-btn-hover-" + o.data_theme).addClass("ui-btn-up-" + o.data_theme);
-			  }).bind("click.checkboxfield",function(e){
-				  e.stopPropagation();
-				  var $input=$(this).find('input');
-				  if( $input.attr("checked")){
-					  $input.removeAttr("checked");
-					  if (o.orientation == "vertical") {
-						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-on").addClass("ui-icon-checkbox-off");
-						} else {
-							$(this).find(">label").removeClass('ui-btn-active');
-						}
-					  
-				  }else{
-					  $input.attr("checked","checked");
-					  if (o.orientation == "vertical") {
-						    $(this).find("label span .ui-icon").removeClass("ui-icon-checkbox-off").addClass("ui-icon-checkbox-on");
-						} else {
-							$(this).find(">label").addClass('ui-btn-active');
-						}
-					  
-				  }
-				  return ;
-			  });;
-			
-			/*$(".ui-checkbox").bind('click.checkboxfield',function(e){
-				var name=o.id;
-				$(this).find('input[type="checkbox"][name="'+name+'"]').attr('checked','checked');
-				if (o.orientation == "vertical") {
-					$(this).removeClass("ui-icon-checkbox-off").addClass('ui-checkbox-on').siblings().removeClass('ui-checkbox-on');
-				} else {
-					$(this).find(">label").addClass('ui-btn-active').parent().siblings().find(">label").removeClass('ui-btn-active');
-				}
-			});*/
-			
-			this.input = el.children(".ui-controlgroup");
-					
-				
-			
-			/*this.input = $("<input type='checkbox'/>").attr({name:o.id})
-		    .addClass("codiqa-control").bind("change.checkboxfield",function(e){
-			var value = self.input.prop("checked"), oldValue = o.value;
-			if(value != oldValue){
-				o.value = value;
-				self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
+			elementoptions.theme = o.data_theme;
+			if (o.isMini) {
+				elementoptions.mini = true;
 			}
-		}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});*/
-			this.contents = el.children(".content");
-			if(!$.isEmptyObject(o.validate)){
-				this.input.addClass($.toJSON({validate:o.validate}));
+			if($("input[type='checkbox']").checkboxradio){
+				$("input[type='checkbox']").checkboxradio(elementoptions);
+				$("fieldset[data-role='controlgroup']").controlgroup();
 			}
-			this.input.filter("[value="+o.value+"]").prop("checked",true);
 			
-			this.input.bind("change.checkboxfield",function(e){
-				var value = $(e.target).attr("value"), oldValue = o.value;
-				if(value != oldValue){
-					o.value = value;
-					self._trigger("optionchanged",null,{key:"value", value:value, oldValue:oldValue, isTransient:o.isTransient});
-				}
-			}).bind("dblclick.checkboxfield",function(e){e.stopImmediatePropagation();});
+						
 		}else{
 			this.input = $("<input type='checkbox'/>").attr({name:o.id})
 			    .addClass("ui-widget-content ui-corner-all").bind("change.checkboxfield",function(e){
@@ -6955,21 +6899,17 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	
 	_handleChange:function(key, value, oldValue){
 		var o = this.options;
-		if(key == "value"){
-			this.input.filter("[value="+o.value+"]").prop("checked",true);
-		}else if(key == "selectItems"){
-			this.input.remove();
-			this.contents.remove();
-			this.element.children("label,br").remove();
-			this._createControl();
-		}else if(key == "orientation"){
-			this.input.remove();
-			this.contents.remove();
-			this.element.children("label,br").remove();
-			this._createControl();
-		}else{
-			return $.an.inputfield.prototype._handleChange.apply(this, arguments );
-		}
+			if(key == "value"){
+				this.input.filter("[value="+o.value+"]").prop("checked",true);
+			}else if(key == "selectItems"){
+				this.input.remove();
+				this.contents.remove();
+				this.element.children("label,br").remove();
+				this._createControl();
+			}else{
+				return $.an.inputfield.prototype._handleChange.apply(this, arguments );
+			}
+		
 	},
 	
 	_makeResizable:function(){},
@@ -6985,16 +6925,51 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	_browser:function(){
-        this.input.prop('checked', this.options.value).attr("disabled","disabled");
+		if(!this.options.mobile){
+			this.input.prop('checked', this.options.value).attr("disabled","disabled");
+		}else{
+			this.content.css("display","");
+		}
 	},
 	
 	_edit:function(){
-        this.input.prop('checked', this.options.value).removeAttr("disabled");
+		if(!this.options.mobile){
+			this.input.prop('checked', this.options.value).removeAttr("disabled");
+		}else{
+			this.content.css("display","");
+		}
 	},
 	
 	_design:function(){
-		if (this.options.mobile) {
-			this.input.find(".incheck").unbind();
+		var o = this.options,c = this.content;
+		if (o.mobile) {
+			if (!o.data_theme) {
+					o.data_theme = 'c';
+				}
+			c.html("");
+			if(o.selectItems.length>1){
+				var fildset = $("<fieldset class='ui-corner-all ui-controlgroup' />").appendTo(c);
+				if(o.orientation=="horizontal"){
+					fildset.addClass("ui-controlgroup-horizontal");
+				}
+				var group = $("<div class='ui-controlgroup-controls' />").appendTo(fildset);
+				$.each(o.selectItems||[], function(k,v){
+					var divcheckbox = $("<div class='ui-checkbox' />").html('<input type="checkbox" id="'+o.id+k+'" name="'+o.id+k+'" value="'+v+'">').appendTo(group);
+					var labelcheckbox = $("<label class='ui-checkbox-off ui-btn ui-btn-corner-all ui-fullsize ui-btn-icon-left ui-btn-up-"+o.data_theme+"' />").html('<span class="ui-btn-inner"><span class="ui-btn-text">'+this.label+'</span><span class="ui-icon ui-icon-checkbox-off ui-icon-shadow">&nbsp;</span></span>').appendTo(divcheckbox); 
+					if(k==0){
+						labelcheckbox.addClass("ui-first-child");
+					}
+					if(k==o.selectItems.length-1){
+						labelcheckbox.addClass("ui-last-child");
+					}
+				});
+			}else{
+				$.each(o.selectItems||[], function(k,v){
+				$("<div class='ui-checkbox' />").html('<input type="checkbox" id="'+o.id+k+'" name="'+o.id+k+'" value="'+v+'"><label for="1230" class="ui-checkbox-off ui-btn ui-btn-corner-all ui-fullsize ui-btn-icon-left ui-btn-up-'+o.data_theme+'"><span class="ui-btn-inner"><span class="ui-btn-text">'+this.label+'</span><span class="ui-icon ui-icon-checkbox-off ui-icon-shadow">&nbsp;</span></span></label>').appendTo(c);
+			});
+			}
+			
+		this.content.css("display","");
 		} else {
 			this.input.hide();
 			this.content.css("display","");
@@ -7006,13 +6981,12 @@ $.widget( "an.checkboxfield", $.an.inputfield, {
 	},
 	
 	destroy: function() {
-		if(this.options.mobile){
-			this.input.unbind(".checkboxfield").remove();
-			this.contents.remove();
+		if(!this.options.mobile){
+			this.input.unbind(".checkboxfield");
 		}
-		this.input.unbind(".checkboxfield");
 		this.element.removeClass( "an-checkboxfield" );
 		return $.an.inputfield.prototype.destroy.apply( this, arguments );
+		
 	}
 });
 })( jQuery );
@@ -21267,6 +21241,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 	_create: function() {
         $.an.widget.prototype._create.apply(this, arguments);
         var o = this.options,newOps={};
+        o.mobile = true;
         if(o.mobile){
            // o.headerText = o.headerText || 'Section Header';
             //o.contentText = o.contentText || 'Content';
@@ -21275,7 +21250,12 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
             var wrap = $('<div data-content-theme="'+o.content_theme+'"></div>'),
 				header = $('<h3>' + o.headerText + '</h3>');
             this.contentDiv = $('<div></div>');
-			wrap.append(header).append(this.contentDiv);
+			wrap.append(header);
+			if(o.link=="raw"){
+				wrap.append(this.element.children(".content").children());
+			}else{
+				wrap.append(this.contentDiv);
+			}
             this.element.find('.content').append(wrap);
 			if(o.collapsedIcon){
 				newOps.collapsedIcon=o.collapsedIcon;
@@ -21292,6 +21272,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.theme){
 				newOps.theme=o.theme;
 			}
+			
 			wrap.collapsible&&wrap.collapsible(newOps);
         }
 	},
@@ -21313,7 +21294,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 		this.option("contextmenu2", false);
 		this.content[0].contentEditable = false;
 		if(link && link != "raw"){
-			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"edit"});
+			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
 			this.contentDiv.css("border","0 none");
 		}else{
 			this.contentDiv.append(o.contentText);
@@ -21778,13 +21759,16 @@ $.widget( "an.mobilelistview", $.an.view, {
 	},
 
 	_showDocuments:function(){
-		var self = this, o = this.options;
+		var self = this, o = this.options, html = '';
 		if (o.templateTemp) {
-			var html = o.templateTemp.render(self.docs);
+			html = o.templateTemp.render(self.docs);
 			$(o.templateSelector, this.documents).html(html);
 		}
+		
 		if($(o.templateSelector).listview){
 			$(o.templateSelector).listview();
+		}else if (o.templateTemp) {
+			$(o.templateSelector, this.documents).attr('data-role', 'listview').mlist();
 		}
 		if(o.templateConverts&&typeof o.templateConverts=='string'){
 			o.templateConverts=eval("("+o.templateConverts+")");			
@@ -21926,22 +21910,25 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 	},
 	
 	_edit:function(){
-		var minDate,maxDate;
+		var minDate,maxDate,self=this,o=this.options;
 		var date=new Date(), lng=window.database.local,
 		opts={
 			//invalid: {  dates: [new Date(2013/07/01), new Date(2014/06/30)],daysOfWeek: [], daysOfMonth: [] },
-			theme: this.options.theme,
-			lang: this.options.lang,
-			display: this.options.display,
-			mode: this.options.mode,
-			dateFormat:this.options.dateFormat,
-			dateOrder: this.options.dateOrder,
+			theme: o.theme,
+			lang: o.lang,
+			display: o.display,
+			mode: o.mode,
+			dateFormat:o.dateFormat,
+			dateOrder: o.dateOrder,
 		}
-		minDate=this.options.minDate=="now"?date:new Date(this.options.minDate);
+		minDate=o.minDate=="now"?date:new Date(o.minDate);
 		minDate.toString()!="Invalid Date"&&(opts.minDate=minDate);
-		maxDate=this.options.maxDate=="now"?date:new Date(this.options.maxDate);
+		maxDate=o.maxDate=="now"?date:new Date(o.maxDate);
 		maxDate.toString()!="Invalid Date"&&(opts.maxDate=maxDate);
 		$.an.inputfield.prototype._edit.apply( this, arguments );
+		opts.onSelect=function(value){
+			self.input.trigger("keyup");
+		};
 		this.input.mobiscroll().date(opts);
 	},
 	
@@ -22155,3 +22142,464 @@ $.widget( "an.loading", {
 	}
 });
 })( jQuery );
+(function( $, undefined ) {
+// This function calls getAttribute, which should be safe for data-* attributes
+var getAttrFixed = function( e, key ) {
+	var value = e.getAttribute( key );
+
+	return value === "true" ? true :
+		value === "false" ? false :
+		value === null ? undefined : value;
+};
+
+$.fn.buttonMarkup = function( options ) {
+	var $workingSet = this,
+		nsKey = "data-",
+		key = {};
+
+	// Enforce options to be of type string
+	options = ( options && ( $.type( options ) === "object" ) )? options : {};
+	for ( var i = 0; i < $workingSet.length; i++ ) {
+		var el = $workingSet.eq( i ),
+			e = el[ 0 ],
+			o = $.extend( {}, $.fn.buttonMarkup.defaults, {
+				icon:       options.icon       !== undefined ? options.icon       : getAttrFixed( e, nsKey + "icon" ),
+				iconpos:    options.iconpos    !== undefined ? options.iconpos    : getAttrFixed( e, nsKey + "iconpos" ),
+				theme:      options.theme      !== undefined ? options.theme      : getAttrFixed( e, nsKey + "theme" ) || "c",
+				inline:     options.inline     !== undefined ? options.inline     : getAttrFixed( e, nsKey + "inline" ),
+				shadow:     options.shadow     !== undefined ? options.shadow     : getAttrFixed( e, nsKey + "shadow" ),
+				corners:    options.corners    !== undefined ? options.corners    : getAttrFixed( e, nsKey + "corners" ),
+				iconshadow: options.iconshadow !== undefined ? options.iconshadow : getAttrFixed( e, nsKey + "iconshadow" ),
+				mini:       options.mini       !== undefined ? options.mini       : getAttrFixed( e, nsKey + "mini" )
+			}, options ),
+
+			// Classes Defined
+			innerClass = "ui-btn-inner",
+			textClass = "ui-btn-text",
+			buttonClass, iconClass,
+			hover = false,
+			state = "up",
+			// Button inner markup
+			buttonInner,
+			buttonText,
+			buttonIcon,
+			buttonElements;
+
+		for ( key in o ) {
+			if ( o[ key ] === undefined || o[ key ] === null ) {
+				el.removeAttr( nsKey + key );
+			} else {
+				e.setAttribute( nsKey + key, o[ key ] );
+			}
+		}
+
+		if ( getAttrFixed( e, nsKey + "rel" ) === "popup" && el.attr( "href" ) ) {
+			e.setAttribute( "aria-haspopup", true );
+			e.setAttribute( "aria-owns", el.attr( "href" ) );
+		}
+
+		// Check if this element is already enhanced
+		buttonElements = $.data( ( ( e.tagName === "INPUT" || e.tagName === "BUTTON" ) ? e.parentNode : e ), "buttonElements" );
+		
+		if ( buttonElements ) {
+			e = buttonElements.outer;
+			el = $( e );
+			buttonInner = buttonElements.inner;
+			buttonText = buttonElements.text;
+			// We will recreate this icon below
+			$( buttonElements.icon ).remove();
+			buttonElements.icon = null;
+			hover = buttonElements.hover;
+			state = buttonElements.state;
+		}
+		else {
+			buttonInner = document.createElement( o.wrapperEls );
+			buttonText = document.createElement( o.wrapperEls );
+		}
+		buttonIcon = o.icon ? document.createElement( "span" ) : null;
+
+		// if not, try to find closest theme container
+		if ( !o.theme ) {
+			o.theme = "c";
+		}
+
+		buttonClass = "ui-btn ";
+		buttonClass += ( hover ? "ui-btn-hover-" + o.theme : "" );
+		buttonClass += ( state ? " ui-btn-" + state + "-" + o.theme : "" );
+		buttonClass += o.shadow ? " ui-shadow" : "";
+		buttonClass += o.corners ? " ui-btn-corner-all" : "";
+
+		if ( o.mini !== undefined ) {
+			// Used to control styling in headers/footers, where buttons default to `mini` style.
+			buttonClass += o.mini === true ? " ui-mini" : " ui-fullsize";
+		}
+
+		if ( o.inline !== undefined ) {
+			// Used to control styling in headers/footers, where buttons default to `inline` style.
+			buttonClass += o.inline === true ? " ui-btn-inline" : " ui-btn-block";
+		}
+
+		if ( o.icon ) {
+			o.icon = "ui-icon-" + o.icon;
+			o.iconpos = o.iconpos || "left";
+
+			iconClass = "ui-icon " + o.icon;
+
+			if ( o.iconshadow ) {
+				iconClass += " ui-icon-shadow";
+			}
+		}
+
+		if ( o.iconpos ) {
+			buttonClass += " ui-btn-icon-" + o.iconpos;
+
+			if ( o.iconpos === "notext" && !el.attr( "title" ) ) {
+				el.attr( "title", el.getEncodedText() );
+			}
+		}
+
+		if ( buttonElements ) {
+			el.removeClass( buttonElements.bcls || "" );
+		}
+		el.removeClass( "ui-link" ).addClass( buttonClass );
+
+		buttonInner.className = innerClass;
+		buttonText.className = textClass;
+		if ( !buttonElements ) {
+			buttonInner.appendChild( buttonText );
+		}
+		if ( buttonIcon ) {
+			buttonIcon.className = iconClass;
+			if ( !( buttonElements && buttonElements.icon ) ) {
+				buttonIcon.innerHTML = "&#160;";
+				buttonInner.appendChild( buttonIcon );
+			}
+		}
+
+		while ( e.firstChild && !buttonElements ) {
+			buttonText.appendChild( e.firstChild );
+		}
+
+		if ( !buttonElements ) {
+			e.appendChild( buttonInner );
+		}
+
+		// Assign a structure containing the elements of this button to the elements of this button. This
+		// will allow us to recognize this as an already-enhanced button in future calls to buttonMarkup().
+		buttonElements = {
+			hover : hover,
+			state : state,
+			bcls  : buttonClass,
+			outer : e,
+			inner : buttonInner,
+			text  : buttonText,
+			icon  : buttonIcon
+		};
+
+		$.data( e,           'buttonElements', buttonElements );
+		$.data( buttonInner, 'buttonElements', buttonElements );
+		$.data( buttonText,  'buttonElements', buttonElements );
+		if ( buttonIcon ) {
+			$.data( buttonIcon, 'buttonElements', buttonElements );
+		}
+	}
+
+	return this;
+};
+
+$.fn.buttonMarkup.defaults = {
+	corners: true,
+	shadow: true,
+	iconshadow: true,
+	wrapperEls: "span"
+};
+
+})(jQuery);
+
+(function( $, undefined ) {
+
+//Keeps track of the number of lists per page UID
+//This allows support for multiple nested list in the same page
+//https://github.com/jquery/jquery-mobile/issues/1617
+var listCountPerPage = {};
+var addFirstLastClasses = {
+		_addFirstLastClasses : function (e,t,i){e.removeClass("ui-first-child ui-last-child"),t.eq(0).addClass("ui-first-child").end().last().addClass("ui-last-child"),i||this.element.trigger("updatelayout")},
+		_getVisibles : function (e,t){var i;return t?i=e.not(".ui-screen-hidden"):(i=e.filter(":visible"),0===i.length&&(i=e.not(".ui-screen-hidden"))),i}
+};
+
+var getInheritedTheme = function (e,t){for(var i,n,a=e[0],o="",s=/ui-(bar|body|overlay)-([a-z])\b/;a&&(i=a.className||"",!(i&&(n=s.exec(i))&&(o=n[2])));)a=a.parentNode;return o||t||"a"};
+
+$.widget( "an.mlist", $.an.widget, $.extend( {
+	options: {
+		theme: null,
+		countTheme: "c",
+		headerTheme: "b",
+		dividerTheme: "b",
+		icon: "arrow-r",
+		splitIcon: "arrow-r",
+		splitTheme: "b",
+		corners: true,
+		shadow: true,
+		inset: false,
+		initSelector: ":jqmData(role='listview')"
+	},
+
+	_create: function() {
+		var t = this,
+			listviewClasses = "";
+
+		listviewClasses += t.options.inset ? " ui-listview-inset" : "";
+
+		if ( !!t.options.inset ) {
+			listviewClasses += t.options.corners ? " ui-corner-all" : "";
+			listviewClasses += t.options.shadow ? " ui-shadow" : "";
+		}
+
+		// create listview markup
+		t.element.addClass(function( i, orig ) {
+			return orig + " ui-listview" + listviewClasses;
+		});
+		t.refresh( true );
+	},
+
+	// This is a generic utility method for finding the first
+	// node with a given nodeName. It uses basic DOM traversal
+	// to be fast and is meant to be a substitute for simple
+	// $.fn.closest() and $.fn.children() calls on a single
+	// element. Note that callers must pass both the lowerCase
+	// and upperCase version of the nodeName they are looking for.
+	// The main reason for this is that this function will be
+	// called many times and we want to avoid having to lowercase
+	// the nodeName from the element every time to ensure we have
+	// a match. Note that this function lives here for now, but may
+	// be moved into $.mobile if other components need a similar method.
+	_findFirstElementByTagName: function( ele, nextProp, lcName, ucName ) {
+		var dict = {};
+		dict[ lcName ] = dict[ ucName ] = true;
+		while ( ele ) {
+			if ( dict[ ele.nodeName ] ) {
+				return ele;
+			}
+			ele = ele[ nextProp ];
+		}
+		return null;
+	},
+	_getChildrenByTagName: function( ele, lcName, ucName ) {
+		var results = [],
+			dict = {};
+		dict[ lcName ] = dict[ ucName ] = true;
+		ele = ele.firstChild;
+		while ( ele ) {
+			if ( dict[ ele.nodeName ] ) {
+				results.push( ele );
+			}
+			ele = ele.nextSibling;
+		}
+		return $( results );
+	},
+
+	_addThumbClasses: function( containers ) {
+		var i, img, len = containers.length;
+		for ( i = 0; i < len; i++ ) {
+			img = $( this._findFirstElementByTagName( containers[ i ].firstChild, "nextSibling", "img", "IMG" ) );
+			if ( img.length ) {
+				img.addClass( "ui-li-thumb" );
+				$( this._findFirstElementByTagName( img[ 0 ].parentNode, "parentNode", "li", "LI" ) ).addClass( img.is( ".ui-li-icon" ) ? "ui-li-has-icon" : "ui-li-has-thumb" );
+			}
+		}
+	},
+
+	refresh: function( create ) {
+		this.parentPage = this.element.closest( ".ui-page" );
+
+		var o = this.options,
+			$list = this.element,
+			self = this,
+			dividertheme = $list.attr( "data-divider-theme" ) || o.dividerTheme,
+			listsplittheme = $list.attr( "data-split-theme" ),
+			listspliticon = $list.attr( "data-split-icon" ),
+			listicon = $list.attr( "data-icon" ),
+			li = this._getChildrenByTagName( $list[ 0 ], "li", "LI" ),
+			ol = !!$.nodeName( $list[ 0 ], "ol" ),
+			jsCount = !$.support.cssPseudoElement,
+			start = $list.attr( "start" ),
+			itemClassDict = {},
+			item, itemClass, itemTheme,
+			a, last, splittheme, counter, startCount, newStartCount, countParent, icon, imgParents, img, linkIcon;
+
+		if ( ol && jsCount ) {
+			$list.find( ".ui-li-dec" ).remove();
+		}
+
+		if ( ol ) {
+			// Check if a start attribute has been set while taking a value of 0 into account
+			if ( start || start === 0 ) {
+				if ( !jsCount ) {
+					startCount = parseInt( start , 10 ) - 1;
+					$list.css( "counter-reset", "listnumbering " + startCount );
+				} else {
+					counter = parseInt( start , 10 );
+				}
+			} else if ( jsCount ) {
+					counter = 1;
+			}
+		}
+
+		if ( !o.theme ) {
+			o.theme = getInheritedTheme( this.element, "c" );
+		}
+
+		for ( var pos = 0, numli = li.length; pos < numli; pos++ ) {
+			item = li.eq( pos );
+			itemClass = "ui-li";
+
+			// If we're creating the element, we update it regardless
+			if ( create || !item.hasClass( "ui-li" ) ) {
+				itemTheme = item.attr( "data-theme" ) || o.theme;
+				a = this._getChildrenByTagName( item[ 0 ], "a", "A" );
+				var isDivider = ( item.attr( "data-role" ) === "list-divider" );
+
+				if ( a.length && !isDivider ) {
+					icon = item.attr( "data-icon" );
+					
+					item.buttonMarkup({
+						wrapperEls: "div",
+						shadow: false,
+						corners: false,
+						iconpos: "right",
+						icon: a.length > 1 || icon === false ? false : icon || listicon || o.icon,
+						theme: itemTheme
+					});
+
+					if ( ( icon !== false ) && ( a.length === 1 ) ) {
+						item.addClass( "ui-li-has-arrow" );
+					}
+
+					a.first().removeClass( "ui-link" ).addClass( "ui-link-inherit" );
+
+					if ( a.length > 1 ) {
+						itemClass += " ui-li-has-alt";
+
+						last = a.last();
+						splittheme = listsplittheme || last.attr( "data-theme" ) || o.splitTheme;
+						linkIcon = last.attr( "data-icon" );
+
+						last.appendTo( item )
+							.attr( "title", $.trim(last.getEncodedText()) )
+							.addClass( "ui-li-link-alt" )
+							.empty()
+							.buttonMarkup({
+								shadow: false,
+								corners: false,
+								theme: itemTheme,
+								icon: false,
+								iconpos: "notext"
+							})
+							.find( ".ui-btn-inner" )
+								.append(
+									$( document.createElement( "span" ) ).buttonMarkup({
+										shadow: true,
+										corners: true,
+										theme: splittheme,
+										iconpos: "notext",
+										// link icon overrides list item icon overrides ul element overrides options
+										icon: linkIcon || icon || listspliticon || o.splitIcon
+									})
+								);
+					}
+				} else if ( isDivider ) {
+
+					itemClass += " ui-li-divider ui-bar-" + ( item.attr( "data-theme" ) || dividertheme );
+					item.attr( "role", "heading" );
+
+					if ( ol ) {
+						//reset counter when a divider heading is encountered
+						if ( start || start === 0 ) {
+							if ( !jsCount ) {
+								newStartCount = parseInt( start , 10 ) - 1;
+								item.css( "counter-reset", "listnumbering " + newStartCount );
+							} else {
+								counter = parseInt( start , 10 );
+							}
+						} else if ( jsCount ) {
+								counter = 1;
+						}
+					}
+
+				} else {
+					itemClass += " ui-li-static ui-btn-up-" + itemTheme;
+				}
+			}
+
+			if ( ol && jsCount && itemClass.indexOf( "ui-li-divider" ) < 0 ) {
+				countParent = itemClass.indexOf( "ui-li-static" ) > 0 ? item : item.find( ".ui-link-inherit" );
+
+				countParent.addClass( "ui-li-jsnumbering" )
+					.prepend( "<span class='ui-li-dec'>" + ( counter++ ) + ". </span>" );
+			}
+
+			// Instead of setting item class directly on the list item and its
+			// btn-inner at this point in time, push the item into a dictionary
+			// that tells us what class to set on it so we can do this after this
+			// processing loop is finished.
+
+			if ( !itemClassDict[ itemClass ] ) {
+				itemClassDict[ itemClass ] = [];
+			}
+
+			itemClassDict[ itemClass ].push( item[ 0 ] );
+		}
+
+		// Set the appropriate listview item classes on each list item
+		// and their btn-inner elements. The main reason we didn't do this
+		// in the for-loop above is because we can eliminate per-item function overhead
+		// by calling addClass() and children() once or twice afterwards. This
+		// can give us a significant boost on platforms like WP7.5.
+
+		for ( itemClass in itemClassDict ) {
+			$( itemClassDict[ itemClass ] ).addClass( itemClass ).children( ".ui-btn-inner" ).addClass( itemClass );
+		}
+
+		$list.find( "h1, h2, h3, h4, h5, h6" ).addClass( "ui-li-heading" )
+			.end()
+
+			.find( "p, dl" ).addClass( "ui-li-desc" )
+			.end()
+
+			.find( ".ui-li-aside" ).each(function() {
+					var $this = $( this );
+					$this.prependTo( $this.parent() ); //shift aside to front for css float
+				})
+			.end()
+
+			.find( ".ui-li-count" ).each(function() {
+					$( this ).closest( "li" ).addClass( "ui-li-has-count" );
+				}).addClass( "ui-btn-up-" + ( $list.attr( "data-count-theme" ) || this.options.countTheme) + " ui-btn-corner-all" );
+
+		// The idea here is to look at the first image in the list item
+		// itself, and any .ui-link-inherit element it may contain, so we
+		// can place the appropriate classes on the image and list item.
+		// Note that we used to use something like:
+		//
+		//    li.find(">img:eq(0), .ui-link-inherit>img:eq(0)").each( ... );
+		//
+		// But executing a find() like that on Windows Phone 7.5 took a
+		// really long time. Walking things manually with the code below
+		// allows the 400 listview item page to load in about 3 seconds as
+		// opposed to 30 seconds.
+
+		this._addThumbClasses( li );
+		this._addThumbClasses( $list.find( ".ui-link-inherit" ) );
+
+		this._addFirstLastClasses( li, this._getVisibles( li, create ), create );
+		// autodividers binds to this to redraw dividers after the listview refresh
+		this._trigger( "afterrefresh" );
+	}
+}, addFirstLastClasses ) );
+
+//auto self-init widgets
+/*$.mobile.document.bind( "pagecreate create", function( e ) {
+	$.mobile.listview.prototype.enhanceWithin( e.target );
+});*/
+
+})(jQuery);
