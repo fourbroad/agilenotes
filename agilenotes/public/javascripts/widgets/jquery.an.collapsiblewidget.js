@@ -15,6 +15,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 	_create: function() {
         $.an.widget.prototype._create.apply(this, arguments);
         var o = this.options,newOps={};
+        o.mobile = true;
         if(o.mobile){
            // o.headerText = o.headerText || 'Section Header';
             //o.contentText = o.contentText || 'Content';

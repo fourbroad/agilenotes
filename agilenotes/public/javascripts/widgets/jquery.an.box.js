@@ -213,7 +213,7 @@ $.widget( "an.box", $.an.widget, {
 	        });
 		if (o.mobile && o.mode == 'design') {
 			Model.getPages(dbId,[formId],function(err, forms){
-				el.page({mode:"design", page:forms[0], mobile:true});
+				el.page({mode:"design", page:forms[0], document: forms[0], mobile:true});
 			});
 		} else {
 			Model.openPage(el, dbId, formId, optsx);

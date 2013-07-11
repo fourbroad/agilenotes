@@ -102,8 +102,8 @@
 		  contentType: "application/json",
 		  data: JSON.stringify(doc),
 		  complete: function(req) {
-			  var resp = httpData(req, "json"), err, result;
-			  if (req.status == 201) {
+			  var resp = httpData(req, "json"), err = null, result = null;
+			  if (req.status == 201 || req.status == 200) {
 				  result = resp;
 			  } else {
 				  err = {status: req.status, error:resp.error, reason:resp.reason};
@@ -231,7 +231,6 @@
 			  }
 		  });
 	   }else{
-
 		ajax_post("/dbs/"+dbId+encodeOptions(options), doc, function(err,result){
    	       callback(err,result);
 		   if(!err) $(document).trigger("documentCreated",doc);
