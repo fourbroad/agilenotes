@@ -21247,16 +21247,14 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
             //o.contentText = o.contentText || 'Content';
 			o.content_theme=o.content_theme||"";
             this.element.addClass("an-collapsiblewidget");
-            var wrap = $('<div data-content-theme="'+o.content_theme+'"></div>'),
-				header = $('<h3>' + o.headerText + '</h3>');
+			var content = this.element.children(".content");
+			content.attr("data-content-theme",o.content_theme);
+            this.header = $('<h3>' + o.headerText + '</h3>');
             this.contentDiv = $('<div></div>');
-			wrap.append(header);
-			if(o.link=="raw"){
-				wrap.append(this.element.children(".content").children());
-			}else{
-				wrap.append(this.contentDiv);
+			content.prepend(this.header);
+			if(o.link!="raw"){
+				content.append(this.contentDiv);
 			}
-            this.element.find('.content').append(wrap);
 			if(o.collapsedIcon){
 				newOps.collapsedIcon=o.collapsedIcon;
 			}
@@ -21273,7 +21271,7 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 				newOps.theme=o.theme;
 			}
 			
-			wrap.collapsible&&wrap.collapsible(newOps);
+			content.collapsible&&content.collapsible(newOps);
         }
 	},
 	
@@ -21315,9 +21313,16 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
     },
 
 	destroy: function() {
+		var o = this.options, link = o.link;
+		if(link && link != "raw"){
+			this.content.remove();
+		}else{
+			this.content.removeAttr("contenteditable");
+			this.content.removeAttr("data-content-theme");
+			this.header.remove();
+		}
 		this.element.removeClass("an-collapsiblewidget");
         this.element.unbind('collapsiblewidget');
-        this.content.remove();
 		return $.an.widget.prototype.destroy.apply( this, arguments );
 	}
 });
