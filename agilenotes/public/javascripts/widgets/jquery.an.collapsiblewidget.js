@@ -44,27 +44,20 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
 			if(o.theme){
 				newOps.theme=o.theme;
 			}
-			
-			content.collapsible&&content.collapsible(newOps);
+			this.opts=newOps;
         }
 	},
 	
 	_browser:function(){
-		var o = this.options,link=o.link;
-		this.option("contextmenu2", false);
-		this.content[0].contentEditable = false;
-		if(link && link != "raw"){
-			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
-			this.contentDiv.css("border","0 none");
-		}else{
-			this.contentDiv.append(o.contentText);
-		}
+		this._edit();
 	},
 
 	_edit:function(){
 		var o = this.options,link=o.link;
+		var content = this.element.children(".content");
 		this.option("contextmenu2", false);
 		this.content[0].contentEditable = false;
+		content.collapsible&&content.collapsible(this.opts);
 		if(link && link != "raw"){
 			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"browser"});
 			this.contentDiv.css("border","0 none");
@@ -76,6 +69,8 @@ $.widget( "an.collapsiblewidget", $.an.widget, {
     _design: function(){
 		var o = this.options,link=o.link;
 		this.option("contextmenu2", true);
+		this.header.addClass("ui-collapsible-heading").html('<a href="#" class="ui-collapsible-heading-toggle ui-btn ui-fullsize ui-btn-icon-right ui-btn-up-c" data-corners="false" data-shadow="false" data-iconshadow="true" data-wrapperels="span" data-icon="arrow-u" data-iconpos="right" data-theme="c" data-mini="false"><span class="ui-btn-inner"><span class="ui-btn-text">'+o.headerText+'<span class="ui-collapsible-heading-status"> click to collapse contents</span></span><span class="ui-icon ui-icon-shadow ui-icon-arrow-d">&nbsp;</span></span></a>');
+
 		var tag=false;
 		if(link && link != "raw"){
 			this.contentDiv.box({hideTitleBar:true,link:o.link,odbId:o.dbId,targetId:o.targetId,mode:"design"});

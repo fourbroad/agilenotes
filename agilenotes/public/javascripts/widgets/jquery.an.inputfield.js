@@ -48,6 +48,7 @@
 
 				if (o.value) {
 					this.input.attr("value", o.value);
+					this._trigger("optionchanged", null, { key : "value", value : o.value, oldValue : "",isTransient : o.isTransient });
 				}
 
 				if (o.data_mini) {
