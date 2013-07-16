@@ -272,6 +272,9 @@
 	       o = {url: "/tmp"};
 	   $.extend(o, options);
 	   form.ajaxSubmit(o);
+   },
+   downPdf:function(url) {
+	   window.location.href = url;
    }
   });
 
