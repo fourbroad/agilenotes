@@ -20,6 +20,7 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 		mode: 'scroller',
 		dateFormat:'yy-mm-dd',
 		dateOrder: 'yy mmD dd',
+		dateOrder:'yymmdd',
 		minDate:'',
 		maxDate:'',
 	},
