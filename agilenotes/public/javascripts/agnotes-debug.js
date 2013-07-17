@@ -1068,6 +1068,9 @@ ObjectId.prototype.toString = function () {
 	       o = {url: "/tmp"};
 	   $.extend(o, options);
 	   form.ajaxSubmit(o);
+   },
+   downPdf:function(url) {
+	   window.location.href = url;
    }
   });
 
@@ -12613,7 +12616,8 @@ $.widget( "an.page", {
 		    navbar:["5080143085ac60df09000001", "51c17808caa05a042500004a", "51c02b6eac8f274167000120"],
 		    listview:["5080143085ac60df09000001","51ad5e1f21c7d6296100006c","51ad54a921c7d63144000144"],
 		    customhtml:["5080143085ac60df09000001","51c175e221c7d6118800023a"],
-            swipe:["5080143085ac60df09000001","51ca58ebedad5734e8000023"]
+            swipe:["5080143085ac60df09000001","51ca58ebedad5734e8000023"],
+            codearea:["5080143085ac60df09000001","51d66f5fedad572a8b0001ad"]
 		}
 	},
 
@@ -21901,6 +21905,7 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 		mode: 'scroller',
 		dateFormat:'yy-mm-dd',
 		dateOrder: 'yy mmD dd',
+		dateOrder:'yymmdd',
 		minDate:'',
 		maxDate:'',
 	},
