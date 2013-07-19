@@ -319,6 +319,7 @@ function postDoc(req,res){
 					res.send({result:error}, 416);
 				}else{
 					doc._create_at = new Date().toJSON();
+					doc._update_at = doc._create_at;
 					if(doc.type == Model.TASK && doc.taskType == "interval"){
 						doc.userId = req.user._id;
 					}
