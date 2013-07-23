@@ -22,4 +22,6 @@ jquery.colorpicker.css
 jquery.ui.select.css 
 rte\paddinginput.css 
 jquery.an.rte.css 
-base.css 
+base.css
+..\javascripts\codemirror\lib\codemirror.css
+..\javascripts\codemirror\theme\solarized.css
