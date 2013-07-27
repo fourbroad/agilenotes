@@ -610,8 +610,8 @@ function imapReceive(doc, callback) {
 // var header =
 // "http://localhost:8080/page.html?dbid=5122f1b9e675275e69000000&formid=51385b90caa05a3dcb0000e0";
 function pdfDownload(req, res) {
-	var q = req.query, dbid = q.dbid, docid = q.docid;
-	var pdfFileName = "/tmp/" + docid + ".pdf";
+	var q = req.query, dbid = q.dbid, docid = q.docid, alias = q.alias;
+	var pdfFileName = alias ? ("/tmp/" + alias + ".pdf") : ("/tmp/" + docid + ".pdf");
 
 	var fs = require("fs");
 	if (fs.existsSync(pdfFileName)) {
