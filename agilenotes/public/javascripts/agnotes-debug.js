@@ -6248,7 +6248,12 @@ $.widget( "an.box", $.an.widget, {
 	        el = $("<div class='target'/>").appendTo(this.content.empty()),
 	        optsx = $.extend(true, {mode:opts.mode != 'design' ? "edit" : opts.mode}, opts,{
 	        	opened: function(page){
-	    			var p = page.option("page"), title = opts.title || p.title || p._id;
+					var p,title;
+					if(page.option("mobile")){
+	    				title = opts.title;
+					}else{
+						p = page.option("page"), title = opts.title || p.title || p._id;
+					}
 	    			self._showFootButtons(opts.footAreaButtons||[]);
 	    			self.option("title", title);
 	    			opts.opened && opts.opened(page);

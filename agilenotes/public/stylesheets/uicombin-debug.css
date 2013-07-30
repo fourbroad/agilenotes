@@ -1255,8 +1255,13 @@ content:'.';
     white-space: nowrap;
 }
 
-.an-navbarwidget {
-	display:inline-block !important;
+.an-navbarwidget.design {
+	display:block !important;
+	margin:0;
+	padding:0;
+	left:0;
+	width:100%;
+	right:0;
 }
 
 .an-navbarwidget.left {
@@ -1268,11 +1273,11 @@ content:'.';
 }
 
 .an-navbarwidget.top {
-
+	margin:0 auto;
 }
 
 .an-navbarwidget.bottom {
-
+	
 }
 
 
