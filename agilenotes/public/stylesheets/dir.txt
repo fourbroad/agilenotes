@@ -1,4 +1,3 @@
-jquery.mobile-1.3.1.min.css
 jquery.an.box.css
 jquery.an.page.css
 jquery.an.form.css
