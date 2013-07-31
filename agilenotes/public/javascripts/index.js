@@ -1,4 +1,4 @@
-var designMode='develop';
+var designMode='develossp';
 
 if(designMode=='develop'){
 document.write('\
