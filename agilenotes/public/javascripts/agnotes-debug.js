@@ -34884,7 +34884,7 @@ $.widget( "an.view", {
 	
 	lastpage:function(){
 		var o = this.options;
-		o.skip = Math.floor(o.total/o.limit)*o.limit; 
+		o.skip = Math.floor(o.total/o.limit)*o.limit-o.limit; 
 		this._loadDocs();
 	},
 
@@ -34912,7 +34912,7 @@ $.widget( "an.view", {
 			}
 			this.pager.find("input.current-page").val(o.currentPage);
 			this.pager.find(".total-page").html(o.totalPage);
-			var currentNums=o.currentPage==o.totalPage?(o.limit*(o.currentPage-1)+o.total%o.limit):o.limit*o.currentPage,info="";
+			var currentNums=o.currentPage==o.totalPage?o.total:o.limit*o.currentPage,info="";
 			if($.i18n.pager){
 				info = $.i18n.pager.display.replace(/{total}/,o.total).replace(/{currentPagerFirst}/,(o.limit*(o.currentPage-1)+1)).replace(/{currentPagerLast}/,currentNums);
 			}else{
