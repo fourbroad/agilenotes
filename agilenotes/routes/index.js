@@ -420,7 +420,7 @@ function putDoc(req,res){
 		    provider = providers.getProvider(dbid, doc.type);
 		validate(dbid, doc, function(error, doc, fileFields){
 			if(error) {
-				res.send({result:errors}, 416);
+				res.send({result:error}, 416);
 			}else{
 				delete doc._id;
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
