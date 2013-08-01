@@ -67,3 +67,7 @@ swfupload/swfupload.queue.js
 swfupload/fileprogress.js
 swfupload/handlers.js
 jquery.an.loading.js
+codemirror/lib/codemirror.js
+codemirror/mode/javascript.js
+codemirror/mode/css.js
+widgets/jquery.an.codeareafield.js
