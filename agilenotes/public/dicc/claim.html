@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title></title>
+  <link rel="stylesheet" href="../stylesheets/jquery.mobile-1.3.1.min.css">
+  <!-- jQuery and jQuery Mobile -->
+  <script src="../javascripts/jquery-1.8.2.min.js"></script>
+  <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
+   <style>
+   .ui-collapsible-content{padding:0;}
+   .ui-collapsible-themed-content .ui-collapsible-content{padding:10px 15px;}
+   </style>
+</head>
+<body>
+<!-- Home -->
+<div data-role="page" id="page1">
+    <div data-theme="c" data-role="header">
+        <h3>
+            理赔申请
+        </h3>
+    </div>
+    <div data-role="content">
+		<div data-role="collapsible" data-collapsed="false">
+                <ul data-role="listview" data-divider-theme="b" data-inset="true">
+                    <li data-role="fieldcontain"><a>
+						<label for="File">登机牌</label>
+						<span id="File"></span></a>
+					</li>
+                </ul>
+            </div>
+		
+            <div data-role="collapsible" data-collapsed="false">
+                <ul data-role="listview" data-divider-theme="b" data-inset="true">
+                    <li data-role="fieldcontain">
+						<label for="PolicyNumber">保单号</label>
+						<input name="PolicyNumber" id="PolicyNumber" value="" data-clear-btn="true" type="text">
+					</li>
+                </ul>
+            </div>
+            <div data-role="collapsible" data-collapsed="false">
+                <ul data-role="listview" data-divider-theme="b" data-inset="true">
+                    <li data-role="fieldcontain">
+						<label for="Name">收款人姓名</label>
+						<input name="Name" id="Name" value="" data-clear-btn="true" type="text">
+					</li>
+                    <li data-role="fieldcontain">
+						<label for="IdNo">证件号码</label>
+						<input name="IdNo" id="IdNo" value="" data-clear-btn="true" type="text">
+					</li>
+					<li data-role="fieldcontain">
+						<label for="Tel">手机</label>
+						<input name="Tel" id="Tel" value="" data-clear-btn="true" type="text">
+					</li>
+					<li data-role="fieldcontain">
+						<label for="Email">E-mail</label>
+						<input name="Email" id="Email" value="" data-clear-btn="true" type="text">
+					</li>
+                </ul>
+            </div>
+
+		<div data-role="collapsible" data-collapsed="false" data-theme="b" data-content-theme="d" data-collapsed-icon="arrow-u" data-expanded-icon="arrow-d" data-iconpos="right">
+			<h4>银行</h4>
+			<ul data-role="listview" data-inset="false">
+                    <li data-role="fieldcontain">
+						<label for="BankName">开户行</label>
+						<input name="BankName" id="BankName" value="" data-clear-btn="true" type="text">
+					</li>
+                    <li data-role="fieldcontain">
+						<label for="Card">银行卡号</label>
+						<input name="Card" id="Card" value="" data-clear-btn="true" type="text">
+					</li>
+                </ul>
+		</div>
+		<input value="提 交" id="submit" type="submit">
+
+    </div>
+</div>
+</body>
+</html>
