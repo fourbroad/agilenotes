@@ -584,7 +584,7 @@ function acl(req,res,next){
 	var params = req.params, dbid = params.dbid, user = req.user, q = req.query,
 	    doc = req.body, docid = params.docid, dbn = params.dbn, docn = params.docn,	provider = providers.getProvider(Model.ADMIN_DB);
 	
-	if (req.headers['content-type'].indexOf('xml') != -1) {
+	if (req.headers['content-type'] && req.headers['content-type'].indexOf('xml') != -1) {
 		req.body = "";
 		req.on("data", function(chunk) {
 			req.body += chunk;
