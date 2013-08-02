@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>大众保险</title>
+  <link rel="stylesheet" href="../stylesheets/jquery.mobile-1.3.1.min.css">
+  <!-- jQuery and jQuery Mobile -->
+  <script src="../javascripts/jquery-1.8.2.min.js"></script>
+  <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
+  <style>
+     *{margin:0;padding:0;}
+     html,body{
+        font-family:"微软雅黑";
+        font-size:12px;
+     }
+     .c:after{
+        clear:both;
+        height:0;
+        display:block;
+        visibility:hidden;
+        content:'.';
+     }
+     .proLogo{
+        float:left;
+     }
+     .proSimpleInfo{
+        float:left;
+        margin-left:3px;
+     }
+     .desBox{
+        display:none;
+        padding:12px;
+     }
+     .knowledge h3{
+        font-size:14px;
+        font-weight:bold;
+     }
+     .knowledge ol{
+        margin:3px 0;
+        padding-left:25px;
+     }
+     .knowledge ol li{
+        line-height:18px;
+     }
+    .ui-table-reflow.ui-responsive {
+        display: table;
+    }
+     .group{
+        background:#ECEDEB;
+    }
+  </style>
+</head>
+<body>
+<!-- product detail -->
+<div data-role="page" id="productDesc">
+    <div data-role="header" data-theme="a">
+        <a href="#" data-icon="back" data-rel="back" data-theme="a">back</a>
+        <h1>产品详情</h1>
+    </div>
+    <div data-role="content">
+        <div class="c">
+            <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg" width="80" class="proLogo"/>
+            <div class="proSimpleInfo">
+                <h2 class="ui-li-heading">境外旅游保险</h2>
+                <p class="ui-li-desc">适于境外旅行，同时还承保热门运动。</p>
+                <p class="ui-li-desc">适用人群：境内旅游及热爱户外运动的人士</p>
+                <p class="ui-li-desc">承包年龄：1-80周岁</p>
+            </div>
+        </div>
+        <div data-role="navbar">
+            <ul id="productDesNav">
+                <li><a href="#" data-transition="none" class="ui-btn-active">保障范围</a></li>
+                <li><a href="#" data-transition="none">保费</a></li>
+                <li><a href="#" data-transition="none">投保须知</a></li>
+            </ul>
+        </div>
+        <div class="desBox range" style="display:block;">
+            <table data-role="table" data-mode="reflow" class="ui-responsive table-stroke">
+                <thead>
+                    <tr>
+                        <th width="70%">保障范围摘要 <br>(人民币: 元)</th>
+                        <th width="15%" align="center">计划一</th>
+                        <th width="15%" align="center">计划二</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="group" colspan="3">个人意外伤害和医疗保障</td>
+                    </tr>
+                    <tr>
+                        <td><strong>意外身故、烧伤及残疾保障</strong><br>被保险人旅行期间因意外事故导致身故、烧伤或残疾，我们将一次性给付保险金。</td>
+                        <td align="center">200,000</td>
+                        <td align="center">300,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>医药补偿</strong>旅行期间因意外事故或罹患疾病需治疗，可获实际医药费用补偿。</td>
+                        <td align="center">50,000</td>
+                        <td align="center">80,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>每日住院津贴</strong><br>旅行期间因意外事故或罹患疾病需入院治疗，可按住院天数或每日住院津贴(总赔偿日数以90天为限)。</td>
+                        <td align="center">100/天</td>
+                        <td align="center">100/天</td>
+                    </tr>
+                    <tr>
+                        <td><strong>慰问探访费用补偿</strong><br>旅行期间若被保险人身故或遭严重身体伤害而住院治疗，我们承担被保险人的一名成年直系亲属前往探访的交通费和食宿费。</td>
+                        <td align="center">8,000</td>
+                        <td align="center">8,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>旅行绑架及非法拘禁</strong> <span class="red tiny bold">new</span><br>若被保险人在旅行期间遭受绑架或非法拘禁，我们会根据实际被绑架或被非法拘禁的日数补偿该被保险人。</td>
+                        <td align="center">12,000</td>
+                        <td align="center">15,000</td>
+                    </tr>
+                    <tr>
+                        <td class="group" colspan="3">紧急救援</td>
+                    </tr>
+                    <tr>
+                        <td><strong>紧急医疗运送和送返</strong><br>旅行期间因意外事故或罹患疾病，我们将承担医疗运送和送返(Travel Guard)所发生的费用。</td>
+                        <td align="center">400,000</td>
+                        <td align="center">400,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>身故遗体送返</strong><br>旅行期间因意外事故或罹患疾病不幸身故，我们将承担安排遗体送返(Travel Guard)所发生的费用<br>(其中丧葬保险金以RMB16,000为限)。</td>
+                        <td align="center">80,000</td>
+                        <td align="center">80,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>未成年人旅行送返费用补偿</strong> <span class="red tiny bold">new</span><br>旅行期间被保险人罹患罹患疾病需住院治疗或不幸身故，我们将承担一张与被保险人同行的未满18周岁未成年孩子返回中国常住地的经济舱机票或者补偿改签机票的差价。</td>
+                        <td align="center">2,000</td>
+                        <td align="center">3,000</td>
+                    </tr>
+                    <tr>
+                        <td class="group" colspan="3">个人财物保障</td>
+                    </tr>
+                    <tr>
+                        <td><strong>个人随身财产</strong>旅行期间被保险人随身财产被盗窃或抢劫，或因其他第三方责任而遗失或意外损坏，可获赔偿。(其中：每件或每套行李或物品最高赔偿额为RMB2,500)</td>
+                        <td align="center">5,000</td>
+                        <td align="center">10,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>银行卡盗刷(不适用于未成年人)</strong> <span class="red tiny bold">new</span><br>赔偿被保险人在旅行期间由于银行卡丢失或失窃而造成非授权人非法使用银行卡所发生的账款损失（账款损失须于挂失该丢失或失窃银行卡之前的48小时内发生）</td>
+                        <td align="center">2,500</td>
+                        <td align="center">5,000</td>
+                    </tr>
+                    <tr>
+                        <td><strong>旅行证件遗失</strong> <span class="red tiny bold">new</span><br>赔偿被保险人为重置因被抢劫或盗窃而损失护照、旅行票据等旅行证件所支付的费用及相关交通、住宿费用。</td>
+                        <td align="center">4,000</td>
+                        <td align="center">5,000</td>
+                    </tr>
+                    <tr>
+                        <td class="group" colspan="3">旅程阻碍保障</td>
+                    </tr>
+                    <tr>
+                        <td><strong>旅程延误</strong><br>若由于天气、罢工、航空公司超售或航空管制等原因而导致飞机或轮船延误，每延误5小时，可获赔偿RMB300元。</td>
+                        <td align="center">600</td>
+                        <td align="center">600</td>
+                    </tr>
+                    <tr>
+                        <td class="group" colspan="3">个人责任</td>
+                    </tr>
+                    <tr>
+                        <td>我们承担旅行期间因意外事故导致他人身体或财物损失而须支付给第三方的赔偿金。</td>
+                        <td align="center">80,000</td>
+                        <td align="center">400,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="desBox fee">
+            <table data-role="table" data-mode="reflow" class="ui-responsive table-stroke">
+                  <thead>
+                    <tr>
+                      <th data-priority="1">保险期间</th>
+                      <th data-priority="persist">计划一</th>
+                      <th data-priority="2">计划二</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1-5天</td>
+                      <td>45</td>
+                      <td>55</td>
+                    </tr>
+                    <tr>
+                      <td>超过5天后每天增加</td>
+                      <td>10</td>
+                      <td>15</td>
+                    </tr>
+                  </tbody>
+             </table>
+        </div>
+        <div class="desBox knowledge">
+            <h3>特别提醒</h3>
+            <ol>
+                <li>注意:“乐悠游”海外旅行保障计划单次旅行最长时间不超过 90 天。</li>
+                <li>本计划项下最高给付金额以保险单上被保险人相应的保险金额为限。</li>
+                <li>本计划的投保年龄为1-80周岁。经承保的71至80周岁的被保险人，其“意外身故、烧伤及残疾保障”为上述保障范围摘要中所载金额的一半，保险费维持不变</li>
+                <li>未满18周岁的未成年人的“意外身故、烧伤及残疾保障”的保险金额为10万元。</li>
+                <li>本保险不承保任何直接或间接由于前往或途经阿富汗、缅甸、古巴、刚果民主共和国、伊朗、伊拉克、利比里亚、苏丹、叙利亚，或在上述国家旅行期间发生的保险事故。</li>
+            </ol>
+
+            <h3>主要责任免除</h3>
+            <ol>
+                <li>战争、军事行动、暴乱、罢工或武装叛乱。</li>
+                <li>任何生物、化学、原子能武器、原子能或核能装置造成的爆炸、灼伤或辐射。</li>
+                <li>投保人、受益人的故意行为；或被保险人无论当时神志是否清醒，被保险人自致伤害或自杀。</li>
+            </ol>
+        </div>
+        <a href="#" data-role="button" data-theme="a">投 保</a>
+    </div>
+</div>
+<script>
+    $(function(){
+        $('#productDesNav li').click(function(){
+            var index = $(this).index();
+            $(this).siblings().find('a').removeClass('ui-btn-active');
+            $(this).find('a').addClass('ui-btn-active');
+            $('.desBox').hide().eq(index).show();
+        });
+        $('#productDesNav li a:eq(0)').trigger('click');
+    });
+</script>
+</body>
+</html>
