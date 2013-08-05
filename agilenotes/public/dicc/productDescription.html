@@ -217,7 +217,7 @@
         </div>
     </div>
     <div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="true" data-tap-toggle="false">
-        <a href="#" data-role="button" data-theme="e" data-inline="false" data-mini="true" style="width:200px;margin:0 auto;">投 保</a>
+        <a href="#" data-role="button" data-theme="e" data-inline="false" data-mini="true">投 保</a>
     </div>
     <script>
         $(document).bind("pageinit", function(event){
@@ -229,17 +229,15 @@
             });
             $('#productDesNav li a:eq(0)').trigger('click');
            // navBar
-           setTimeout(function(){
-               var scrollTop = $('#navBar').offset().top;
-               $(window).bind('scroll',function(){
-                   var docScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-                   if(docScrollTop >= scrollTop){
-                      $('#navBar').addClass('fixed').css('top',0);
-                   }else{
-                      $('#navBar').removeClass('fixed')
-                   }
-               });
-           },500);
+           var scrollTop = $('#navBar').offset().top;
+           $(window).bind('scroll',function(){
+               var docScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+               if(docScrollTop > 1 && docScrollTop >= scrollTop){
+                  $('#navBar').addClass('fixed').css('top',0);
+               }else{
+                  $('#navBar').removeClass('fixed')
+               }
+           });
         });
   </script>
 </div>
