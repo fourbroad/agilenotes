@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title></title>
+  <link rel="stylesheet" href="../stylesheets/jquery.mobile-1.3.1.min.css">
+  <link rel="stylesheet" href="../stylesheets/mobiscroll.custom-2.6.0.min.css">
+  <!-- jQuery and jQuery Mobile -->
+  <script src="../javascripts/jquery-1.8.2.min.js"></script>
+  <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
+  <script src="../javascripts/mobiscroll.custom-2.6.0.min.js"></script>
+   <style>
+   .ui-collapsible-content{padding:0;}
+   .ui-collapsible-themed-content .ui-collapsible-content{padding:10px 15px;}
+   #File{margin-left:20px;}
+   #claim .ui-select{display:none;}
+   </style>
+</head>
+<body>
+<!-- Home -->
+<div data-role="page" id="claim">
+    <div data-theme="c" data-role="header">
+        <h3>
+            理赔申请
+        </h3>
+    </div>
+    <div data-role="content">
+
+		<!--div data-role="collapsible" data-collapsed="false">
+                <ul data-role="listview" data-divider-theme="b" data-inset="true">
+                    <li data-role="fieldcontain"><a>
+						<label for="File">登机牌</label>
+						<span id="File"></span></a>
+					</li>
+                </ul>
+            </div-->
+		
+            <div data-role="collapsible" data-collapsed="false">
+                <ul data-role="listview" data-divider-theme="b" data-inset="true">
+                    <li data-role="fieldcontain">
+						<label for="PolicyNumber">保单号</label>
+						<input name="PolicyNumber" id="PolicyNumber" disabled="disabled" value="" data-clear-btn="true" type="text">
+					</li>
+					 <li data-role="fieldcontain">
+						<label for="Name">收款人姓名</label>
+						<input name="Name" id="Name" value="" data-clear-btn="true" type="text">
+					</li>
+                    <li data-role="fieldcontain">
+						<label for="IdNo">证件号码</label>
+						<input name="IdNo" id="IdNo" value="" data-clear-btn="true" type="text">
+					</li>
+					<li data-role="fieldcontain">
+						<label for="Tel">手机</label>
+						<input name="Tel" id="Tel" value="" data-clear-btn="true" type="text">
+					</li>
+					<li data-role="fieldcontain">
+						<label for="Email">E-mail</label>
+						<input name="Email" id="Email" value="" data-clear-btn="true" type="text">
+					</li>
+					<li data-role="fieldcontain">
+						<label for="BankCode">银行</label>
+						<select name="BankCode" id="BankCode" >
+							<option value="0"></option>
+							<option value="ICBCB2C">中国工商银行</option>
+							<option value="CMB">招商银行</option>
+							<option value="ABC">中国农业银行</option>
+							<option value="HCCB">杭州银行</option>
+							<option value="CCB">中国建设银行</option>
+							<option value="RCBFCC">农信银资金清算中心</option>
+							<option value="GDB">广东发展银行</option>
+							<option value="COMM">交通银行</option>
+							<option value="CMBC">中国民生银行</option>
+							<option value="BOC">中国银行</option>
+							<option value="PSBC">中国邮政储蓄银行</option>
+						</select>
+					</li>
+                    <li data-role="fieldcontain">
+						<label for="BankName">开户行</label>
+						<input name="BankName" id="BankName" value="" data-clear-btn="true" type="text">
+					</li>
+                    <li data-role="fieldcontain">
+						<label for="Card">银行卡号</label>
+						<input name="Card" id="Card" value="" data-clear-btn="true" type="text">
+					</li>
+                </ul>
+            </div>
+		</div>
+
+<script>
+$("#claim").on("pagecreate",function(event){
+	var act = event.currentTarget.baseURI.split("?")[1];
+	if(act=="edit"){
+		$("#BankCode").val("ICBCB2C");
+		$("#PolicyNumber").val("123");
+		$("#Card").val("123");
+		$("#BankName").val("test");
+		$("#Email").val("123@qq.com");
+		$("#Tel").val("123");
+		$("#Name").val("test");
+		$("#IdNo").val("123");
+	}
+	var selOpts={
+			theme:'ios',
+			mode:'scroller',
+			lang:'zh',
+			display: 'bottom'
+		};
+    
+    $("#BankCode").mobiscroll().select(selOpts);
+	//console.log(event);
+})
+$("#submit").click(function(){
+	if(!$.trim($("#IdNo").val())){
+	  alert("证件号不能为空");
+	  return ;
+	}else if($("#BankCode").val()==0){
+	  alert("请选择银行");
+	  return ;
+	}else if(!$.trim($("#Card").val())){
+		alert("银行卡号不能为空");
+		return ;
+	}else if(!/^[0-9]+$/.test($.trim($("#Card").val()))){
+		alert("银行卡号不正确");
+		return ;
+	}else if(!$.trim($("#Tel").val())){
+		alert("手机号码不能为空");
+		return ;
+	}else if(!$.trim($("#Email").val())){
+		alert("邮箱不能为空");
+		return ;
+	}else if(!/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test($("#Email").val())){
+		alert("邮箱格式不正确");
+		return ;
+	}
+
+});
+</script>
+
+ <style>
+.footer{width:100%}
+</style>
+<div data-role="footer" data-theme="c"  data-position="fixed">
+<div class="footer">
+<input value="提 交" data-theme="b" id="submit" type="submit">
+</div>
+</div>
+</div>
+</body>
+</html>
