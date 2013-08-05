@@ -6,11 +6,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>大众保险</title>
-  <link rel="stylesheet" href="../stylesheets/jquery.mobile-1.3.1.min.css">
+  <link rel="stylesheet" href="../stylesheets/jquery.mobile.flatui.min.css">
   <!-- jQuery and jQuery Mobile -->
   <script src="../javascripts/jquery-1.8.2.min.js"></script>
   <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
-  <style>
+</head>
+<body>
+<!-- product detail -->
+<div data-role="page" id="productDesc">
+    <style>
      *{margin:0;padding:0;}
      html,body{
         font-family:"微软雅黑";
@@ -51,11 +55,12 @@
      .group{
         background:#ECEDEB;
     }
+    .fixed{
+        position:fixed;
+        width:100%;
+
+    }
   </style>
-</head>
-<body>
-<!-- product detail -->
-<div data-role="page" id="productDesc">
     <div data-role="header" data-theme="a">
         <a href="#" data-icon="back" data-rel="back" data-theme="a">back</a>
         <h1>产品详情</h1>
@@ -70,7 +75,7 @@
                 <p class="ui-li-desc">承包年龄：1-80周岁</p>
             </div>
         </div>
-        <div data-role="navbar">
+        <div data-role="navbar" id="navBar">
             <ul id="productDesNav">
                 <li><a href="#" data-transition="none" class="ui-btn-active">保障范围</a></li>
                 <li><a href="#" data-transition="none">保费</a></li>
@@ -210,19 +215,33 @@
                 <li>投保人、受益人的故意行为；或被保险人无论当时神志是否清醒，被保险人自致伤害或自杀。</li>
             </ol>
         </div>
-        <a href="#" data-role="button" data-theme="a">投 保</a>
     </div>
-</div>
-<script>
-    $(function(){
-        $('#productDesNav li').click(function(){
-            var index = $(this).index();
-            $(this).siblings().find('a').removeClass('ui-btn-active');
-            $(this).find('a').addClass('ui-btn-active');
-            $('.desBox').hide().eq(index).show();
+    <div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="true" data-tap-toggle="false">
+        <a href="#" data-role="button" data-theme="e" data-inline="false" data-mini="true" style="width:200px;margin:0 auto;">投 保</a>
+    </div>
+    <script>
+        $(document).bind("pageinit", function(event){
+            $('#productDesNav li').click(function(){
+                var index = $(this).index();
+                $(this).siblings().find('a').removeClass('ui-btn-active');
+                $(this).find('a').addClass('ui-btn-active');
+                $('.desBox').hide().eq(index).show();
+            });
+            $('#productDesNav li a:eq(0)').trigger('click');
+           // navBar
+           setTimeout(function(){
+               var scrollTop = $('#navBar').offset().top;
+               $(window).bind('scroll',function(){
+                   var docScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                   if(docScrollTop >= scrollTop){
+                      $('#navBar').addClass('fixed').css('top',0);
+                   }else{
+                      $('#navBar').removeClass('fixed')
+                   }
+               });
+           },500);
         });
-        $('#productDesNav li a:eq(0)').trigger('click');
-    });
-</script>
+  </script>
+</div>
 </body>
 </html>
