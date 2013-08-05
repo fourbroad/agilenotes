@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../stylesheets/jquery.mobile.flatui.css" />
+  <link rel="stylesheet" href="../stylesheets/mobiscroll.custom-2.6.0.min.css">
+  <!-- jQuery and jQuery Mobile -->
+  <script src="../javascripts/jquery-1.8.2.min.js"></script>
+  <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
+  <script src="../javascripts/mobiscroll.custom-2.6.0.min.js"></script>
+  <style>
+	html,body,p,a{font-family:"微软雅黑";padding:0;margin:0;}
+	h3{font-weight:normal;}
+  </style>
+</head>
+<body>
+<!-- insuredInfo -->
+<div data-role="page" id="insuredInfo">
+    <div data-role="content">
+		<form id="insuredForm" action="" onsubmit="return false">
+		<div data-role="fieldcontain">
+			<label for="Name">姓名：</label>
+			<input type="text" value="" placeholder="" id="Name" name="Name" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="IdNoType">
+				证件类型：
+			</label>
+			<select id="IdNoType" data-native-menu="false" name="IdNoType">
+				<option value="IDcard">身份证</option>
+				<option value="Passport">护照</option>
+				<option value="Other">其他</option>
+			</select>
+		</div>
+		<div data-role="fieldcontain">
+			<label for="IdNo">证件号码：</label>
+			<input type="text" value="" placeholder="" id="IdNo" name="IdNo" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="BirthDt">生日：</label>
+			<input type="text" value="" placeholder="" id="BirthDt" name="BirthDt" />
+		</div>
+		<div data-role="fieldcontain">
+			<label for="Tel">联系电话：</label>
+			<input type="text" value="" placeholder="" id="Tel" name="Tel" />
+		</div>
+		</form>
+		<input id="saveInsuerd" data-theme="b" value="保存" type="button">
+    </div>
+</div>
+</body>
+</html>
+<script type="text/javascript">
+
+$(document).ready(function(){
+	
+});
+
+</script>
