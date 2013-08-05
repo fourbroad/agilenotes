@@ -33,16 +33,64 @@
 
 			<p>受益人：法定</p>
 			<p>总价：￥<span id="price">80.00</span></p>
-			<input data-theme="b" value="下一步" type="submit">
+			<a id="save" data-theme="b" data-role="button">下一步</a>
         </form>
     </div>
 </div>
 </body>
 </html>
 <script type="text/javascript">
-
-$(document).ready(function(){
+var policy=localStorage.getItem("policy");
+if(!policy){
+	policy={"userName":"cd001"};
+	localStorage.setItem("policy",JSON.stringify(policy));
+}else{
+	policy=$.parseJSON(policy);
+}
+var errors={
+	DateStart:"请输入保单起始日期",
+	DateEnd:"请输入保单结束日期",
+	PHName:"请填写投保人姓名",
+	PHIdNo:"请填写投保人证件号",
+	PHBirth:"请输入投保人生日",
+	PHTel:"请填写投保人联系电话",
+	PHMail:"请正确填写投保人邮箱",
+	Name:"请填写被保人姓名",
+	IdNo:"请填写被保人证件号",
+	BirthDt:"请填写被保人生日",
+	PlanID"请选择保障计划",
+	Tel:"请填写被保人联系电话"
+};
+function checkForm(){
+	var result={"success":true,"error":""};
+	for(var q in policy){
+		if(typeof policy[q]=="string"){
+			policy[q]=policy[q].replace(/(^\s*)|(\s*$)/g, "");
+			if(!policy[q].replace(/\s/g,"")){
+				result.error=errors[q];
+				result.success=false;
+				break;
+			}
+		}else if($.isArray(policy[q])){
+			var insured=policy[q][0];
+			for(var t in insured){
+				if(!insured[q].replace(/\s/g,"")){
+					result.error=errors[q];
+					result.success=false;
+					break;
+				}
+			}
+		}
+	}
+	return result;
+}
+$("#save").bind("tap",function(){
+	var result=checkForm();
+	if(!result.success){
+		alert(!result.error);
+		return ;
+	}
+	//ajax请求，生成订单
 	
 });
-
 </script>

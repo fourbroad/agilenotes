@@ -54,7 +54,11 @@
 
 	<script type="text/javascript">
 		var now=new Date();
-		var nowStr=now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate();
+		var plan={"1":"计划一","2":"计划二"};
+		var m=now.getMonth()+1,d=now.getDate();
+		if(m<10){m = "0"+m;}
+		if(d<10){d = "0"+d;}
+		var nowStr=now.getFullYear()+"-"+m+"-"+d;
 		var opts={
 			theme: "ios",
 			lang: "zh",
@@ -92,15 +96,27 @@
 		$("#PlanID").mobiscroll().select(selOpts);
 		$("#Destination").mobiscroll().select(selOpts);
 		$("#save").bind("tap",function(){
-			var policy=localStorage.getItem("policy");
-			policy=!policy?{}:$.parseJSON(policy);
 			policy.Destination=$("#Destination").val();
 			policy.PlanID=$("#PlanID").val();
 			policy.DateStart=$("#DateStart").val();
 			policy.DateEnd=$("#DateEnd").val();
+			if(new Date(policy.DateEnd.replace(/-/g,"/")).getTime()<new Date(policy.DateStart.replace(/-/g,"/")).getTime()){
+				alert("保险到期日不能小于生效日");
+				return ;
+			}
 			localStorage.setItem("policy",JSON.stringify(policy))
 			history.go(-1);
 		});
+		if(policy.Destination){
+			$("#Destination").mobiscroll("setValue",policy.Destination);
+			$("#Destination_dummy").val(policy.Destination);
+		}
+		if(policy.PlanID){
+			$("#PlanID").mobiscroll("setValue",policy.PlanID);
+			$("#PlanID_dummy").val(plan[policy.PlanID]);
+		}
+		policy.DateStart&&$("#DateStart").val(policy.DateStart);
+		policy.DateEnd&&$("#DateEnd").val(policy.DateEnd);
 	</script>
 </div>
 </body>

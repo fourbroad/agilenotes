@@ -54,15 +54,11 @@
 				<label for="PHMail">E-mail：</label>
 				<input type="text" value="" placeholder="" id="PHMail" name="PHMail" />
 			</div>
-			<a href="#addCom" data-rel="popup" data-role="button" data-inline="true" data-transition="pop">添加为默认投保人</a>
-			<div data-role="popup" id="addCom" data-theme="e">
-				<p>添加成功！</p>
-			</div>
-			<input data-theme="b" value="保存" type="submit">
+			<a id="save" data-theme="b" data-role="button">保存</a>
         </form>
     </div>
 	<script type="text/javascript">
-
+		var IdType={"IDcard":"身份证","Passport":"护照","Other":"其他"};
 		var opts={
 			theme: "ios",
 			lang: "zh",
@@ -85,13 +81,24 @@
 		$("#PHBirth").mobiscroll().date(birth);
 		$("#PHIdNoType").mobiscroll().select(selOpts);
 		$("#save").bind("tap",function(){
-			var result={};
-			result.Name=$("#Name").val();
-			result.IdNoType=$("#IdNoType").val();
-			result.IdNo=$("#IdNo").val();
-			result.BirthDt=$("#BirthDt").val();
-			result.Tel=$("#Tel").val();
+			policy.PHName=$("#PHName").val();
+			policy.PHIdNoType=$("#PHIdNoType").val();
+			policy.PHIdNo=$("#PHIdNo").val();
+			policy.PHBirth=$("#PHBirth").val();
+			policy.PHTel=$("#PHTel").val();
+			policy.PHMail=$("#PHMail").val();
+			localStorage.setItem("policy",JSON.stringify(policy))
+			history.go(-1);
 		});
+		if(policy.PHIdNoType){
+			$("#PHIdNoType").mobiscroll("setValue",policy.PHIdNoType);
+			$("#PHIdNoType_dummy").val(IdType[policy.PHIdNoType]);
+		}
+		policy.PHBirth&&$("#PHBirth").val(policy.PHBirth);
+		policy.PHName&&$("#PHName").val(policy.PHName);
+		policy.PHIdNo&&$("#PHIdNo").val(policy.PHIdNo);
+		policy.PHTel&&$("#PHTel").val(policy.PHTel);
+		policy.PHMail&&$("#PHMail").val(policy.PHMail);
 	</script>
 </div>
 </body>

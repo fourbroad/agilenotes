@@ -51,10 +51,10 @@
 			<input type="text" value="" placeholder="" id="Tel" name="Tel" />
 		</div>
 		</form>
-		<input id="save" data-theme="b" value="保存" type="button">
+		<a id="save" data-theme="b" data-role="button">保存</a>
     </div>
 	<script type="text/javascript">
-
+		var IdType={"IDcard":"身份证","Passport":"护照","Other":"其他"};
 		var opts={
 			theme: "ios",
 			lang: "zh",
@@ -77,8 +77,27 @@
 		$("#BirthDt").mobiscroll().date(birth);
 		$("#IdNoType").mobiscroll().select(selOpts);
 		$("#save").bind("tap",function(){
+			var insured={};
+			insured.Name=$("#Name").val();
+			insured.IdNoType=$("#IdNoType").val();
+			insured.IdNo=$("#IdNo").val();
+			insured.BirthDt=$("#BirthDt").val();
+			insured.Tel=$("#Tel").val();
+			policy.Insured=[insured];
+			localStorage.setItem("policy",JSON.stringify(policy))
 			history.go(-1);
 		});
+		if(policy.Insured&&policy.Insured.length>0){
+			var insured=policy.Insured[0];
+			if(insured.IdNoType){
+				$("#IdNoType").mobiscroll("setValue",insured.IdNoType);
+				$("#IdNoType_dummy").val(IdType[insured.IdNoType]);
+			}
+			insured.Name&&$("#Name").val(insured.Name);
+			insured.IdNo&&$("#IdNo").val(insured.IdNo);
+			insured.BirthDt&&$("#BirthDt").val(insured.BirthDt);
+			insured.Tel&&$("#Tel").val(insured.Tel);
+		}
 	</script>
 </div>
 </body>
