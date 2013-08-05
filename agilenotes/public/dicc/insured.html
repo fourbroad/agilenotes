@@ -15,6 +15,8 @@
   <style>
 	html,body,p,a{font-family:"微软雅黑";padding:0;margin:0;}
 	h3{font-weight:normal;}
+
+	#insuredInfo .ui-select{display:none;}
   </style>
 </head>
 <body>
@@ -24,7 +26,7 @@
 		<form id="insuredForm" action="" onsubmit="return false">
 		<div data-role="fieldcontain">
 			<label for="Name">姓名：</label>
-			<input type="text" value="" placeholder="" id="Name" name="Name" />
+			<input type="text" value="" id="Name" name="Name" />
 		</div>
 		<div data-role="fieldcontain">
 			<label for="IdNoType">
@@ -49,15 +51,35 @@
 			<input type="text" value="" placeholder="" id="Tel" name="Tel" />
 		</div>
 		</form>
-		<input id="saveInsuerd" data-theme="b" value="保存" type="button">
+		<input id="save" data-theme="b" value="保存" type="button">
     </div>
+	<script type="text/javascript">
+
+		var opts={
+			theme: "ios",
+			lang: "zh",
+			display: "bottom",
+			mode: "scroller",
+			dateFormat:"yy-mm-dd",
+			dateOrder: "yymmdd"
+		};
+		var selOpts={
+			theme:'ios',
+			mode:'scroller',
+			lang:'zh',
+			display: 'bottom'
+		};
+
+		var birth=$.extend({
+			minDate:new Date("1940/01/01"),
+			maxDate:new Date()
+		},opts);
+		$("#BirthDt").mobiscroll().date(birth);
+		$("#IdNoType").mobiscroll().select(selOpts);
+		$("#save").bind("tap",function(){
+			history.go(-1);
+		});
+	</script>
 </div>
 </body>
 </html>
-<script type="text/javascript">
-
-$(document).ready(function(){
-	
-});
-
-</script>

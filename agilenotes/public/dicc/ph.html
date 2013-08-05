@@ -15,11 +15,13 @@
   <style>
 	html,body,p,a{font-family:"微软雅黑";padding:0;margin:0;}
 	h3{font-weight:normal;}
+
+	#phInfo .ui-select{display:none;}
   </style>
 </head>
 <body>
 <!-- Home -->
-<div data-role="page" id="page1">
+<div data-role="page" id="phInfo">
     <div data-role="content" >
         <form action="">
 			<div data-role="fieldcontain">
@@ -30,7 +32,7 @@
 				<label for="PHIdNoType">
 					证件类型：
 				</label>
-				<select id="PHIdNoType" data-native-menu="false" name="PHIdNoType">
+				<select id="PHIdNoType" name="PHIdNoType">
 					<option value="IDcard">身份证</option>
 					<option value="Passport">护照</option>
 					<option value="Other">其他</option>
@@ -59,6 +61,38 @@
 			<input data-theme="b" value="保存" type="submit">
         </form>
     </div>
+	<script type="text/javascript">
+
+		var opts={
+			theme: "ios",
+			lang: "zh",
+			display: "bottom",
+			mode: "scroller",
+			dateFormat:"yy-mm-dd",
+			dateOrder: "yymmdd"
+		};
+		var selOpts={
+			theme:'ios',
+			mode:'scroller',
+			lang:'zh',
+			display: 'bottom'
+		};
+
+		var birth=$.extend({
+			minDate:new Date("1940/01/01"),
+			maxDate:new Date()
+		},opts);
+		$("#PHBirth").mobiscroll().date(birth);
+		$("#PHIdNoType").mobiscroll().select(selOpts);
+		$("#save").bind("tap",function(){
+			var result={};
+			result.Name=$("#Name").val();
+			result.IdNoType=$("#IdNoType").val();
+			result.IdNo=$("#IdNo").val();
+			result.BirthDt=$("#BirthDt").val();
+			result.Tel=$("#Tel").val();
+		});
+	</script>
 </div>
 </body>
 </html>

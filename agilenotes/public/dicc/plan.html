@@ -43,17 +43,18 @@
 		</div>
 		<div data-role="fieldcontain">
 			<label for="DateStart">生效日期：</label>
-			<input type="text" value="" placeholder="" id="DateStart" name="DateStart" />
+			<input type="text" value="" id="DateStart" name="DateStart" />
 		</div>
 		<div data-role="fieldcontain">
 			<label for="DateEnd">结束日期：</label>
-			<input type="text" value="" placeholder="" id="DateEnd" name="DateEnd" />
+			<input type="text" value="" id="DateEnd" name="DateEnd" />
 		</div>
-		<a id="save" data-theme="b" data-role="button" data-rel="back">保存</a>
+		<a id="save" data-theme="b" data-role="button">保存</a>
     </div>
 
 	<script type="text/javascript">
-
+		var now=new Date();
+		var nowStr=now.getFullYear()+"-"+(now.getMonth()+1)+"-"+now.getDate();
 		var opts={
 			theme: "ios",
 			lang: "zh",
@@ -69,7 +70,7 @@
 			display: 'bottom'
 		};
 		var dts=$.extend({
-			minDate:new Date("2013/09/01"),
+			minDate:now,
 			maxDate:new Date("2014/09/01"),
 			onSelect:function(val){
 				var newOpts={
@@ -80,20 +81,25 @@
 			}
 		},opts);
 		var dte=$.extend({
-			minDate:new Date("2013/09/01"),
+			minDate:now,
 			maxDate:new Date("2014/09/01")
 		},opts);
+		
+		$("#DateStart").val(nowStr);
+		$("#DateEnd").val(nowStr);
 		$("#DateStart").mobiscroll().date(dts);
 		$("#DateEnd").mobiscroll().date(dte);
 		$("#PlanID").mobiscroll().select(selOpts);
 		$("#Destination").mobiscroll().select(selOpts);
 		$("#save").bind("tap",function(){
-			var result={};
-			result.Name=$("#Name").val();
-			result.IdNoType=$("#IdNoType").val();
-			result.IdNo=$("#IdNo").val();
-			result.BirthDt=$("#BirthDt").val();
-			result.Tel=$("#Tel").val();
+			var policy=localStorage.getItem("policy");
+			policy=!policy?{}:$.parseJSON(policy);
+			policy.Destination=$("#Destination").val();
+			policy.PlanID=$("#PlanID").val();
+			policy.DateStart=$("#DateStart").val();
+			policy.DateEnd=$("#DateEnd").val();
+			localStorage.setItem("policy",JSON.stringify(policy))
+			history.go(-1);
 		});
 	</script>
 </div>
