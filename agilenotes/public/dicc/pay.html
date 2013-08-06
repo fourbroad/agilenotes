@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="../stylesheets/jquery.mobile.flatui.min.css" />
+  <link rel="stylesheet" href="../stylesheets/mobiscroll.custom-2.6.0.min.css">
+  <!-- jQuery and jQuery Mobile -->
+  <script src="../javascripts/jquery-1.8.2.min.js"></script>
+  <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
+  <script src="../javascripts/mobiscroll.custom-2.6.0.min.js"></script>
+</head>
+<body>
+<!-- Home -->
+<div data-role="page" id="page1">
+	<style>
+		html,body,p,a,td,th{font-family:"微软雅黑";padding:0;margin:0;}
+		h3{font-weight:normal;}
+		
+		.planInfo{margin-left:20px;}
+		.planInfo th{text-align:right;line-height:24px;font-weight:normal;}
+		.planInfo td{text-align:left;line-height:24px;}
+		.total{font-size:18px;margin: 10px 0 0 10px;}
+		.total span{color:#db5b5a;}
+    </style>
+    <div data-role="content"  data-theme="b">
+			<div data-role="collapsible-set" data-theme="c" data-content-theme="c">
+				<div data-role="collapsible">
+					<h3>保险计划</h3>
+					<table id="planInfo" class="planInfo">
+						<tr>
+							<th>保险计划：</th>
+							<td data-keyWord="planName">众行天下-境外旅行意外险</td>
+						</tr>
+						<tr>
+							<th>目的地：</th>
+							<td data-keyWord="Destination">全球</td>
+						</tr>
+						<tr>
+							<th>生效日期：</th>
+							<td data-keyWord="DateStart">2013-09-01</td>
+						</tr>
+						<tr>
+							<th>到期日期：</th>
+							<td data-keyWord="DateEnd">2013-10-01</td>
+						</tr>
+					</table>
+				</div>
+				<div data-role="collapsible">
+					<h3>投保人信息</h3>
+					<table id="PHInfo" class="planInfo">
+						<tr>
+							<th>姓名：</th>
+							<td data-keyWord="PHName">张三</td>
+						</tr>
+						<tr>
+							<th>证件类型：</th>
+							<td data-keyWord="PHIdNoType">身份证</td>
+						</tr>
+						<tr>
+							<th>证件号码：</th>
+							<td data-keyWord="PHIdNo">42011214215541</td>
+						</tr>
+						<tr>
+							<th>生日：</th>
+							<td data-keyWord="PHBirth">1985-05-05</td>
+						</tr>
+						<tr>
+							<th>联系电话：</th>
+							<td data-keyWord="PHTel">15012415541</td>
+						</tr>
+						<tr>
+							<th>邮箱：</th>
+							<td data-keyWord="PHMail">dd@qq.com</td>
+						</tr>
+					</table>
+				</div>
+				<div data-role="collapsible">
+					<h3>被保人信息</h3>
+					<table id="InsuredInfo" class="planInfo">
+						<tr>
+							<th>姓名：</th>
+							<td data-keyWord="Name">张三</td>
+						</tr>
+						<tr>
+							<th>证件类型：</th>
+							<td data-keyWord="IdNoType">身份证</td>
+						</tr>
+						<tr>
+							<th>证件号码：</th>
+							<td data-keyWord="IdNo">42011214215541</td>
+						</tr>
+						<tr>
+							<th>生日：</th>
+							<td data-keyWord="BirthDt">1985-05-05</td>
+						</tr>
+						<tr>
+							<th>联系电话：</th>
+							<td data-keyWord="Tel">15012415541</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+
+			<div class="total">总价：<span id="price">￥80.00</span></div>
+        </form>
+    </div>
+	<div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a id="pay" data-theme="d" data-role="button"  data-inline="false" style="width:90%;margin:8px auto;">确认支付</a>
+    </div>
+	<script type="text/javascript">
+	var policy=localStorage.getItem("policy");
+	if(!policy){
+		policy={"userName":"cd001"};
+		localStorage.setItem("policy",JSON.stringify(policy));
+	}else{
+		policy=$.parseJSON(policy);
+	}
+	
+	function setValues(){
+		var IdType={"IDcard":"身份证","Passport":"护照","Other":"其他"};
+		var ids=["planInfo","PHInfo","InsuredInfo"];
+		var result=$.extend(true,{},policy);
+		$.extend(true,result,result.Insured[0]);
+		for(var i=0;i<ids.length;i++){
+			$("#"+ids[i]).find("td").each(function(){
+				for(var q in result){
+					if($(this).attr("data-keyWord")==q){
+						if(q=="PHIdNoType"||q=="IdNoType"){
+							$(this).html(IdType[result[q]]);
+						}else{
+							$(this).html(result[q]);
+						}
+					}
+				}
+			});
+		}
+	}
+	setValues();
+	$("#pay").bind("tap",function(){
+		
+		//ajax请求，进入支付
+		
+	});
+
+	</script>
+</div>
+</body>
+</html>
