@@ -17,47 +17,86 @@
 	h3{font-weight:normal;}
 
 	#phInfo .ui-select{display:none;}
+
+	input{border:0 none !important;background:none !important;float:right;text-align:right;color:#1ca1d8;font-size:14px;}
+	label{font-weight:normal !important;margin:0 !important;}
   </style>
 </head>
 <body>
 <!-- Home -->
 <div data-role="page" id="phInfo">
     <div data-role="content" >
-        <form action="">
-			<div data-role="fieldcontain">
+        <ul class="ui-listview ui-listview-inset ui-corner-all ui-shadow">
+			<li class="ui-li ui-li-static ui-btn-up-c ui-first-child">
+				<input data-role='none' type="text" value="" placeholder="" id="PHName" name="PHName" />
 				<label for="PHName">姓名：</label>
-				<input type="text" value="" placeholder="" id="PHName" name="PHName" />
-			</div>
-			<div data-role="fieldcontain">
-				<label for="PHIdNoType">
-					证件类型：
-				</label>
-				<select id="PHIdNoType" name="PHIdNoType">
+				<div style="clear:both;"></div>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<select data-role='nojs' id="PHIdNoType" name="PHIdNoType">
 					<option value="IDcard">身份证</option>
 					<option value="Passport">护照</option>
 					<option value="Other">其他</option>
 				</select>
-			</div>
-			<div data-role="fieldcontain">
+				<label for="PHIdNoType">证件类型：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" placeholder="" id="PHIdNo" name="PHIdNo" />
 				<label for="PHIdNo">证件号码：</label>
-				<input type="text" value="" placeholder="" id="PHIdNo" name="PHIdNo" />
-			</div>
-			<div data-role="fieldcontain">
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" placeholder="" id="PHBirth" name="PHBirth" />
 				<label for="PHBirth">生日：</label>
-				<input type="text" value="" placeholder="" id="PHBirth" name="PHBirth" />
-			</div>
-			<div data-role="fieldcontain">
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" placeholder="" id="PHTel" name="PHTel" />
 				<label for="PHTel">联系电话：</label>
-				<input type="text" value="" placeholder="" id="PHTel" name="PHTel" />
-			</div>
-			<div data-role="fieldcontain">
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c ui-last-child">
+				<input data-role='none' type="text" value="" placeholder="" id="PHMail" name="PHMail" />
 				<label for="PHMail">E-mail：</label>
-				<input type="text" value="" placeholder="" id="PHMail" name="PHMail" />
-			</div>
-			<a id="save" data-theme="b" data-role="button">保存</a>
-        </form>
+			</li>
+		</ul>
+    </div>
+	<div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a id="savePHInfo" data-theme="d" data-role="button"  data-inline="false">保  存</a>
     </div>
 	<script type="text/javascript">
+		function checkIdcard(idcard){
+			var Errors=["ok","身份证号码位数不对!","身份证号码出生日期超出范围或含有非法字符!","身份证号码校验错误!","身份证地区非法!"];
+			var area={11:"北京",12:"天津",13:"河北",14:"山西",15:"内蒙古",21:"辽宁",22:"吉林",23:"黑龙江",31:"上海",32:"江苏",33:"浙江",34:"安徽",35:"福建",36:"江西",37:"山东",41:"河南",42:"湖北",43:"湖南",44:"广东",45:"广西",46:"海南",50:"重庆",51:"四川",52:"贵州",53:"云南",54:"西藏",61:"陕西",62:"甘肃",63:"青海",64:"宁夏",65:"新疆",71:"台湾",81:"香港",82:"澳门",91:"国外"};
+			var idcard,Y,JYM,S,M,idcard_array = [],retflag=false;
+			idcard_array = idcard.split("");
+			if(area[parseInt(idcard.substr(0,2))]==null)return Errors[4];
+				switch(idcard.length){
+					case 15:
+						return Errors[2];
+						break;
+					case 18:
+						if(parseInt(idcard.substr(6,4)) % 4 == 0 || (parseInt(idcard.substr(6,4))%100 == 0&&parseInt(idcard.substr(6,4))%4 == 0 )){
+							ereg=/^[1-9][0-9]{5}[1|2][0|9][0-9]{2}((01|03|05|07|08|10|12)(0[1-9]|[1-2][0-9]|3[0-1])|(04|06|09|11)(0[1-9]|[1-2][0-9]|30)|02(0[1-9]|[1-2][0-9]))[0-9]{3}[0-9Xx]$/;
+						}else{
+							ereg=/^[1-9][0-9]{5}[1|2][0|9][0-9]{2}((01|03|05|07|08|10|12)(0[1-9]|[1-2][0-9]|3[0-1])|(04|06|09|11)(0[1-9]|[1-2][0-9]|30)|02(0[1-9]|1[0-9]|2[0-8]))[0-9]{3}[0-9Xx]$/;
+						}
+						if(ereg.test(idcard)){
+							S = (parseInt(idcard_array[0]) + parseInt(idcard_array[10])) * 7 + (parseInt(idcard_array[1]) + parseInt(idcard_array[11])) * 9 + (parseInt(idcard_array[2]) + parseInt(idcard_array[12])) * 10 + (parseInt(idcard_array[3]) + parseInt(idcard_array[13])) * 5 + (parseInt(idcard_array[4]) + parseInt(idcard_array[14])) * 8 + (parseInt(idcard_array[5]) + parseInt(idcard_array[15])) * 4 + (parseInt(idcard_array[6]) + parseInt(idcard_array[16])) * 2 + parseInt(idcard_array[7]) * 1  + parseInt(idcard_array[8]) * 6 + parseInt(idcard_array[9]) * 3 ;
+							Y = S % 11;
+							M = "F";
+							JYM = "10X98765432";
+							M = JYM.substr(Y,1);
+							if(M == idcard_array[17])
+								return Errors[0]; 
+							else
+								return Errors[3];
+						}
+						else
+							return Errors[2];
+						break;
+					default:
+						return Errors[1];
+						break;
+			}
+		}
 		var IdType={"IDcard":"身份证","Passport":"护照","Other":"其他"};
 		var opts={
 			theme: "ios",
@@ -80,17 +119,40 @@
 		},opts);
 		$("#PHBirth").mobiscroll().date(birth);
 		$("#PHIdNoType").mobiscroll().select(selOpts);
-		$("#save").bind("tap",function(){
+		$("#savePHInfo").bind("tap",function(){
 			policy.PHName=$("#PHName").val();
 			policy.PHIdNoType=$("#PHIdNoType").val();
 			policy.PHIdNo=$("#PHIdNo").val();
 			policy.PHBirth=$("#PHBirth").val();
 			policy.PHTel=$("#PHTel").val();
 			policy.PHMail=$("#PHMail").val();
+			if(!policy.PHName.replace(/\s/g,"")){
+				alert("请输入投保人姓名");
+				return ;
+			}
+			if(!policy.PHIdNo.replace(/\s/g,"")){
+				alert("请输入投保人证件号");
+				return ;
+			}
+			if(policy.PHIdNoType=="IDcard"&&checkIdcard(policy.PHIdNo)!="ok"){
+				alert("请输入正确的身份证号");
+				return ;
+			}
+			if(policy.PHTel&&!/^1(\d{10})$/.test(policy.PHTel)){
+				alert("请输入正确11位手机号");
+				return ;
+			}
+			if(policy.PHMail&&!/^[a-zA-Z]\w+@\w+\.\w+$/.test(policy.PHMail)){
+				alert("请输入正确的邮箱格式");
+				return ;
+			}
+
+
 			localStorage.setItem("policy",JSON.stringify(policy))
 			history.go(-1);
 		});
 		if(policy.PHIdNoType){
+			$("#PHIdNoType").val(policy.PHIdNoType);
 			$("#PHIdNoType").mobiscroll("setValue",policy.PHIdNoType);
 			$("#PHIdNoType_dummy").val(IdType[policy.PHIdNoType]);
 		}
@@ -99,94 +161,12 @@
 		policy.PHIdNo&&$("#PHIdNo").val(policy.PHIdNo);
 		policy.PHTel&&$("#PHTel").val(policy.PHTel);
 		policy.PHMail&&$("#PHMail").val(policy.PHMail);
+
+		setTimeout(function(){
+			$("#PHIdNoType_dummy").removeClass();
+			$("#PHIdNoType_dummy").parent().removeClass();
+		},200);
 	</script>
 </div>
 </body>
 </html>
-<script type="text/javascript">
-function insured(sel){
-	this.value=[];
-	this.dom=$(sel);
-}
-insured.prototype.getValue=function(){
-	return this.value;
-}
-insured.prototype.setValue=function(val){
-	if($.isArray(val)){
-		var str='';
-		for(var i=0;i<val.length;i++){
-			str += '<li><a href="insured.html" data-transition="slide">'+val[i].Name+' '+val[i].IdNo+'</a></li>';
-		}
-		this.dom.html(str);
-		this.dom.data("mobileListview").refresh();
-		this.value=val;
-	}
-}
-insured.prototype.add=function(obj){
-	if(obj&&obj.Name){
-		var str= '<li><a href="insured.html" data-transition="slide">'+obj.Name+' '+obj.IdNo+'</a></li>';
-		this.dom.append(str);
-		this.dom.data("mobileListview").refresh();
-		this.value.push(obj);
-	}
-}
-var errors={
-	DateStart:"请输入保单起始日期",
-	DateEnd:"请输入保单结束日期",
-	PHName:"请填写投保人姓名",
-	PHIdNo:"请填写投保人证件号",
-	PHBirth:"请输入投保人生日",
-	PHTel:"请填写投保人联系电话",
-	PHMail:"请正确填写投保人邮箱",
-	Name:"请填写被保人姓名",
-	IdNo:"请填写被保人证件号",
-	BirthDt:"请填写被保人生日",
-	Tel:"请填写被保人联系电话"
-};
-$(document).ready(function(){
-	var opts={
-		theme: "ios",
-		lang: "zh",
-		display: "bottom",
-		mode: "scroller",
-		dateFormat:"yy-mm-dd",
-		dateOrder: "yymmdd"
-	};
-	var dts=$.extend({
-		minDate:new Date("2013/09/01"),
-		maxDate:new Date("2014/09/01"),
-		onSelect:function(val){
-			var newOpts={
-				minDate:new Date(val.replace(/-/g,"/")),
-				maxDate:new Date("2014/09/01")
-			};
-			$("#DateEnd").mobiscroll().date($.extend(newOpts,opts));
-		}
-	},opts);
-	var dte=$.extend({
-		minDate:new Date("2013/09/01"),
-		maxDate:new Date("2014/09/01")
-	},opts);
-	var birth=$.extend({
-		minDate:new Date("1940/01/01"),
-		maxDate:new Date()
-	},opts);
-	$("#DateStart").mobiscroll().date(dts);
-	$("#DateEnd").mobiscroll().date(dte);
-	$("#PHBirth").mobiscroll().date(birth);
-	$("#BirthDt").mobiscroll().date(birth);
-
-	var insuerdObj=new insured($("#Insured"));
-	insuerdObj.setValue([{"Name":"张三","IdNo":"42011245411542","IdNoType":"Other","BirthDt":"1985-05-05","Tel":"15012415412"}]);
-
-	$("#saveInsuerd").bind("tap",function(){
-		var result={};
-		result.Name=$("#Name").val();
-		result.IdNoType=$("#IdNoType").val();
-		result.IdNo=$("#IdNo").val();
-		result.BirthDt=$("#BirthDt").val();
-		result.Tel=$("#Tel").val();
-	});
-});
-
-</script>

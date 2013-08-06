@@ -17,41 +17,44 @@
 	h3{font-weight:normal;}
 
 	#insuredInfo .ui-select{display:none;}
+	input{border:0 none !important;background:none !important;float:right;text-align:right;color:#1ca1d8;font-size:14px;}
+	label{font-weight:normal !important;margin:0 !important;}
   </style>
 </head>
 <body>
 <!-- insuredInfo -->
 <div data-role="page" id="insuredInfo">
     <div data-role="content">
-		<form id="insuredForm" action="" onsubmit="return false">
-		<div data-role="fieldcontain">
-			<label for="Name">姓名：</label>
-			<input type="text" value="" id="Name" name="Name" />
-		</div>
-		<div data-role="fieldcontain">
-			<label for="IdNoType">
-				证件类型：
-			</label>
-			<select id="IdNoType" data-native-menu="false" name="IdNoType">
-				<option value="IDcard">身份证</option>
-				<option value="Passport">护照</option>
-				<option value="Other">其他</option>
-			</select>
-		</div>
-		<div data-role="fieldcontain">
-			<label for="IdNo">证件号码：</label>
-			<input type="text" value="" placeholder="" id="IdNo" name="IdNo" />
-		</div>
-		<div data-role="fieldcontain">
-			<label for="BirthDt">生日：</label>
-			<input type="text" value="" placeholder="" id="BirthDt" name="BirthDt" />
-		</div>
-		<div data-role="fieldcontain">
-			<label for="Tel">联系电话：</label>
-			<input type="text" value="" placeholder="" id="Tel" name="Tel" />
-		</div>
-		</form>
-		<a id="save" data-theme="b" data-role="button">保存</a>
+		 <ul class="ui-listview ui-listview-inset ui-corner-all ui-shadow">
+			<li class="ui-li ui-li-static ui-btn-up-c ui-first-child">
+				<input data-role='none' type="text" value="" placeholder="" id="Name" name="Name" />
+				<label for="Name">姓名：</label>
+				<div style="clear:both;"></div>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<select data-role='nojs' id="IdNoType" name="IdNoType">
+					<option value="IDcard">身份证</option>
+					<option value="Passport">护照</option>
+					<option value="Other">其他</option>
+				</select>
+				<label for="IdNoType">证件类型：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" placeholder="" id="IdNo" name="IdNo" />
+				<label for="IdNo">证件号码：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" placeholder="" id="BirthDt" name="BirthDt" />
+				<label for="BirthDt">生日：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c ui-last-child">
+				<input data-role='none' type="text" value="" placeholder="" id="Tel" name="Tel" />
+				<label for="Tel">联系电话：</label>
+			</li>
+		</ul>
+    </div>
+	<div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a id="saveInsured" data-theme="d" data-role="button"  data-inline="false">保  存</a>
     </div>
 	<script type="text/javascript">
 		var IdType={"IDcard":"身份证","Passport":"护照","Other":"其他"};
@@ -76,7 +79,7 @@
 		},opts);
 		$("#BirthDt").mobiscroll().date(birth);
 		$("#IdNoType").mobiscroll().select(selOpts);
-		$("#save").bind("tap",function(){
+		$("#saveInsured").bind("tap",function(){
 			var insured={};
 			insured.Name=$("#Name").val();
 			insured.IdNoType=$("#IdNoType").val();
@@ -84,12 +87,30 @@
 			insured.BirthDt=$("#BirthDt").val();
 			insured.Tel=$("#Tel").val();
 			policy.Insured=[insured];
+			if(!insured.Name.replace(/\s/g,"")){
+				alert("请输入被保人姓名");
+				return ;
+			}
+			if(!insured.IdNo.replace(/\s/g,"")){
+				alert("请输入被保人证件号");
+				return ;
+			}
+			if(insured.IdNoType=="IDcard"&&checkIdcard(insured.IdNo)!="ok"){
+				alert("请输入正确的身份证号");
+				return ;
+			}
+			if(insured.Tel&&!/^1(\d{10})$/.test(insured.Tel)){
+				alert("请输入正确11位手机号");
+				return ;
+			}
+
 			localStorage.setItem("policy",JSON.stringify(policy))
 			history.go(-1);
 		});
 		if(policy.Insured&&policy.Insured.length>0){
 			var insured=policy.Insured[0];
 			if(insured.IdNoType){
+				$("#IdNoType").val(insured.IdNoType);
 				$("#IdNoType").mobiscroll("setValue",insured.IdNoType);
 				$("#IdNoType_dummy").val(IdType[insured.IdNoType]);
 			}
@@ -98,6 +119,10 @@
 			insured.BirthDt&&$("#BirthDt").val(insured.BirthDt);
 			insured.Tel&&$("#Tel").val(insured.Tel);
 		}
+		setTimeout(function(){
+			$("#IdNoType_dummy").removeClass();
+			$("#IdNoType_dummy").parent().removeClass();
+		},200);
 	</script>
 </div>
 </body>

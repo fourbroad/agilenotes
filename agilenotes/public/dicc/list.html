@@ -13,28 +13,43 @@
   <script src="../javascripts/jquery.mobile-1.3.1.min.js"></script>
   <script src="../javascripts/mobiscroll.custom-2.6.0.min.js"></script>
   <style>
-	html,body,p,a{font-family:"微软雅黑";padding:0;margin:0;}
+	html,body,p,a,div{font-family:"微软雅黑";padding:0;margin:0;}
+	a{text-decoration: none;}
 	h3{font-weight:normal;}
-
+	
 	#plan .ui-select{display:none;}
 	#insuredInfo .ui-select{display:none;}
 	#phInfo .ui-select{display:none;}
+	.ui-btn-up-c{border-color:#D7D7D7;}
+	.planInfo{margin-left:20px;}
+	.planInfo th{text-align:right;line-height:24px;font-weight:normal;}
+	.planInfo td{text-align:left;line-height:24px;}
+
+	.copy{padding:11px 15px;border-radius:.4em;}
+	.copy span{color:#db5b5a;margin-left:10px;}
+	.total{font-size:18px;margin: 10px 0 0 10px;}
+	.total span{color:#db5b5a;}
+
+	input{border:0 none !important;background:none !important;float:right;text-align:right;color:#1ca1d8;font-size:14px;}
+	label{font-weight:normal !important;margin:0 !important;}
   </style>
 </head>
 <body>
 <!-- Home -->
 <div data-role="page" id="page1">
-    <div data-role="content"  data-theme="b">
+    <div data-role="content"  data-theme="d">
 			<ul id="list" data-role="listview" data-inset="true" data-theme="c">
 				<li><a href="plan.html" data-transition="slide">保险计划</a></li>
 				<li><a href="ph.html" data-transition="slide">投保人信息</a></li>
 				<li><a href="insured.html" data-transition="slide">被保人信息</a></li>
 			</ul>
 
-			<p>受益人：法定</p>
-			<p>总价：￥<span id="price">80.00</span></p>
-			<a id="save" data-theme="b" data-role="button">下一步</a>
+			<div class="ui-btn-up-c copy">受益人<span>法定</span></div>
+			<div class="total">总价：<span id="price">￥80.00</span></div>
         </form>
+    </div>
+	<div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a id="save" data-theme="d" data-role="button"  data-inline="false">下一步</a>
     </div>
 </div>
 </body>
@@ -42,7 +57,7 @@
 <script type="text/javascript">
 var policy=localStorage.getItem("policy");
 if(!policy){
-	policy={"userName":"cd001"};
+	policy={"userName":"cd001","planID":"2","productName":"众行天下 境外旅行险","planName":"白银计划"};
 	localStorage.setItem("policy",JSON.stringify(policy));
 }else{
 	policy=$.parseJSON(policy);
@@ -74,7 +89,7 @@ function checkForm(){
 		}else if($.isArray(policy[q])){
 			var insured=policy[q][0];
 			for(var t in insured){
-				if(!insured[q].replace(/\s/g,"")){
+				if(!insured[t].replace(/\s/g,"")){
 					result.error=errors[q];
 					result.success=false;
 					break;
@@ -90,7 +105,10 @@ $("#save").bind("tap",function(){
 		alert(!result.error);
 		return ;
 	}
+	$.mobile.changePage( "/dicc/pay.html", { transition: "slideup"});
 	//ajax请求，生成订单
 	
 });
+
+//每隔一分钟检测policy保单数据的完整型，如果完整则发出请求取回保费
 </script>

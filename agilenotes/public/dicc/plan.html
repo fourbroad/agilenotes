@@ -17,41 +17,45 @@
 	h3{font-weight:normal;}
 
 	#plan .ui-select{display:none;}
+	.ui-btn-up-c{border-color:#D7D7D7;}
+	
+	input{border:0 none !important;background:none !important;float:right;text-align:right;color:#1ca1d8;font-size:14px;}
+	label{font-weight:normal !important;margin:0 !important;}
   </style>
 </head>
 <body>
 <!-- Home -->
 <div data-role="page" id="plan">
     <div data-role="content" >
-		<div data-role="fieldcontain">
-			<label for="Destination">
-				目的地：
-			</label>
-			<select id="Destination" data-native-menu="false" name="Destination">
-				<option value="涵盖所有申根国家 All Schengen States">涵盖所有申根国家 All Schengen States</option>
-				<option value="全球 Worldwide">全球 Worldwide</option>
-			</select>
-		</div>
-		<div data-role="fieldcontain">
-			<label for="PlanID">
-				保险计划：
-			</label>
-			<select id="PlanID" name="PlanID">
-				<option value="1">计划一</option>
-				<option value="2">计划二</option>
-			</select>
-		</div>
-		<div data-role="fieldcontain">
-			<label for="DateStart">生效日期：</label>
-			<input type="text" value="" id="DateStart" name="DateStart" />
-		</div>
-		<div data-role="fieldcontain">
-			<label for="DateEnd">结束日期：</label>
-			<input type="text" value="" id="DateEnd" name="DateEnd" />
-		</div>
-		<a id="save" data-theme="b" data-role="button">保存</a>
+		<ul class="ui-listview ui-listview-inset ui-corner-all ui-shadow">
+			<li class="ui-li ui-li-static ui-btn-up-c ui-first-child">
+				<select data-role='nojs' id="Destination" data-native-menu="false" name="Destination">
+					<option value="涵盖所有申根国家 All Schengen States">涵盖所有申根国家 All Schengen States</option>
+					<option value="全球 Worldwide">全球 Worldwide</option>
+				</select>
+				<label data-role='none' for="Destination" style="float:left;">目的地：</label>
+				<div style="clear:both;"></div>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<select data-role='nojs' id="PlanID" name="PlanID">
+					<option value="1">计划一</option>
+					<option value="2">计划二</option>
+				</select>
+				<label for="PlanID">保险计划：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c">
+				<input data-role='none' type="text" value="" id="DateStart" name="DateStart" />
+				<label for="DateStart">生效日期：</label>
+			</li>
+			<li class="ui-li ui-li-static ui-btn-up-c ui-last-child">
+				<input data-role='none' type="text" value="" id="DateEnd" name="DateEnd" />
+				<label for="DateEnd">结束日期：</label>
+			</li>
+		</ul>
     </div>
-
+	<div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a id="savePlan" data-theme="d" data-role="button"  data-inline="false">保  存</a>
+    </div>
 	<script type="text/javascript">
 		var now=new Date();
 		var plan={"1":"计划一","2":"计划二"};
@@ -95,7 +99,7 @@
 		$("#DateEnd").mobiscroll().date(dte);
 		$("#PlanID").mobiscroll().select(selOpts);
 		$("#Destination").mobiscroll().select(selOpts);
-		$("#save").bind("tap",function(){
+		$("#savePlan").bind("tap",function(){
 			policy.Destination=$("#Destination").val();
 			policy.PlanID=$("#PlanID").val();
 			policy.DateStart=$("#DateStart").val();
@@ -108,6 +112,7 @@
 			history.go(-1);
 		});
 		if(policy.Destination){
+			$("#Destination").val(policy.Destination);
 			$("#Destination").mobiscroll("setValue",policy.Destination);
 			$("#Destination_dummy").val(policy.Destination);
 		}
@@ -117,6 +122,13 @@
 		}
 		policy.DateStart&&$("#DateStart").val(policy.DateStart);
 		policy.DateEnd&&$("#DateEnd").val(policy.DateEnd);
+
+		setTimeout(function(){
+			$("#Destination_dummy").removeClass();
+			$("#Destination_dummy").parent().removeClass();
+			$("#PlanID_dummy").removeClass();
+			$("#PlanID_dummy").parent().removeClass();
+		},200);
 	</script>
 </div>
 </body>
