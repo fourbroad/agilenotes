@@ -582,6 +582,13 @@ function postTempFile(req,res){
 function acl(req,res,next){
 	var params = req.params, dbid = params.dbid, user = req.user, q = req.query, 
 	    doc = req.body, docid = params.docid, dbn = params.dbn, docn = params.docn,	provider = providers.getProvider(Model.ADMIN_DB);
+	
+	if (req.headers['content-type'] && req.headers['content-type'].indexOf('xml') != -1) {
+		req.body = "";
+		req.on("data", function(chunk) {
+			req.body += chunk;
+		});
+	}
 	var reg = new  RegExp('[0-9a-f]{24}');
 	if(reg.test(dbn)||dbid){
                 dbid = dbn ? dbn : dbid;
@@ -612,6 +619,57 @@ function acl(req,res,next){
 			}
 		});
 	}
+}
+
+function staticPage(req, res) {
+	var str = '\
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\
+	<html xmlns="http://www.w3.org/1999/xhtml">\
+	<head>\
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\
+	<script type="text/javascript" charset="utf-8" src="/javascripts/jquery-1.8.2.min.js"></script>\
+		<script type="text/javascript" charset="utf-8" src="/javascripts/jquery.mobile-1.3.1.min.js"></script>\
+		<link rel="stylesheet" href="/stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">\
+	<title>{{title}}</title>\
+	<style>{{stylesheet}}</style>\
+	</head>\
+	<body>{{content}}</body>\
+	</html>\
+	';
+	
+	var replace = function(source, obj) {
+		source = source.replace("{{title}}", obj.title);
+		source = source.replace("{{stylesheet}}", obj.stylesheet);
+		source = source.replace("{{content}}", obj.content);
+		return source;
+	};
+	
+	var replaceScripts = function(source, obj) {
+		var s = '';
+		for (var i in obj) {
+			s = obj[i].toString();
+			source = source.replace("{{script_" + i + "}}", "<script>" + s.substr(13, s.length - 14) + "</script>");
+		}
+		
+		return source;
+	};
+	var params = req.params, dbid = params.dbid, docid = params.docid;
+	var provider = providers.getProvider(dbid);
+	res.set('Content-Type', 'text/html');
+	provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, data) {
+		if (!err && data) {
+			try{
+				var s = eval("(" + data.methods + ")");
+				data.content = replaceScripts(data.content, s);
+			}catch (e) {
+				data.script = "";
+			}
+			
+			res.send(replace(str, data));
+		} else {
+			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
+		}
+	});
 }
 
 module.exports = function(agilenotes){
@@ -709,6 +767,7 @@ module.exports = function(agilenotes){
 			
 			// sms module
 			agilenotes.post("/sms", Functions.sendSms);
+			agilenotes.get("/static/:dbid/:docid?", staticPage);
 
 		}
 	});
