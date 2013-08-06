@@ -27,16 +27,76 @@
         visibility:hidden;
         content:'.';
      }
+     ul li{
+        list-style:none;
+     }
+     a{
+        text-decoration:none;
+     }
+     .diccHead{
+        background:#dd605e;
+        border:1px solid #dd605e;
+     }
+     .diccContent{
+        padding:9px !important;
+        background:#e8e8e8;
+        color:#000;
+     }
+     .gray{
+        color:#666;
+     }
+     .proDescTip{
+        background:#fafafa;
+        border:1px solid #d7d7d7;
+        padding:8px;
+        margin-bottom:8px;
+     }
      .proLogo{
         float:left;
      }
      .proSimpleInfo{
         float:left;
-        margin-left:3px;
+        margin-left:-80px;
+        width:100%;
+     }
+     .proSimpleInfo p{
+        line-height:18px;
+     }
+     .priceStep{
+        color:#db5b5a;
+     }
+     #navBar{
+        border-left:1px solid #d7d7d7;
+        border-right:1px solid #d7d7d7;
+        border-top:1px solid #d7d7d7;
+        background:#efefef;
+        margin-bottom:-2px;
+     }
+     #productDesNav li{
+        float:left;
+        width:33.33%;
+        text-align:center;
+        height:32px;
+        line-height:32px;
+        padding:5px 0;
+     }
+     #productDesNav li a{
+        display:block;
+        border-right:1px solid #D1D1D1;
+     }
+     #productDesNav li:last-child a{
+        border:none !important;
+     }
+     #productDesNav li a:hover{
+        color:#000;
      }
      .desBox{
         display:none;
-        padding:12px;
+        padding:8px;
+        background:#fafafa;
+        border-left:1px solid #d7d7d7;
+        border-right:1px solid #d7d7d7;
+        border-bottom:1px solid #d7d7d7;
      }
      .knowledge h3{
         font-size:14px;
@@ -60,24 +120,38 @@
         width:100%;
 
     }
+    .ui-li-heading{
+        font-size:14px;
+    }
+    .ui-btn-active{
+        background:#fafafa;
+        color:#000000;
+        border:none;
+    }
+    .ui-btn-active a,.noBorder a{
+        border:none !important;
+    }
   </style>
-    <div data-role="header" data-theme="a">
+    <div data-role="header" data-theme="a" class="diccHead">
         <a href="#" data-icon="back" data-rel="back" data-theme="a">back</a>
         <h1>产品详情</h1>
     </div>
-    <div data-role="content">
-        <div class="c">
+    <div data-role="content" class="diccContent">
+        <div class="c proDescTip">
             <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg" width="80" class="proLogo"/>
             <div class="proSimpleInfo">
-                <h2 class="ui-li-heading">境外旅游保险</h2>
-                <p class="ui-li-desc">适于境外旅行，同时还承保热门运动。</p>
-                <p class="ui-li-desc">适用人群：境内旅游及热爱户外运动的人士</p>
-                <p class="ui-li-desc">承包年龄：1-80周岁</p>
+                <div style="padding-left:90px">
+                    <h2 class="ui-li-heading">众行天下-国内旅行保障计划1(经济款)</h2>
+                    <p class="ui-li-desc priceStep">￥8.00起</p>
+                    <p class="ui-li-desc"><span class="gray">承保年龄：</span>1周岁-85周岁</p>
+                    <p class="ui-li-desc"><span class="gray">保障期限：</span>1-30天或1年</p>
+                    <p class="ui-li-desc"><span class="gray">适用人群：</span>国内旅游人士</p>
+                </div>
             </div>
         </div>
-        <div data-role="navbar" id="navBar">
-            <ul id="productDesNav">
-                <li><a href="#" data-transition="none" class="ui-btn-active">保障范围</a></li>
+        <div id="navBar">
+            <ul id="productDesNav" class="c">
+                <li class="ui-btn-active"><a href="#" data-transition="none">保障范围</a></li>
                 <li><a href="#" data-transition="none">保费</a></li>
                 <li><a href="#" data-transition="none">投保须知</a></li>
             </ul>
@@ -86,91 +160,77 @@
             <table data-role="table" data-mode="reflow" class="ui-responsive table-stroke">
                 <thead>
                     <tr>
-                        <th width="70%">保障范围摘要 <br>(人民币: 元)</th>
-                        <th width="15%" align="center">计划一</th>
-                        <th width="15%" align="center">计划二</th>
+                        <th width="50%">保障范围摘要 <br>(人民币: 元)</th>
+                        <th width="50%" align="center">金额</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="group" colspan="3">个人意外伤害和医疗保障</td>
+                        <td class="group" colspan="2">个人意外伤害和医疗保障</td>
                     </tr>
                     <tr>
                         <td><strong>意外身故、烧伤及残疾保障</strong><br>被保险人旅行期间因意外事故导致身故、烧伤或残疾，我们将一次性给付保险金。</td>
                         <td align="center">200,000</td>
-                        <td align="center">300,000</td>
                     </tr>
                     <tr>
                         <td><strong>医药补偿</strong>旅行期间因意外事故或罹患疾病需治疗，可获实际医药费用补偿。</td>
                         <td align="center">50,000</td>
-                        <td align="center">80,000</td>
                     </tr>
                     <tr>
                         <td><strong>每日住院津贴</strong><br>旅行期间因意外事故或罹患疾病需入院治疗，可按住院天数或每日住院津贴(总赔偿日数以90天为限)。</td>
-                        <td align="center">100/天</td>
                         <td align="center">100/天</td>
                     </tr>
                     <tr>
                         <td><strong>慰问探访费用补偿</strong><br>旅行期间若被保险人身故或遭严重身体伤害而住院治疗，我们承担被保险人的一名成年直系亲属前往探访的交通费和食宿费。</td>
                         <td align="center">8,000</td>
-                        <td align="center">8,000</td>
                     </tr>
                     <tr>
                         <td><strong>旅行绑架及非法拘禁</strong> <span class="red tiny bold">new</span><br>若被保险人在旅行期间遭受绑架或非法拘禁，我们会根据实际被绑架或被非法拘禁的日数补偿该被保险人。</td>
                         <td align="center">12,000</td>
-                        <td align="center">15,000</td>
                     </tr>
                     <tr>
-                        <td class="group" colspan="3">紧急救援</td>
+                        <td class="group" colspan="2">紧急救援</td>
                     </tr>
                     <tr>
                         <td><strong>紧急医疗运送和送返</strong><br>旅行期间因意外事故或罹患疾病，我们将承担医疗运送和送返(Travel Guard)所发生的费用。</td>
-                        <td align="center">400,000</td>
                         <td align="center">400,000</td>
                     </tr>
                     <tr>
                         <td><strong>身故遗体送返</strong><br>旅行期间因意外事故或罹患疾病不幸身故，我们将承担安排遗体送返(Travel Guard)所发生的费用<br>(其中丧葬保险金以RMB16,000为限)。</td>
                         <td align="center">80,000</td>
-                        <td align="center">80,000</td>
                     </tr>
                     <tr>
                         <td><strong>未成年人旅行送返费用补偿</strong> <span class="red tiny bold">new</span><br>旅行期间被保险人罹患罹患疾病需住院治疗或不幸身故，我们将承担一张与被保险人同行的未满18周岁未成年孩子返回中国常住地的经济舱机票或者补偿改签机票的差价。</td>
                         <td align="center">2,000</td>
-                        <td align="center">3,000</td>
                     </tr>
                     <tr>
-                        <td class="group" colspan="3">个人财物保障</td>
+                        <td class="group" colspan="2">个人财物保障</td>
                     </tr>
                     <tr>
                         <td><strong>个人随身财产</strong>旅行期间被保险人随身财产被盗窃或抢劫，或因其他第三方责任而遗失或意外损坏，可获赔偿。(其中：每件或每套行李或物品最高赔偿额为RMB2,500)</td>
                         <td align="center">5,000</td>
-                        <td align="center">10,000</td>
                     </tr>
                     <tr>
                         <td><strong>银行卡盗刷(不适用于未成年人)</strong> <span class="red tiny bold">new</span><br>赔偿被保险人在旅行期间由于银行卡丢失或失窃而造成非授权人非法使用银行卡所发生的账款损失（账款损失须于挂失该丢失或失窃银行卡之前的48小时内发生）</td>
                         <td align="center">2,500</td>
-                        <td align="center">5,000</td>
                     </tr>
                     <tr>
                         <td><strong>旅行证件遗失</strong> <span class="red tiny bold">new</span><br>赔偿被保险人为重置因被抢劫或盗窃而损失护照、旅行票据等旅行证件所支付的费用及相关交通、住宿费用。</td>
                         <td align="center">4,000</td>
-                        <td align="center">5,000</td>
                     </tr>
                     <tr>
-                        <td class="group" colspan="3">旅程阻碍保障</td>
+                        <td class="group" colspan="2">旅程阻碍保障</td>
                     </tr>
                     <tr>
                         <td><strong>旅程延误</strong><br>若由于天气、罢工、航空公司超售或航空管制等原因而导致飞机或轮船延误，每延误5小时，可获赔偿RMB300元。</td>
                         <td align="center">600</td>
-                        <td align="center">600</td>
                     </tr>
                     <tr>
-                        <td class="group" colspan="3">个人责任</td>
+                        <td class="group" colspan="2">个人责任</td>
                     </tr>
                     <tr>
                         <td>我们承担旅行期间因意外事故导致他人身体或财物损失而须支付给第三方的赔偿金。</td>
                         <td align="center">80,000</td>
-                        <td align="center">400,000</td>
                     </tr>
                 </tbody>
             </table>
@@ -216,23 +276,26 @@
             </ol>
         </div>
     </div>
-    <div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="true" data-tap-toggle="false">
-        <a href="#" data-role="button" data-theme="e" data-inline="false" data-mini="true">投 保</a>
+    <div data-role="footer" data-theme="a" data-position="fixed" data-fullscreen="false" data-tap-toggle="false">
+        <a href="#" data-role="button" data-theme="d" data-inline="false" data-mini="true" style="width:90%;margin:8px auto;">立即投保</a>
     </div>
     <script>
         $(document).bind("pageinit", function(event){
             $('#productDesNav li').click(function(){
                 var index = $(this).index();
-                $(this).siblings().find('a').removeClass('ui-btn-active');
-                $(this).find('a').addClass('ui-btn-active');
+                $(this).siblings().removeClass('noBorder');
+                $(this).prev() && $(this).prev().addClass('noBorder');
+                $(this).siblings().removeClass('ui-btn-active');
+                $(this).addClass('ui-btn-active');
                 $('.desBox').hide().eq(index).show();
+                setTimeout(function(){$(window).trigger('scroll');},100);
             });
             $('#productDesNav li a:eq(0)').trigger('click');
            // navBar
            var scrollTop = $('#navBar').offset().top;
            $(window).bind('scroll',function(){
                var docScrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-               if(docScrollTop > 1 && docScrollTop >= scrollTop){
+               if(docScrollTop > $('.proDescTip').height() && docScrollTop >= scrollTop){
                   $('#navBar').addClass('fixed').css('top',0);
                }else{
                   $('#navBar').removeClass('fixed')
