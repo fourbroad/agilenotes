@@ -16,12 +16,21 @@
         font-family:"微软雅黑";
         font-size:12px;
      }
+     img{
+        border:none;
+     }
+     ul li{
+        list-style:none;
+     }
      .c:after{
         clear:both;
         height:0;
         display:block;
         visibility:hidden;
         content:'.';
+     }
+     a{
+        text-decoration:none;
      }
      .proLogo{
         float:left;
@@ -33,45 +42,139 @@
      .ui-listview-inset .ui-li{
         margin:2px 0;
      }
+     .diccHead{
+        background:#dd605e;
+        border:1px solid #dd605e;
+     }
+     .diccContent{
+        padding:9px;
+        background:#e8e8e8;
+     }
+     .productList>li{
+        border:1px solid #d8d8d8;
+        background:#fafafa;
+        margin-bottom:5px;
+     }
+     .productInfo{
+        padding:12px;
+        border-bottom:1px dashed #c3c3c3;
+     }
+     .productInfo h2{
+        font-size:14px;
+        color:#000;
+     }
+     .infoList{
+        float:left;
+     }
+     .infoList p{
+        line-height:22px;
+     }
+     .minPrice{
+        float:right;
+        background:#f3a89f;
+        color:#fff;
+        padding:7px 12px;
+        margin-top:16px;
+     }
+     .infoTitle{
+        color:#666666;
+     }
+     .infoValue{
+        color:#000000;
+     }
+     .mt10{
+        margin-top:10px;
+     }
+     .benefitList{
+        padding:12px;
+        color:#666666;
+     }
+     .benefitList li{
+        float:left;
+        width:50%;
+        line-height:22px;
+     }
+     .benefitList li span{
+        color:#000;
+        padding-left:4px;
+     }
+     .ui-body-c, .ui-overlay-c{
+            background:#E8E8E8;
+     }
   </style>
 
 </head>
 <body>
 <!-- Home -->
 <div data-role="page" id="page1">
-    <div data-theme="a" data-role="header">
+    <div data-theme="d" data-role="header" class="diccHead">
         <h3>
             产品列表
         </h3>
     </div>
-    <div data-role="content">
-        <ul data-role="listview" data-divider-theme="b" data-inset="true">
-            <li data-theme="c">
+    <div data-role="content" class="diccContent">
+        <ul class="productList">
+            <li>
                 <a href="productDescription.html" data-transition="slide">
-                    <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg"   class="proLogo"/>
-                    <h2>境外旅游保险</h2>
-                    <p>海外留学、商务旅行、旅游观光</p>
+                    <div class="productInfo">
+                        <h2>众行天下-国内旅行保障计划1(经济款)</h2>
+                        <div class="c mt10">
+                            <div class="infoList">
+                                <p><span class="infoTitle">承保年龄：</span><span class="infoValue">1周岁-85周岁</span></p>
+                                <p><span class="infoTitle">保障期限：</span><span class="infoValue">1-30天或1年</span></p>
+                                <p><span class="infoTitle">适用人群：</span><span class="infoValue">国内旅游人士</span></p>
+                            </div>
+                            <span class="minPrice">￥8.00起</span>
+                        </div>
+                    </div>
+                    <ul class="c benefitList">
+                        <li>意外伤害<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                        <li>意外医疗<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                    </ul>
                 </a>
             </li>
-            <li data-theme="c">
+            <li>
                 <a href="productDescription.html" data-transition="slide">
-                    <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg"   class="proLogo"/>
-                    <h2>境内旅游保险</h2>
-                    <p>户外运动、自驾出行</p>
+                    <div class="productInfo">
+                        <h2>众行天下-国内旅行保障计划1(经济款)</h2>
+                        <div class="c mt12">
+                            <div class="infoList">
+                                <p><span class="infoTitle">承保年龄：</span><span class="infoValue">1周岁-85周岁</span></p>
+                                <p><span class="infoTitle">保障期限：</span><span class="infoValue">1-30天或1年</span></p>
+                                <p><span class="infoTitle">适用人群：</span><span class="infoValue">国内旅游人士</span></p>
+                            </div>
+                            <span class="minPrice">￥8.00起</span>
+                        </div>
+                    </div>
+                    <ul class="c benefitList">
+                        <li>意外伤害<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                        <li>意外医疗<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                    </ul>
                 </a>
             </li>
-            <li data-theme="c">
+            <li>
                 <a href="productDescription.html" data-transition="slide">
-                    <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg"   class="proLogo"/>
-                    <h2>交通意外保险</h2>
-                    <p>航班延误、安心驾乘</p>
-                </a>
-            </li>
-            <li data-theme="c">
-                <a href="productDescription.html" data-transition="slide">
-                    <img src="http://192.168.1.40:8080/dbs/51bfbb919239e21a9200000a/51d230ecedad577131000038/attachments/logo/lyy2.jpg"   class="proLogo"/>
-                    <h2>综合意外保险</h2>
-                    <p>医疗保障、综合保障</p>
+                    <div class="productInfo">
+                        <h2>众行天下-国内旅行保障计划1(经济款)</h2>
+                        <div class="c mt12">
+                            <div class="infoList">
+                                <p><span class="infoTitle">承保年龄：</span><span class="infoValue">1周岁-85周岁</span></p>
+                                <p><span class="infoTitle">保障期限：</span><span class="infoValue">1-30天或1年</span></p>
+                                <p><span class="infoTitle">适用人群：</span><span class="infoValue">国内旅游人士</span></p>
+                            </div>
+                            <span class="minPrice">￥8.00起</span>
+                        </div>
+                    </div>
+                    <ul class="c benefitList">
+                        <li>意外伤害<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                        <li>意外医疗<span>10万元</span></li>
+                        <li>公共交通加倍给付<span>10万元</span></li>
+                    </ul>
                 </a>
             </li>
         </ul>
