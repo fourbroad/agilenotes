@@ -8,7 +8,7 @@ var hostname = 'dicc2.ins24.com';
 var headers = {
     'Host': hostname,
     'Content-Type': 'application/json',
-    'User-Agent':'asdasdasd'
+    'User-Agent':'Mozilla/5.0 (X11; Linux i686; rv:12.0) Gecko/20100101 Firefox/12.0'
 };
 
 var options = {
