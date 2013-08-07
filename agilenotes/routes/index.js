@@ -630,7 +630,9 @@ function staticPage(req, res) {
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\
 	<script type="text/javascript" charset="utf-8" src="/javascripts/jquery-1.8.2.min.js"></script>\
 		<script type="text/javascript" charset="utf-8" src="/javascripts/jquery.mobile-1.3.1.min.js"></script>\
-		<link rel="stylesheet" href="/stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">\
+		<script type="text/javascript" charset="utf-8" src="/javascripts/mobiscroll.custom-2.6.0.min.js"></script>\
+		<link rel="stylesheet" href="/stylesheets/jquery.mobile.flatui.min.css" type="text/css">\
+		<link rel="stylesheet" href="/stylesheets/mobiscroll.custom-2.6.0.min.css" type="text/css">\
 	<title>{{title}}</title>\
 	<style>{{stylesheet}}</style>\
 	</head>\
