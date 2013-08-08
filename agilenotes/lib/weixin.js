@@ -42,9 +42,10 @@ function genArticle(req, opts, callback) {
 	if (!opts) {
 		callback("");
 	} else {
+		options.items = options.items || [];
 		var str = '<xml>' + _to(req) + '<MsgType><![CDATA[news]]></MsgType>';
 		str += '<ArticleCount>' + opts.items.length + '</ArticleCount><Articles>';
-		for ( var i = 0; i < opts.items; i++) {
+		for ( var i = 0; i < opts.items.length; i++) {
 			str += _getItem(opts.items[i]);
 		}
 		str += '</Articles></xml>';
