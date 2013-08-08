@@ -53,5 +53,12 @@ function genArticle(req, opts, callback) {
 	}
 }
 
+function textCallback(xml, content, cb) {
+	genText(xml, { Content : content }, function(data) {
+		cb(false, data);
+	});
+}
+
 exports.genText = genText;
 exports.genArticle = genArticle;
+exports.textCallback = textCallback;
