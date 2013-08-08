@@ -42,7 +42,7 @@ function genArticle(req, opts, callback) {
 	if (!opts) {
 		callback("");
 	} else {
-		options.items = options.items || [];
+		opts.items = opts.items || [];
 		var str = '<xml>' + _to(req) + '<MsgType><![CDATA[news]]></MsgType>';
 		str += '<ArticleCount>' + opts.items.length + '</ArticleCount><Articles>';
 		for ( var i = 0; i < opts.items.length; i++) {
