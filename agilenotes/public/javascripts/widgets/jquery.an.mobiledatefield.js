@@ -14,15 +14,14 @@
 $.widget( "an.mobiledatefield", $.an.inputfield, {
 	
 	options:{
-		theme: 'jqm',
-		lang: 'en',
-		display: 'bottom',
-		mode: 'scroller',
-		dateFormat:'yy-mm-dd',
-		dateOrder: 'yy mmD dd',
-		dateOrder:'yymmdd',
+		theme: "ios",
+		lang: "zh",
+		display: "bottom",
+		mode: "scroller",
+		dateFormat:"yy-mm-dd",
+		dateOrder: "yymmdd",
 		minDate:'',
-		maxDate:'',
+		maxDate:''
 	},
 
 	_create: function() {
@@ -38,7 +37,6 @@ $.widget( "an.mobiledatefield", $.an.inputfield, {
 			theme: o.theme,
 			lang: o.lang,
 			display: o.display,
-			mode: o.mode,
 			dateFormat:o.dateFormat,
 			dateOrder: o.dateOrder,
 		}
