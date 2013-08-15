@@ -118,7 +118,7 @@ Httpclient.prototype.get_delete_headers = function(host, path, dat) {
 Httpclient.prototype.get_common_headers = function(method, host, path) {
 	var req = path;
 	if (this.argument) {
-		if (stristr(path, '?')) {
+		if (path.indexOf("?") != -1) {
 			req += this.argument;
 		} else {
 			req += '?' + this.argument;
