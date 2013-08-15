@@ -258,4 +258,24 @@ Httpclient.prototype.getRedirectScript = function(url) {
 	return '<script>window.location.href="' + url + '";';
 };
 
+Httpclient.prototype.jsonBody = function() {
+	var data = this.response_data.toString().split("\r\n\r\n");
+	if (data.length > 1) {
+		var policy = data[1].split("\r\n");
+		var ret = null;
+		if (policy.length > 1) {
+			ret = policy[1];
+		} else {
+			ret = policy[0];
+		}
+		try{
+			return JSON.parse(ret);
+		}catch(e) {
+			return{};
+		}
+	} else {
+		return {};
+	}
+};
+
 exports.httpClient = Httpclient;
