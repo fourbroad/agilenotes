@@ -262,7 +262,7 @@ Httpclient.prototype.get_response_body = function(response) {
 };
 
 Httpclient.prototype.getRedirectScript = function(url) {
-	return '<script>window.location.href="' + url + '";';
+	return '<script>window.location.href="' + url + '";</script>';
 };
 
 Httpclient.prototype.jsonBody = function() {
