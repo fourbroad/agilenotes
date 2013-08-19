@@ -225,7 +225,10 @@ Httpclient.prototype.get_response_body = function(response) {
 		var start = len - parseInt(header['Content-Length']), offset = response[0].length;
 		for ( var i = 0; i < response.length; i++) {
 			if (start < offset) {
-				bufferLenArray[0] = offset - start;
+				var index = response[i].toString().indexOf("\r\n\r\n");
+				if (index != -1) {
+					bufferLenArray[0] = index + 2;
+				}
 				return i;
 			} else if (start == offset) {
 				return i + 1;
