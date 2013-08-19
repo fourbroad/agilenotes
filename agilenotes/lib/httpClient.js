@@ -236,14 +236,21 @@ Httpclient.prototype.get_response_body = function(response) {
 	};
 
 	var result = [];
-	if (this.response_header['Content-Length'] > 0) {
+	if (parseInt(this.response_header['Content-Length']) > 0) {
 		var bufferLenArray = [ 0 ];
 		var index = getStartIndex(this.response_header, this.response_data, this.response_len, bufferLenArray);
 		if (bufferLenArray[0] > 0) {
 			var start = this.response_data[index].length - bufferLenArray[0];
 			var buffer = new Buffer(bufferLenArray[0] + 1);
-			this.response_data[index].copy(buffer, 0, start - 1);
-			result.push(buffer);
+			if (start - 1 < 0) {
+				start = -start;
+			}
+			try {
+				this.response_data[index].copy(buffer, 0, start - 1);
+				result.push(buffer);
+			} catch (e) {
+				console.log(e);
+			}
 		}
 
 		for ( var i = (index + 1); i < this.response_data.length; i++) {
@@ -268,10 +275,10 @@ Httpclient.prototype.jsonBody = function() {
 		} else {
 			ret = policy[0];
 		}
-		try{
+		try {
 			return JSON.parse(ret);
-		}catch(e) {
-			return{};
+		} catch (e) {
+			return {};
 		}
 	} else {
 		return {};
