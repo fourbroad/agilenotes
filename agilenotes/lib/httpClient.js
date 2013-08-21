@@ -225,7 +225,7 @@ Httpclient.prototype.get_response_body = function(response) {
 		var start = len - parseInt(header['Content-Length']), offset = response[0].length;
 		for ( var i = 0; i < response.length; i++) {
 			if (start < offset) {
-				bufferLenArray[0] = offset - start;
+				bufferLenArray[0] = response[i].length - response[i].toString().indexOf("%PDF-");
 				return i;
 			} else if (start == offset) {
 				return i + 1;
