@@ -251,13 +251,22 @@ function getDoc(req,res){
 			res.send(data || error || {success:false, result :"document not found or not authorized!", msg :"document not found or not authorized!"});
 		}
 	};
+	
+	var inType = function(data) {
+		var t = data.type;
+		if (t == Model.Page || t == Model.Form || data._static) {
+			return true;
+		} else {
+			return false;
+		}
+	};
 	if (docid) {
 		getCache(docid, function(err, doc) {
 			if (!err && doc) {
 				doModule(err, doc.value);
 			} else {
 				provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
-					if (!error && data) {
+					if (!error && data && inType(data)) {
 						setCache(docid, data, 86400 * 365, function(err, result){
 							
 						});
