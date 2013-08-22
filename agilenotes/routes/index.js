@@ -10,6 +10,7 @@ var mongo = require("mongodb"),
     Functions = require("../lib/common_functions"); // common functions
 
 ACL.setBson(BSON);
+var g_ans = null;
 
 // TODO: add cache for design documents on server side.
 function ensureAuthenticated(req, res, next) {
@@ -201,7 +202,7 @@ function getDoc(req,res){
 	}
 		console.log("selector =====> %j", selector);
 	res.header('Content-Type', 'application/json');
-	provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+	var doModule = function(error, data) {
 		if(options.exec){
 			options.query = q;
 			delete(options.query.options);
@@ -249,7 +250,27 @@ function getDoc(req,res){
 		}else{
 			res.send(data || error || {success:false, result :"document not found or not authorized!", msg :"document not found or not authorized!"});
 		}
-	});
+	};
+	if (docid) {
+		getCache(docid, function(err, doc) {
+			if (!err && doc) {
+				doModule(err, doc.value);
+			} else {
+				provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+					if (!error && data) {
+						setCache(docid, data, 86400 * 365, function(err, result){
+							
+						});
+					}
+					doModule(error, data);
+				});
+			}
+		});
+	} else {
+		provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+			doModule(error, data);
+		});
+	}
 }
 
 //TODO 支持文档批量上传。
@@ -662,7 +683,7 @@ function staticPage(req, res) {
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	var provider = providers.getProvider(dbid);
 	res.set('Content-Type', 'text/html');
-	provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, data) {
+	var doModule = function(err, data) {
 		if (!err && data) {
 			try{
 				var s = eval("(" + data.methods + ")");
@@ -675,10 +696,51 @@ function staticPage(req, res) {
 		} else {
 			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
 		}
+	};
+	
+	getCache(docid, function(err, doc) {
+		if (!err && doc) {
+			doModule(err, doc.value);
+		} else {
+			provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
+				if (!err && doc) {
+					setCache(docid, doc, 86400 * 365, function(err, result) {
+						
+					});
+				}
+				doModule(err, doc);
+			});
+		}
+	});
+}
+
+function getCache(key, callback) {
+	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
+	redis.on("connect", function(){
+		redis.get(key, function(err, result){
+			callback(err, result);
+		});
+	});
+	redis.on("error", function(err){
+		callback(err, null);
+	});
+}
+
+function setCache(key, value, expire, callback) {
+	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
+	redis.on("connect", function(){
+		expire = expire && expire > 0 ? expire : 86400; // one day
+		redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
+			callback(false, null);
+		});
+	});
+	redis.on("error", function(err){
+		callback(err, null);
 	});
 }
 
 module.exports = function(agilenotes){
+	g_ans = agilenotes;
 	providers.init(agilenotes);
 	providers.openAdminDb(function(error, db){
 		if(db){
