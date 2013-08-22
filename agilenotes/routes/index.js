@@ -10,6 +10,7 @@ var mongo = require("mongodb"),
     Functions = require("../lib/common_functions"); // common functions
 
 ACL.setBson(BSON);
+var g_ans = null;
 
 // TODO: add cache for design documents on server side.
 function ensureAuthenticated(req, res, next) {
@@ -21,7 +22,7 @@ function ensureAuthenticated(req, res, next) {
 
 //  check user login state
 function login(req,res){
-	
+
         if ( !req.user && typeof( req.session.passport.user ) === 'undefined' ){
             res.send(MSG.auth.c1502, 200);
         } else {
@@ -42,7 +43,7 @@ function cleanFileField(provider, docid, fieldName, values, newValues, callback)
 		callback(null, newValues);
 		return;
 	}
-	
+
 	var value = values.shift();
 	if(value._tmp){
 		if(value._del){
@@ -80,7 +81,7 @@ function cleanFileFields(provider, docid, doc, fileFields, callback){
 		callback(null, doc);
 		return;
 	}
-	
+
 	var fileField = fileFields.shift(), values = eval("doc."+fileField);
 	cleanFileField(provider, docid, fileField, values, [], function(error, newValues){
 		eval("doc."+fileField +"="+JSON.stringify(newValues));
@@ -109,7 +110,7 @@ function validate(dbid, doc, callback){
 			for(var i in forms){
 				var f = $("<form/>").append(forms[i].content);
 				f.find(".field[type!=button]").each(function(){
-					var $this = $(this), field = $this.attr("id"), md = $this.metadata(), 
+					var $this = $(this), field = $this.attr("id"), md = $this.metadata(),
 					    input = $("<input type='text'/>").attr("name",$this.attr("id") || $this.attr("name")).appendTo($this),
 					    value = eval("try{doc['"+field+"']}catch(e){}");
 					if(value){
@@ -132,7 +133,7 @@ function validate(dbid, doc, callback){
 					break;
 				}
 			}
-			
+
 			if(errors.length == 0){
 				callback(error, doc, fileFields);
 			}else{
@@ -150,7 +151,7 @@ function rend(req,res){
 	var reg = new  RegExp('[0-9a-f]{24}');
 	if(reg.test(dbn)){
         	dbQuery = {type:Model.DATABASE, _id:new BSON.ObjectID(dbn)};
-        }	
+        }
 	if(reg.test(docn)){
         	docQuery = { _id:new BSON.ObjectID(docn)};
         }
@@ -164,7 +165,7 @@ function rend(req,res){
 		                if (err || doc == null) {
 				    res.render('page_404', {});
 				    return;
-		                }  
+		                }
 			        var data =  new Object();
 		                data.db = db;
 		                data.doc = doc;
@@ -172,7 +173,7 @@ function rend(req,res){
 			        data = data.replace(/<\/script>/g, '<\\/script>');
 			        res.render('page', {data: data});
 			});
-			
+
 		});
 }
 
@@ -201,7 +202,7 @@ function getDoc(req,res){
 	}
 		console.log("selector =====> %j", selector);
 	res.header('Content-Type', 'application/json');
-	provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+	var doModule = function(error, data) {
 		if(options.exec){
 			options.query = q;
 			delete(options.query.options);
@@ -249,14 +250,34 @@ function getDoc(req,res){
 		}else{
 			res.send(data || error || {success:false, result :"document not found or not authorized!", msg :"document not found or not authorized!"});
 		}
-	});
+	};
+	if (docid) {
+		getCache(docid, function(err, doc) {
+			if (!err && doc) {
+				doModule(err, doc.value);
+			} else {
+				provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+					if (!error && data) {
+						setCache(docid, data, 86400 * 365, function(err, result){
+							
+						});
+					}
+					doModule(error, data);
+				});
+			}
+		});
+	} else {
+		provider[docid ? "findOne" : "find"](selector, fields, options, function(error,data){
+			doModule(error, data);
+		});
+	}
 }
 
 //TODO 支持文档批量上传。
 function postDoc(req,res){
 	var params = req.params, dbid = params.dbid, doc = req.body,  docid = params.docid, q = req.query, options = q.options;
 	res.header('Content-Type', 'application/json');
-	
+
 	var  process = function(data, response, options, callback) {
 		var doc = data.shift();
 		if (doc) {
@@ -275,7 +296,7 @@ function postDoc(req,res){
 			callback(null, response);
 		}
 	};
-	
+
 	if (typeof(docid) != 'undefined') {
 		options = options || {};
 		options.query = q;
@@ -319,11 +340,12 @@ function postDoc(req,res){
 					res.send({result:error}, 416);
 				}else{
 					doc._create_at = new Date().toJSON();
+					doc._update_at = doc._create_at;
 					if(doc.type == Model.TASK && doc.taskType == "interval"){
 						doc.userId = req.user._id;
 					}
 					doc._ownerID = req.user._id;
-					
+
 					provider.insert(doc, options, function(error,docs){
 						if(error) {
 							res.send(403);
@@ -370,8 +392,8 @@ function postDoc(req,res){
 												});
 											}
 										});
-									}	
-									
+									}
+
 									var t = setInterval(function() {
 										if (respArr.length >= options.task.length) {
 											docs[0].result = respArr;
@@ -416,11 +438,11 @@ function putDoc(req,res){
 		}
 	};
 	if(docid){
-		var q = req.query, options = q.options, selector = q.selector,doc = req.body, 
+		var q = req.query, options = q.options, selector = q.selector,doc = req.body,
 		    provider = providers.getProvider(dbid, doc.type);
 		validate(dbid, doc, function(error, doc, fileFields){
 			if(error) {
-				res.send({result:error}, 416);
+				res.send({result:errors}, 416);
 			}else{
 				delete doc._id;
 				if(doc.type == Model.TASK && doc.taskType == "interval"){
@@ -451,8 +473,8 @@ function putDoc(req,res){
 													msg : "document not found or not authorized!" });
 										});
 									});
-								}	
-								
+								}
+
 								var t = setInterval(function() {
 									if (respArr.length >= options.task.length) {
 										doc.result = respArr;
@@ -544,7 +566,7 @@ function getAttachment(req,res){
 }
 
 function postAttachment(req,res){
-	var params = req.params, dbid = params.dbid, docid = params.docid, 
+	var params = req.params, dbid = params.dbid, docid = params.docid,
 	    path = params[1] ? params[1] +"/":"", attachment = req.files.attachment;
 	if(attachment){
 		providers.getProvider(dbid).createAttachment(docid, path+attachment.filename, attachment.mime, function(error,gridStore){
@@ -580,7 +602,7 @@ function postTempFile(req,res){
 }
 
 function acl(req,res,next){
-	var params = req.params, dbid = params.dbid, user = req.user, q = req.query, 
+	var params = req.params, dbid = params.dbid, user = req.user, q = req.query,
 	    doc = req.body, docid = params.docid, dbn = params.dbn, docn = params.docn,	provider = providers.getProvider(Model.ADMIN_DB);
 	
 	if (req.headers['content-type'] && req.headers['content-type'].indexOf('xml') != -1) {
@@ -609,7 +631,7 @@ function acl(req,res,next){
 		q.selector = JSON.parse(q.selector||"{}");
 		q.options = JSON.parse(q.options||"{}");
 		if(docid) q.selector["_id"] = docid;
-	
+
 		ACL.acl(user, provider, req.method.toLowerCase(), q.selector, doc&&doc.type || doc && docid, function(error, selector){
 			if(error){
 				res.json({error:"Not Authorized!"});
@@ -623,13 +645,18 @@ function acl(req,res,next){
 
 function staticPage(req, res) {
 	var str = '\
-	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\
+	<!DOCTYPE>\
 	<html xmlns="http://www.w3.org/1999/xhtml">\
 	<head>\
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">\
+		<meta name="apple-mobile-web-app-capable" content="yes">\
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">\
 	<script type="text/javascript" charset="utf-8" src="/javascripts/jquery-1.8.2.min.js"></script>\
 		<script type="text/javascript" charset="utf-8" src="/javascripts/jquery.mobile-1.3.1.min.js"></script>\
-		<link rel="stylesheet" href="/stylesheets/jquery.mobile-1.3.1.min.css" type="text/css">\
+		<script type="text/javascript" charset="utf-8" src="/javascripts/mobiscroll.custom-2.6.0.min.js"></script>\
+		<link rel="stylesheet" href="/stylesheets/jquery.mobile.flatui.min.css" type="text/css">\
+		<link rel="stylesheet" href="/stylesheets/mobiscroll.custom-2.6.0.min.css" type="text/css">\
 	<title>{{title}}</title>\
 	<style>{{stylesheet}}</style>\
 	</head>\
@@ -656,7 +683,7 @@ function staticPage(req, res) {
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	var provider = providers.getProvider(dbid);
 	res.set('Content-Type', 'text/html');
-	provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, data) {
+	var doModule = function(err, data) {
 		if (!err && data) {
 			try{
 				var s = eval("(" + data.methods + ")");
@@ -669,15 +696,56 @@ function staticPage(req, res) {
 		} else {
 			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
 		}
+	};
+	
+	getCache(docid, function(err, doc) {
+		if (!err && doc) {
+			doModule(err, doc.value);
+		} else {
+			provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
+				if (!err && doc) {
+					setCache(docid, doc, 86400 * 365, function(err, result) {
+						
+					});
+				}
+				doModule(err, doc);
+			});
+		}
+	});
+}
+
+function getCache(key, callback) {
+	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
+	redis.on("connect", function(){
+		redis.get(key, function(err, result){
+			callback(err, result);
+		});
+	});
+	redis.on("error", function(err){
+		callback(err, null);
+	});
+}
+
+function setCache(key, value, expire, callback) {
+	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
+	redis.on("connect", function(){
+		expire = expire && expire > 0 ? expire : 86400; // one day
+		redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
+			callback(false, null);
+		});
+	});
+	redis.on("error", function(err){
+		callback(err, null);
 	});
 }
 
 module.exports = function(agilenotes){
+	g_ans = agilenotes;
 	providers.init(agilenotes);
 	providers.openAdminDb(function(error, db){
 		if(db){
 			var ous = {}, groups = {};
-			
+
 			ouAuthz = agilenotes.get("ou_authz");
 			groupAuthz = agilenotes.get("group_authz");
 			roleAuthz = agilenotes.get("role_authz");
@@ -696,7 +764,7 @@ module.exports = function(agilenotes){
 					groups[i] = docs[i];
 				}
 			});
-			
+
 			ACL.init(ous, groups, ouAuthz, groupAuthz,roleAuthz);
 			agilenotes.set("acl", ACL);
 
@@ -733,14 +801,14 @@ module.exports = function(agilenotes){
 									MSG.auth.c1501.isFirstLogin = 0;
 								}
 								res.send(MSG.auth.c1501, 200);
-	
+
 							});
 						}
 					})(req, res, next);});
 
 			agilenotes.get('/logout', logout);
 			agilenotes.get('/login', login);
-			
+
 
 			agilenotes.get('/dbs/:dbid/:docid?', acl, getDoc);
 			agilenotes.post('/dbs/:dbid/:docid?', acl, postDoc);
@@ -759,16 +827,15 @@ module.exports = function(agilenotes){
 			agilenotes.get('/pdfs', MailLib.pdfDownload);
 
 			agilenotes.set('providers', providers);
-                        
-			
+
+
 			// agilenotes.get('/mailtest', getMailTest);
 			agilenotes.get("/dbs/:dbid/:docid/readmail(\/?|\/*)", acl, MailLib.readMail);
 			agilenotes.post("/dbs/:dbid/:docid/sendmail(\/?|\/*)", MailLib.sendObject);
-			
+
 			// sms module
 			agilenotes.post("/sms", Functions.sendSms);
 			agilenotes.get("/static/:dbid/:docid?", staticPage);
-
 		}
 	});
 };
