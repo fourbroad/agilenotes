@@ -714,10 +714,11 @@ function staticPage(req, res) {
 			provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
 				if (!err && doc) {
 					setCache(docid, doc, 86400 * 365, function(err, result) {
-						
+						doModule(err, doc);
 					});
+				} else {
+					doModule(err, doc);
 				}
-				doModule(err, doc);
 			});
 		}
 	});
