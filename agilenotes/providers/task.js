@@ -114,26 +114,16 @@ Task.prototype.exec = function(user, task, options, callback) {
 						alipay.verity(config, options, callback);
 					},
 					getCache:function(key, callback) {
-						var RedisStore = self.agilenotes.get('RedisStore'), redis = new RedisStore();
-						redis.on("connect", function(){
-							redis.get(key, function(err, result){
-								callback(err, result);
-							});
-						});
-						redis.on("error", function(err){
-							callback(err, null);
+						var redis = self.agilenotes.get('RedisStore');
+						redis.get(key, function(err, result){
+							callback(err, result);
 						});
 					},
 					setCache:function(key, value, expire, callback) {
-						var RedisStore = self.agilenotes.get('RedisStore'), redis = new RedisStore();
-						redis.on("connect", function(){
-							expire = expire && expire > 0 ? expire : 86400; // one day
-							redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
-								callback(false, null);
-							});
-						});
-						redis.on("error", function(err){
-							callback(err, null);
+						var redis = self.agilenotes.get('RedisStore');
+						expire = expire && expire > 0 ? expire : 86400; // one day
+						redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
+							callback(false, null);
 						});
 					}
 				};
