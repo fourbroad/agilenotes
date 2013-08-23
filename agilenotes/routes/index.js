@@ -192,6 +192,15 @@ function _parseCookie(cookieStr) {
      return typeof(cookieStr) == 'string' ? cookieValue : cookieStr;
 }
 
+function inType(data) {
+	var t = data.type;
+	if (t == Model.Page || t == Model.Form || data._static) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
@@ -252,15 +261,7 @@ function getDoc(req,res){
 		}
 	};
 	
-	var inType = function(data) {
-		var t = data.type;
-		if (t == Model.Page || t == Model.Form || data._static) {
-			return true;
-		} else {
-			return false;
-		}
-	};
-	if (docid) {
+	if (docid && false) {
 		getCache(docid, function(err, doc) {
 			if (!err && doc) {
 				doModule(err, doc.value);
@@ -407,11 +408,23 @@ function postDoc(req,res){
 										if (respArr.length >= options.task.length) {
 											docs[0].result = respArr;
 											clearInterval(t);
-											res.send(docs[0], 201);
+											if (inType(docs[0])) {
+												setCache(docs[0]._id, docs[0], 86400 * 365, function(err, ret) {
+													res.send(docs[0], 201);
+												});
+											} else {
+												res.send(docs[0], 201);
+											}
 										};
 									}, 50);
 								} else {
-									res.send(docs[0], 201);
+									if (inType(docs[0])) {
+										setCache(docs[0]._id, docs[0], 86400 * 365, function(err, ret) {
+											res.send(docs[0], 201);
+										});
+									} else {
+										res.send(docs[0], 201);
+									}
 								}
 							}
 						}
@@ -488,11 +501,31 @@ function putDoc(req,res){
 									if (respArr.length >= options.task.length) {
 										doc.result = respArr;
 										clearInterval(t);
-										res.send(doc, result ? 200 : 403);
+										if (result) {
+											if (inType(result)) {
+												setCache(docid, doc, 86400 * 365, function(err, ret) {
+													res.send(doc, result ? 200 : 403);
+												});
+											} else {
+												res.send(doc, result ? 200 : 403);
+											}
+										} else {
+											res.send(doc, result ? 200 : 403);
+										}
 									};
 								}, 50);
 							} else {
-								res.send(doc, result ? 200 : 403);
+								if (result) {
+									if (inType(result)) {
+										setCache(docid, doc, 86400 * 365, function(err, ret) {
+											res.send(doc, 200);
+										});
+									} else {
+										res.send(doc, 200);
+									}
+								} else {
+									res.send(403);
+								}
 							}
 						}
 					});
@@ -517,7 +550,13 @@ function delDoc(req,res){
 	res.header('Content-Type', 'application/json');
 	providers.getProvider(dbid).update(selector, {$set:{_deleted: true}}, options, function(error,result){
 		if(result) {
-			res.send({result:"OK"}, 200);
+			if (selector._id) {
+				setCache(selector._id, null, -1, function(err, ret) {
+					res.send({result:"OK"}, 200);
+				});
+			} else {
+				res.send({result:"OK"}, 200);
+			}
 		} else {
 			res.send(403);
 		}
@@ -691,7 +730,6 @@ function staticPage(req, res) {
 	};
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	var provider = providers.getProvider(dbid);
-	res.set('Content-Type', 'text/html');
 	var doModule = function(err, data) {
 		if (!err && data) {
 			try{
@@ -701,8 +739,10 @@ function staticPage(req, res) {
 				data.script = "";
 			}
 			
+			res.set('Content-Type', 'text/html');
 			res.send(replace(str, data));
 		} else {
+			res.set('Content-Type', 'text/html');
 			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
 		}
 	};
@@ -714,37 +754,28 @@ function staticPage(req, res) {
 			provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
 				if (!err && doc) {
 					setCache(docid, doc, 86400 * 365, function(err, result) {
-						
+						doModule(err, doc);
 					});
+				} else {
+					doModule(err, doc);
 				}
-				doModule(err, doc);
 			});
 		}
 	});
 }
 
 function getCache(key, callback) {
-	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
-	redis.on("connect", function(){
-		redis.get(key, function(err, result){
-			callback(err, result);
-		});
-	});
-	redis.on("error", function(err){
-		callback(err, null);
+	var redis = g_ans.get('RedisStore');
+	redis.get(key, function(err, result){
+		callback(err, result);
 	});
 }
 
 function setCache(key, value, expire, callback) {
-	var RedisStore = g_ans.get('RedisStore'), redis = new RedisStore();
-	redis.on("connect", function(){
-		expire = expire && expire > 0 ? expire : 86400; // one day
-		redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
-			callback(false, null);
-		});
-	});
-	redis.on("error", function(err){
-		callback(err, null);
+	var redis = g_ans.get('RedisStore');
+	expire = expire && expire != 0 ? expire : 86400; // one day
+	redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
+		callback(false, null);
 	});
 }
 

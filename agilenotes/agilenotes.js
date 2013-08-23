@@ -77,7 +77,7 @@ agilenotes.configure(function() {
 	agilenotes.set('ou_authz', "include"); 
 	agilenotes.set('group_authz', "inherit");
 	agilenotes.set('role_authz', "inherit");
-	agilenotes.set("RedisStore", RedisStore);
+	agilenotes.set("RedisStore", new RedisStore);
 });
 agilenotes.configure('development', function() { 
 	agilenotes.use(express.logger()); 
