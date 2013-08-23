@@ -192,6 +192,15 @@ function _parseCookie(cookieStr) {
      return typeof(cookieStr) == 'string' ? cookieValue : cookieStr;
 }
 
+function inType(data) {
+	var t = data.type;
+	if (t == Model.Page || t == Model.Form || data._static) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 // TODO将exec作为一项独立的操作进行授权和访问控制。
 function getDoc(req,res){
 	var params = req.params, dbid = params.dbid, docid = params.docid, q = req.query, dbn = params.dbn, docn = params.docn,
@@ -252,15 +261,7 @@ function getDoc(req,res){
 		}
 	};
 	
-	var inType = function(data) {
-		var t = data.type;
-		if (t == Model.Page || t == Model.Form || data._static) {
-			return true;
-		} else {
-			return false;
-		}
-	};
-	if (docid) {
+	if (docid && false) {
 		getCache(docid, function(err, doc) {
 			if (!err && doc) {
 				doModule(err, doc.value);
@@ -691,7 +692,6 @@ function staticPage(req, res) {
 	};
 	var params = req.params, dbid = params.dbid, docid = params.docid;
 	var provider = providers.getProvider(dbid);
-	res.set('Content-Type', 'text/html');
 	var doModule = function(err, data) {
 		if (!err && data) {
 			try{
@@ -701,8 +701,10 @@ function staticPage(req, res) {
 				data.script = "";
 			}
 			
+			res.set('Content-Type', 'text/html');
 			res.send(replace(str, data));
 		} else {
+			res.set('Content-Type', 'text/html');
 			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
 		}
 	};
