@@ -708,8 +708,11 @@ function staticPage(req, res) {
 			res.send(replace(str, {title:"agilenotes", stylesheet:"", content:""}));
 		}
 	};
+	provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
+		doModule(err, doc);
+	});
 	
-	getCache(docid, function(err, doc) {
+	/*getCache(docid, function(err, doc) {
 		if (!err && doc) {
 			doModule(err, doc.value);
 		} else {
@@ -723,7 +726,7 @@ function staticPage(req, res) {
 				}
 			});
 		}
-	});
+	});*/
 }
 
 function getCache(key, callback) {
