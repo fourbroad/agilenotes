@@ -747,7 +747,7 @@ function staticPage(req, res) {
 		}
 	};
 	
-	getCache(docid, function(err, doc) {
+	/*getCache(docid, function(err, doc) {
 		if (!err && doc) {
 			doModule(err, doc.value);
 		} else {
@@ -761,6 +761,9 @@ function staticPage(req, res) {
 				}
 			});
 		}
+	});*/
+	provider.findOne({_id:new BSON.ObjectID(docid)},  null, null, function(err, doc) {
+		doModule(err, doc);
 	});
 }
 
