@@ -39,7 +39,7 @@ $.widget( "an.view", {
 		o.showPager&&this._createPager();
 
 		this.docs = [];
-		this._loadDocs();
+		!o.view.autoLoad&&this._loadDocs();
 	},
 
 	option: function(key, value) {
@@ -169,7 +169,6 @@ $.widget( "an.view", {
 
 	_loadDocs:function(){
 		var self = this, o = this.options, sel = o.view.selector, filter= o.filter,opts = {skip:o.skip,limit:o.limit},selectorStr;
-
 		if($.type(o.view.sort)=="string"){
 			opts.sort=eval("("+o.view.sort+")");
 		}
