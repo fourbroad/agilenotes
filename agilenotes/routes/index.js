@@ -532,8 +532,11 @@ function putDoc(req,res){
 				}
 
 				if(fileFields.length > 0){
-					cleanFileFields(provider, docid, doc, fileFields, function(error, doc){
-						update(selector, doc);
+					provider.findOne({_id:new BSON.ObjectID(docid)}, null, null, function(err, ret) {
+						var newDoc = _getDelAttachments(ret, doc);
+						cleanFileFields(provider, docid, newDoc, fileFields, function(error, doc){
+							update(selector, doc);
+						});
 					});
 				}else{
 					update(selector, doc);
@@ -543,6 +546,30 @@ function putDoc(req,res){
 	}else{
 		res.send(404);
 	}
+}
+
+function _getDelAttachments(oldDoc, newDoc) {
+	var result = [];
+	// deal with deleted file
+	for (var i = 0; i < oldDoc.attachment.length; i++) {
+		for (var j = 0; j < newDoc.attachment.length; j++) {
+			if (oldDoc.attachment[i]._id.toString() == newDoc.attachment[j]._id.toString()) {
+				continue;
+			}
+		}
+		
+		oldDoc.attachment[i]._del = true;
+		result.push(oldDoc.attachment[i]);
+	}
+	
+	for (var t = 0; t < newDoc.attachment.length; t++) {
+		if (newDoc.attachment[t]._tmp) {
+			result.push(newDoc.attachment[t]);
+		}
+	}
+	
+	newDoc.attachment = result;
+	return newDoc;
 }
 
 function delDoc(req,res){
