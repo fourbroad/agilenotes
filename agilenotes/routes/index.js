@@ -549,17 +549,20 @@ function putDoc(req,res){
 }
 
 function _getDelAttachments(oldDoc, newDoc, type) {
-	var result = [];
+	var result = [], pushed = {};
 	// deal with deleted file
 	for (var i = 0; i < oldDoc[type].length; i++) {
 		for (var j = 0; j < newDoc[type].length; j++) {
 			if (oldDoc[type][i]._id.toString() == newDoc[type][j]._id.toString()) {
+				pushed[i] = 1;
 				continue;
 			}
 		}
 		
-		oldDoc[type][i]._del = true;
-		result.push(oldDoc[type][i]);
+		if (!pushed[i]) {
+			oldDoc[type][i]._del = true;
+			result.push(oldDoc[type][i]);
+		}
 	}
 	
 	for (var t = 0; t < newDoc[type].length; t++) {
