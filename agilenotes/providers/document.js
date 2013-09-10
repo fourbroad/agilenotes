@@ -308,9 +308,12 @@ Document.prototype.findAttachmentByPath = function(docId, filepath, callback) {
 
 Document.prototype.createAttachment = function(docId, filepath, filename, contentType, callback) {
 	var metadata = {ownerId:docId, filepath:filepath};
-	var gridStore = new GridStore(this.db, new BSON.ObjectID(), filename, 'w',{root:this.collection, content_type:contentType, metadata:metadata});
-	gridStore.open(function(error, gridStore){
-		callback(error, gridStore);
+	var self = this;
+	this.deleteAttachment(docId, filepath, function(err, ret) {
+		var gridStore = new GridStore(self.db, new BSON.ObjectID(), filename, 'w',{root:self.collection, content_type:contentType, metadata:metadata});
+		gridStore.open(function(error, gridStore){
+			callback(error, gridStore);
+		});
 	});
 };
 
@@ -325,6 +328,7 @@ Document.prototype.deleteAttachment = function(docId, filepath, callback) {
 					var gridStore = new GridStore(self.db, new BSON.ObjectID(result[0]._id.toString()), 'r',{root:self.collection});
 					gridStore.open(function(error, gridStore) {
 						gridStore.unlink(function(error,result){
+							console.log(result);
 							callback(error, result);
 						});
 					});
