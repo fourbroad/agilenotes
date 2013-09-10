@@ -532,11 +532,8 @@ function putDoc(req,res){
 				}
 
 				if(fileFields.length > 0){
-					provider.findOne({_id:new BSON.ObjectID(docid)}, null, null, function(err, ret) {
-						var newDoc = _getDelAttachments(ret, doc, fileFields[0]);
-						cleanFileFields(provider, docid, newDoc, fileFields, function(error, doc){
-							update(selector, doc);
-						});
+					cleanFileFields(provider, docid, doc, fileFields, function(error, doc){
+						update(selector, doc);
 					});
 				}else{
 					update(selector, doc);
@@ -561,6 +558,8 @@ function _getDelAttachments(oldDoc, newDoc, type) {
 		
 		if (!pushed[i]) {
 			oldDoc[type][i]._del = true;
+			result.push(oldDoc[type][i]);
+		} else {
 			result.push(oldDoc[type][i]);
 		}
 	}
