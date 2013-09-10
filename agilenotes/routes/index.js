@@ -545,35 +545,6 @@ function putDoc(req,res){
 	}
 }
 
-function _getDelAttachments(oldDoc, newDoc, type) {
-	var result = [], pushed = {};
-	// deal with deleted file
-	for (var i = 0; i < oldDoc[type].length; i++) {
-		for (var j = 0; j < newDoc[type].length; j++) {
-			if (oldDoc[type][i]._id.toString() == newDoc[type][j]._id.toString()) {
-				pushed[i] = 1;
-				continue;
-			}
-		}
-		
-		if (!pushed[i]) {
-			oldDoc[type][i]._del = true;
-			result.push(oldDoc[type][i]);
-		} else {
-			result.push(oldDoc[type][i]);
-		}
-	}
-	
-	for (var t = 0; t < newDoc[type].length; t++) {
-		if (newDoc[type][t]._tmp) {
-			result.push(newDoc[type][t]);
-		}
-	}
-	
-	newDoc[type] = result;
-	return newDoc;
-}
-
 function delDoc(req,res){
 	var params = req.params, dbid = params.dbid, q = req.query, options = q.options, selector = q.selector;
 	res.header('Content-Type', 'application/json');
