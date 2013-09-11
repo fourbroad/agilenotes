@@ -328,7 +328,6 @@ Document.prototype.deleteAttachment = function(docId, filepath, callback) {
 					var gridStore = new GridStore(self.db, new BSON.ObjectID(result[0]._id.toString()), 'r',{root:self.collection});
 					gridStore.open(function(error, gridStore) {
 						gridStore.unlink(function(error,result){
-							console.log(result);
 							callback(error, result);
 						});
 					});
