@@ -274,6 +274,7 @@ Document.prototype.remove = function(selector, options, callback) {
 
 Document.prototype.findAttachment = function(docId, selector, options, callback) {
 	selector["metadata.ownerId"] = docId;
+	options = options || {};
 	this.getFileCollection(function(error,collection){
 		if(collection){
 			collection.find(selector, options).toArray(function(error,result){

@@ -125,6 +125,18 @@ Task.prototype.exec = function(user, task, options, callback) {
 						redis.set(key, { cookie: { maxAge: expire * 1000 }, value: value }, function(){
 							callback(false, null);
 						});
+					},
+					findAttachment:function(docId, selector, options, callback) {
+						provider.findAttachment(docId, selector, options, callback);
+					},
+					findAttachmentByPath:function(docId, filepath, callback) {
+						provider.findAttachmentByPath(docId, filepath, callback);
+					},
+					deleteAttachment:function(docId, filepath, callback) {
+						provider.deleteAttachment(docId, filepath, callback);
+					},
+					createAttachment:function(docId, filepath, filename, contentType, callback) {
+						provider.createAttachment(docId, filepath, filename, contentType, callback);
 					}
 				};
 
