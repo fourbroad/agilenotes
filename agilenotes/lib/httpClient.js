@@ -44,10 +44,10 @@ Httpclient.prototype.get = function(url, params, callback) {
 	this.sent_request(callback);
 };
 
-Httpclient.prototype.post = function(url, post_data) {
+Httpclient.prototype.post = function(url, post_data, callback) {
 	this.parseUrl(url, post_data);
 	this.request_header = this.post_request_header(this.host, this.path, post_data);
-	this.sent_request();
+	this.sent_request(callback);
 };
 
 // 解释url地址等
@@ -81,9 +81,9 @@ Httpclient.prototype.get_request_header = function(host, path) {
 
 // 用POST方法请求数据
 Httpclient.prototype.post_request_header = function(host, path, post_data) {
-	this.http_header("Content-Length", strlen(post_data));
+	this.http_header("Content-Length", post_data.length);
 
-	return this.get_common_headers("POST", host, path).post_data;
+	return this.get_common_headers("POST", host, path) + post_data;
 };
 
 // 用PUT方法请求数据
@@ -195,16 +195,27 @@ Httpclient.prototype.socket_open = function(host, port, header, callback) {
 
 Httpclient.prototype.get_response_header = function(response) {
 	// header=explode( "\r\n\r\n" , response,2);
-	var header = response[0].toString("UTF-8").split("\r\n\r\n");
+	var header = this.response_data.join().split("\r\n\r\n");
 	var result = {};
 	if (header) {
 		var sp = header[0].split("\r\n");
+		result['Set-Cookie'] = [];
 		for ( var i = 0; i < sp.length; i++) {
 			var t = sp[i].split(": ");
 			if (t.length > 1) {
-				result[t[0]] = t[1];
+				if (t[0].indexOf('Set-Cookie') != -1) {
+					var index = String(t[1]).indexOf("=");
+					var key = String(t[1]).substr(0, index);
+					var value = String(t[1]).substr(index + 1);
+					var item = {};
+					item[key] = value;
+					result['Set-Cookie'].push(item);
+				} else {
+					result[t[0]] = t[1];
+				}
 			} else {
-				this.response_status = parseInt(t[0]);
+				var st = String(t[0]).split(" ");
+				this.response_status = parseInt(st[1]);
 			}
 		}
 	}
